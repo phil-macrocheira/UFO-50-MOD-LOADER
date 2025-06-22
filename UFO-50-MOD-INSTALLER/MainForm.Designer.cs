@@ -1,4 +1,6 @@
-﻿namespace UFO_50_MOD_INSTALLER
+﻿using System.Windows.Forms;
+
+namespace UFO_50_MOD_INSTALLER
 {
     partial class MainForm
     {
@@ -43,15 +45,15 @@
             // 
             // dataGridView1
             // 
+            dataGridView1.AllowUserToResizeRows = false;
+            dataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.Location = new Point(0, 0);
+            dataGridView1.Location = new Point(10, 63);
             dataGridView1.Margin = new Padding(2);
             dataGridView1.Name = "dataGridView1";
             dataGridView1.RowHeadersWidth = 62;
-            dataGridView1.ScrollBars = ScrollBars.Vertical;
-            dataGridView1.Size = new Size(200, 125);
+            dataGridView1.Size = new Size(260, 110);
             dataGridView1.TabIndex = 0;
-            dataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
             // 
             // buttonInstall
             // 
@@ -66,19 +68,19 @@
             // textBox1
             // 
             textBox1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            textBox1.Location = new Point(0, 541);
+            textBox1.Location = new Point(0, 551);
             textBox1.Multiline = true;
             textBox1.Name = "textBox1";
             textBox1.ReadOnly = true;
             textBox1.ScrollBars = ScrollBars.Both;
-            textBox1.Size = new Size(976, 200);
+            textBox1.Size = new Size(1196, 200);
             textBox1.TabIndex = 2;
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(978, 744);
+            ClientSize = new Size(1198, 754);
             Controls.Add(textBox1);
             Controls.Add(buttonInstall);
             Controls.Add(dataGridView1);

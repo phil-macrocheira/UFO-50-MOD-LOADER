@@ -1,5 +1,4 @@
 ﻿using Standart.Hash.xxHash;
-using System.Configuration;
 using System.Diagnostics;
 
 namespace UFO_50_MOD_INSTALLER
@@ -9,24 +8,24 @@ namespace UFO_50_MOD_INSTALLER
         public ulong supportedDataHash = 876354219589866315; // 1.7.6
         public List<string> enabledMods;
         public string? rootPath = "";
-        public string? iniPath = "";
+        public string? gamePath = "";
         public string? GMLoaderPath = "";
         public string? myModsPath = "";
         public string? modsPath = "";
         public string? mods_basePath = "";
-        public string? modded_data_winPath = "";
         public string? ufo50_data_winPath = "";
-        public void installMods(string data_winPath, List<string> enabledMods_arg, bool conflictsExist, string currentPath) {
+        public string? modded_data_winPath = "";
+        public void installMods(string currentPath, string gamePath_arg, List<string> enabledMods_arg, bool conflictsExist) {
             enabledMods = enabledMods_arg;
             rootPath = currentPath;
-            iniPath = Path.Combine(rootPath, "GMLoader.ini");
+            gamePath = gamePath_arg;
             GMLoaderPath = Path.Combine(rootPath, "GMloader.exe");
             myModsPath = Path.Combine(rootPath, "my mods");
             modsPath = Path.Combine(rootPath, "mods");
             mods_basePath = Path.Combine(rootPath, "mods_base");
+            ufo50_data_winPath = Path.Combine(gamePath, "data.win");
             modded_data_winPath = Path.Combine(rootPath, "data.win");
             string vanillaPath = Path.Combine(rootPath, "vanilla.win");
-            ufo50_data_winPath = data_winPath;
 #if DEBUG
             GMLoaderPath = Path.Combine(rootPath, "GMLoader", "GMloader.exe");
 #endif
@@ -35,11 +34,10 @@ namespace UFO_50_MOD_INSTALLER
                 MessageBox.Show("ERROR: No vanilla.win file in this folder", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            //if (!checkVanillaHash(vanillaPath))
-                //MessageBox.Show("The vanilla.win in this folder is either outdated or modded. If it is modded, please replace the vanilla.win with an unmodded data.win file.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-
-            if (conflictsExist)
+            if (conflictsExist) {
                 MessageBox.Show("Please disable mods to resolve conflicts before installation", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             addModNames();
             generateModsFolder(vanillaPath);
@@ -68,20 +66,35 @@ namespace UFO_50_MOD_INSTALLER
             }
         }
         private void generateModsFolder(string vanillaPath) {
+            string localizationPath = Path.Combine(gamePath, "ext");
+            string vanilla_localizationPath = Path.Combine(rootPath, "localization", "vanilla", "ext");
+            string modded_localizationPath = Path.Combine(rootPath, "modded", "vanilla", "ext");
+
             File.Copy(vanillaPath, modded_data_winPath, overwrite: true);
             if (Directory.Exists(modsPath))
                 Directory.Delete(modsPath, recursive: true);
             CopyDirectory(mods_basePath, modsPath);
 
-            var mods = enabledMods.OrderBy(m => Path.GetFileName(m) != "UFO 50 Modding Framework").ThenBy(m => m); // Ensures we copy the framework first
-            foreach (string mod in mods) {
+            var modPaths = enabledMods.OrderBy(m => Path.GetFileName(m) != "UFO 50 Modding Framework").ThenBy(m => m); // Ensures we copy the framework first
+            foreach (string mod in modPaths) {
                 foreach (string subFolder in Directory.GetDirectories(mod)) {
+                    string folderName = Path.GetFileName(subFolder);
                     string destSubFolder = Path.Combine(modsPath, Path.GetFileName(subFolder));
+                    if (folderName == "ext")
+                        destSubFolder = localizationPath;
+                    else if (folderName == "dll") {
+                        foreach (string dll in Directory.GetFiles(subFolder)) {
+                            string destFile = Path.Combine(gamePath, Path.GetFileName(dll));
+                            File.Copy(dll, destFile, true);
+                        }
+                        continue;
+                    }
+
                     CopyDirectory(subFolder, destSubFolder);
                 }
             }
         }
-        private void CopyDirectory(string sourceDir, string destDir) {
+        public void CopyDirectory(string sourceDir, string destDir) {
             Directory.CreateDirectory(destDir);
             foreach (string file in Directory.GetFiles(sourceDir)) {
                 string destFile = Path.Combine(destDir, Path.GetFileName(file));
@@ -97,10 +110,10 @@ namespace UFO_50_MOD_INSTALLER
                 return;
 
             string modNameListPath = Path.Combine(myModsPath, "UFO 50 Modding Framework", "code", "gml_Object_oModding_Other_10.gml");
-
             File.WriteAllText(modNameListPath, "global.mod_list = ds_list_create();\n");
 
-            foreach (string modName in enabledMods) {
+            foreach (string modPath in enabledMods) {
+                string modName = Path.GetFileName(modPath);
                 if (modName == "UFO 50 Modding Framework")
                     continue;
                 using (var stream = new FileStream(modNameListPath, FileMode.Append, FileAccess.Write))
@@ -113,10 +126,11 @@ namespace UFO_50_MOD_INSTALLER
         public bool checkVanillaWin(string vanillaPath) {
             return File.Exists(vanillaPath);
         }
-        public bool checkVanillaHash(string vanillaPath) {
+        public bool checkVanillaHash(string vanillaPath, string iniPath) {
             if (!File.Exists(iniPath)) {
                 MessageBox.Show("ERROR: GMLoader.ini is missing somehow!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Application.Exit();
+                return false;
             }
 
             foreach (string line in File.ReadLines(iniPath)) {
@@ -130,7 +144,6 @@ namespace UFO_50_MOD_INSTALLER
             ulong dataHash = ComputeFileHash3(vanillaPath);
             if (supportedDataHash != dataHash)
                 return false;
-
             return true;
         }
         private static ulong ComputeFileHash3(string filePath) {

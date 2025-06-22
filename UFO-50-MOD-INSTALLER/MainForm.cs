@@ -5,16 +5,19 @@ namespace UFO_50_MOD_INSTALLER
 {
     public partial class MainForm : Form
     {
-        private string? currentPath = "";
+        private string? currentPath = Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
         private string? gamePath = "";
         private string? modsPath = "";
         public string? data_winPath = "";
         public string? exePath = "";
+        public string? localizationPath = "";
+        public string? vanilla_localizationPath = "";
         private Image defaultIcon = null!;
         private ModInstaller modInstaller = new ModInstaller();
         private ConflictChecker conflictChecker = new ConflictChecker();
         public bool conflictsExist = true;
         public string? conflictsText = "";
+        public List<string> enabledMods = new List<string>();
 
         public MainForm() {
             InitializeComponent();
@@ -30,6 +33,7 @@ namespace UFO_50_MOD_INSTALLER
         private void InitializeApplication() {
             CheckGamePath();
             GetVanillaWin();
+            GetLocalization();
             InitializeUI();
             InitializeFileSystemWatcher();
             LoadMods();
@@ -70,16 +74,27 @@ namespace UFO_50_MOD_INSTALLER
         }
         private void GetVanillaWin() {
             string vanillaPath = Path.Combine(currentPath, "vanilla.win");
+            string iniPath = Path.Combine(currentPath, "GMLoader.ini");
 
             if (!modInstaller.checkVanillaWin(vanillaPath)) {
                 File.Copy(data_winPath, vanillaPath);
 
-                if (!modInstaller.checkVanillaHash(data_winPath)) {
+                if (!modInstaller.checkVanillaHash(data_winPath, iniPath)) {
                     MessageBox.Show("Currently installed version of UFO 50 is either outdated or modded. If it is modded, please replace the vanilla.win in this folder with an unmodded data.win file.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
-            else if (!modInstaller.checkVanillaHash(vanillaPath)) {
+            else if (!modInstaller.checkVanillaHash(vanillaPath, iniPath)) {
                 MessageBox.Show("The vanilla.win in this folder is either outdated or modded. If it is modded, please replace the vanilla.win with an unmodded data.win file.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            return;
+        }
+        private void GetLocalization() {
+            localizationPath = Path.Combine(gamePath, "ext");
+            vanilla_localizationPath = Path.Combine(currentPath, "localization", "vanilla", "ext");
+
+            // ext files in game path are assumed to be vanilla for now, no hash checking
+            if (!Directory.Exists(vanilla_localizationPath)) {
+                modInstaller.CopyDirectory(localizationPath, vanilla_localizationPath);
             }
             return;
         }
@@ -96,7 +111,6 @@ namespace UFO_50_MOD_INSTALLER
             var icon = new Icon(stream);
             defaultIcon = icon.ToBitmap();
 
-            currentPath = Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
             modsPath = Path.Combine(currentPath, "my mods");
             if (!Directory.Exists(modsPath)) Directory.CreateDirectory(modsPath);
             InitializeDataGridView();
@@ -121,7 +135,7 @@ namespace UFO_50_MOD_INSTALLER
             dataGridView1.MultiSelect = false;
             dataGridView1.AllowUserToResizeRows = false;
             dataGridView1.Location = new Point(12, 74);
-            dataGridView1.Size = new Size(ClientSize.Width - 24, ClientSize.Height - 74 - 12);
+            dataGridView1.Size = new Size(ClientSize.Width - 24, ClientSize.Height - textBox1.Height - 24 - 74 - 20);
             dataGridView1.ReadOnly = false;
             dataGridView1.RowTemplate.Height = 80;
             dataGridView1.ClearSelection();
@@ -129,11 +143,13 @@ namespace UFO_50_MOD_INSTALLER
             dataGridView1.DefaultCellStyle.SelectionForeColor = dataGridView1.DefaultCellStyle.ForeColor;
 
             DataGridViewCheckBoxColumn checkColumn = new DataGridViewCheckBoxColumn();
-            checkColumn.HeaderText = "Enable";
             checkColumn.Width = 80;
             checkColumn.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             checkColumn.Resizable = DataGridViewTriState.False;
+            checkColumn.HeaderCell = new DataGridViewCheckBoxHeaderCell();
+            checkColumn.HeaderCell.Value = "";
             dataGridView1.Columns.Add(checkColumn);
+            ((DataGridViewCheckBoxHeaderCell)checkColumn.HeaderCell).OnCheckBoxClicked += HeaderCheckBoxClicked;
 
             DataGridViewImageColumn iconColumn = new DataGridViewImageColumn();
             iconColumn.HeaderText = "";
@@ -149,6 +165,17 @@ namespace UFO_50_MOD_INSTALLER
             nameColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             nameColumn.ReadOnly = true;
             dataGridView1.Columns.Add(nameColumn);
+
+            dataGridView1.CellValueChanged += (s, e) => {
+                if (e.ColumnIndex == 0) {
+                    CheckForConflicts();
+                }
+            };
+            dataGridView1.CurrentCellDirtyStateChanged += (s, e) => {
+                if (dataGridView1.IsCurrentCellDirty) {
+                    dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                }
+            };
         }
 
         private Image ResizeImage(Image image, int width, int height) {
@@ -200,14 +227,56 @@ namespace UFO_50_MOD_INSTALLER
             return enabledMods;
         }
         private void CheckForConflicts() {
-            var conflictResult = conflictChecker.CheckConflicts(modsPath);
+            enabledMods = GetEnabledMods();
+            var conflictResult = conflictChecker.CheckConflicts(modsPath, enabledMods);
             conflictsExist = conflictResult.Item1;
             conflictsText = conflictResult.Item2;
-            textBox1.AppendText(conflictsText);
+            textBox1.Text = conflictsText;
         }
         private void installMods() {
-            List<string> enabledMods = GetEnabledMods();
-            modInstaller.installMods(data_winPath, enabledMods, conflictsExist, currentPath);
+            enabledMods = GetEnabledMods();
+            modInstaller.installMods(currentPath, gamePath, enabledMods, conflictsExist);
+        }
+        private void HeaderCheckBoxClicked(bool state) {
+            dataGridView1.EndEdit();
+
+            foreach (DataGridViewRow row in dataGridView1.Rows) {
+                row.Cells[0].Value = state;
+            }
+            CheckForConflicts();
+        }
+    }
+    public class DataGridViewCheckBoxHeaderCell : DataGridViewColumnHeaderCell
+    {
+        public delegate void CheckBoxClickedHandler(bool state);
+        public event CheckBoxClickedHandler OnCheckBoxClicked;
+
+        private bool _checked = true;
+        private Point _location;
+        private Size _size;
+
+        protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates dataGridViewElementState, object value, object formattedValue, string errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts) {
+            base.Paint(graphics, clipBounds, cellBounds, rowIndex, dataGridViewElementState, value, formattedValue, errorText, cellStyle, advancedBorderStyle, paintParts);
+
+            Point p = new Point();
+            p.X = cellBounds.Location.X + (cellBounds.Width / 2) - 7;
+            p.Y = cellBounds.Location.Y + (cellBounds.Height / 2) - 7;
+            _location = p;
+            _size = new Size(14, 14);
+            CheckBoxRenderer.DrawCheckBox(graphics, _location, _checked ? System.Windows.Forms.VisualStyles.CheckBoxState.CheckedNormal : System.Windows.Forms.VisualStyles.CheckBoxState.UncheckedNormal);
+        }
+
+        protected override void OnMouseClick(DataGridViewCellMouseEventArgs e) {
+            Rectangle rect = new Rectangle(_location, _size);
+            Point clickLocation = new Point(e.X, e.Y);
+            if (rect.Contains(clickLocation)) {
+                _checked = !_checked;
+                if (OnCheckBoxClicked != null) {
+                    OnCheckBoxClicked(_checked);
+                }
+                this.DataGridView.InvalidateCell(this);
+            }
+            base.OnMouseClick(e);
         }
     }
 }

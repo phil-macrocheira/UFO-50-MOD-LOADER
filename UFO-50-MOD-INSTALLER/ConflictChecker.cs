@@ -1,16 +1,16 @@
-﻿using UFO_50_MOD_INSTALLER;
-
-namespace UFO_50_MOD_INSTALLER
+﻿namespace UFO_50_MOD_INSTALLER
 {
     internal class ConflictChecker
     {
-        public (bool,string) CheckConflicts(string myModsPath) {
+        public (bool, string) CheckConflicts(string myModsPath, List<string> enabledMods) {
             var conflicts = new List<string>();
-            var mods = Directory.GetDirectories(myModsPath);
+            var mods = enabledMods.ToArray();
             var modFiles = new Dictionary<string, Dictionary<string, string>>();
 
             foreach (var mod in mods) {
-                var files = Directory.GetFiles(mod, "*", SearchOption.AllDirectories);
+                var files = Directory.GetFiles(mod, "*", SearchOption.AllDirectories)
+                     .Where(f => Path.GetRelativePath(mod, f).Contains(Path.DirectorySeparatorChar))
+                     .ToArray();
                 var relativePaths = new Dictionary<string, string>();
                 foreach (var file in files) {
                     var relativePath = Path.GetRelativePath(mod, file);
@@ -37,7 +37,7 @@ namespace UFO_50_MOD_INSTALLER
                                 string fileName = Path.GetFileName(relativePath);
                                 if (fileName.Contains("sIconCart", StringComparison.OrdinalIgnoreCase))
                                     continue;
-                                conflicts.Add($"Mods {mod1} and {mod2} are incompatible due to a file conflict with {fileName}");
+                                conflicts.Add($"{mod1} and {mod2} are incompatible due to a file conflict with {fileName}");
                             }
                         }
                     }
