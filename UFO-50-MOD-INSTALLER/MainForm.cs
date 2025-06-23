@@ -190,6 +190,12 @@ namespace UFO_50_MOD_INSTALLER
 
         private void LoadMods() {
             dataGridView1.Invoke((System.Windows.Forms.MethodInvoker)delegate {
+                var modStates = new Dictionary<string, bool>();
+                foreach (DataGridViewRow row in dataGridView1.Rows) {
+                    string modName = row.Cells[2].Value.ToString();
+                    bool isEnabled = (bool)row.Cells[0].Value;
+                    modStates[modName] = isEnabled;
+                }
                 dataGridView1.Rows.Clear();
                 var modFolders = Directory.GetDirectories(modsPath);
                 foreach (var modFolder in modFolders) {
@@ -203,7 +209,8 @@ namespace UFO_50_MOD_INSTALLER
                         }
                         catch { modIcon = defaultIcon; }
                     }
-                    dataGridView1.Rows.Add(true, modIcon, folderName);
+                    bool isEnabled = modStates.ContainsKey(folderName) ? modStates[folderName] : true;
+                    dataGridView1.Rows.Add(isEnabled, modIcon, folderName);
                 }
                 dataGridView1.ClearSelection();
             });
@@ -241,6 +248,11 @@ namespace UFO_50_MOD_INSTALLER
             dataGridView1.EndEdit();
 
             foreach (DataGridViewRow row in dataGridView1.Rows) {
+                string modName = row.Cells[2].Value.ToString();
+                if (modName == "UFO 50 Modding Framework") {
+                    if (row.Cells[0].Value is bool isChecked && isChecked)
+                        continue;
+                }
                 row.Cells[0].Value = state;
             }
             CheckForConflicts();
