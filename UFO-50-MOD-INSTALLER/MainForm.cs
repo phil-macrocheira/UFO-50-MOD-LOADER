@@ -41,11 +41,18 @@ namespace UFO_50_MOD_INSTALLER
         }
 
         private void CheckGamePath() {
+            string customPathFile = Path.Combine(currentPath, "Custom_Game_Path.txt");
+
             string[] possiblePaths = new string[]
             {
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Steam", "steamapps", "common", "UFO 50"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Steam", "steamapps", "common", "UFO 50")
             };
+
+            if (File.Exists(customPathFile)) {
+                string customPath = File.ReadAllText(customPathFile);
+                possiblePaths = possiblePaths.Append(customPath).ToArray();
+            }
 
             foreach (string path in possiblePaths) {
                 if (IsValidGamePath(path)) {
@@ -60,6 +67,7 @@ namespace UFO_50_MOD_INSTALLER
                     DialogResult result = folderDialog.ShowDialog();
                     if (result == DialogResult.OK) {
                         string selectedPath = folderDialog.SelectedPath;
+                        File.WriteAllText(customPathFile, selectedPath);
                         if (IsValidGamePath(selectedPath)) {
                             gamePath = selectedPath;
                             return;
