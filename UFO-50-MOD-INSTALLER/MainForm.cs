@@ -1,4 +1,6 @@
 using System.Drawing.Drawing2D;
+using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 
 namespace UFO_50_MOD_INSTALLER
@@ -17,6 +19,9 @@ namespace UFO_50_MOD_INSTALLER
         private ConflictChecker conflictChecker = new ConflictChecker();
         public bool conflictsExist = true;
         public string? conflictsText = "";
+        public string? otherText = "";
+        private bool skipModdingSettings = false;
+        private bool skipModdingIcons = false;
         public List<string> enabledMods = new List<string>();
 
         public MainForm() {
@@ -36,6 +41,7 @@ namespace UFO_50_MOD_INSTALLER
             GetLocalization();
             InitializeUI();
             InitializeFileSystemWatcher();
+            CleanupMods();
             LoadMods();
             CheckForConflicts();
         }
@@ -169,10 +175,25 @@ namespace UFO_50_MOD_INSTALLER
 
             DataGridViewTextBoxColumn nameColumn = new DataGridViewTextBoxColumn();
             nameColumn.HeaderText = "Mod";
-            nameColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
-            nameColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            nameColumn.SortMode = DataGridViewColumnSortMode.Automatic;
+            nameColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
             nameColumn.ReadOnly = true;
             dataGridView1.Columns.Add(nameColumn);
+
+            DataGridViewTextBoxColumn creatorColumn = new DataGridViewTextBoxColumn();
+            creatorColumn.HeaderText = "Modder";
+            creatorColumn.SortMode = DataGridViewColumnSortMode.Automatic;
+            creatorColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            creatorColumn.ReadOnly = true;
+            dataGridView1.Columns.Add(creatorColumn);
+
+            DataGridViewTextBoxColumn descColumn = new DataGridViewTextBoxColumn();
+            descColumn.HeaderText = "Description";
+            descColumn.DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            descColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
+            descColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            descColumn.ReadOnly = true;
+            dataGridView1.Columns.Add(descColumn);
 
             dataGridView1.CellValueChanged += (s, e) => {
                 if (e.ColumnIndex == 0) {
@@ -205,39 +226,120 @@ namespace UFO_50_MOD_INSTALLER
                     modStates[modName] = isEnabled;
                 }
                 dataGridView1.Rows.Clear();
+
                 var modFolders = Directory.GetDirectories(modsPath);
-                foreach (var modFolder in modFolders) {
+
+                foreach (string modFolder in modFolders) {
+                    string? modPath = FindMod(modFolder);
+                    if (modPath == null) {
+                        continue;
+                    }
+
                     string? folderName = Path.GetFileName(modFolder);
                     string? iconPath = Directory.GetFiles(modFolder, "*.png").FirstOrDefault();
                     Image? modIcon = defaultIcon;
                     if (!string.IsNullOrEmpty(iconPath)) {
                         try {
-                            modIcon = Image.FromFile(iconPath);
-                            modIcon = ResizeImage(modIcon, 80, 80);
+                            using (FileStream stream = new FileStream(iconPath, FileMode.Open, FileAccess.Read))
+                            using (Image img = Image.FromStream(stream)) {
+                                modIcon = ResizeImage(new Bitmap(img), 80, 80);
+                            }
                         }
                         catch { modIcon = defaultIcon; }
                     }
+
+                    string? txtPath = Directory.GetFiles(modFolder, "*.txt").FirstOrDefault();
+                    string creator = "", desc = "";
+                    if (!string.IsNullOrEmpty(txtPath)) {
+                        try {
+                            var lines = File.ReadLines(txtPath).Take(2).ToArray();
+                            if (lines.Length > 0) creator = lines[0];
+                            if (lines.Length > 1) desc = lines[1];
+                        }
+                        catch { }
+                    }
+
                     bool isEnabled = modStates.ContainsKey(folderName) ? modStates[folderName] : true;
-                    dataGridView1.Rows.Add(isEnabled, modIcon, folderName);
+                    dataGridView1.Rows.Add(isEnabled, modIcon, folderName, creator, desc);
                 }
                 dataGridView1.ClearSelection();
             });
         }
 
+        private void CleanupMods() {
+            fileSystemWatcher1.EnableRaisingEvents = false;
+
+            // Unzip zipped mods
+            var modZips = Directory.GetFiles(modsPath, "*.zip");
+            foreach (string zipPath in modZips) {
+                string extractPath = Path.Combine(modsPath, Path.GetFileNameWithoutExtension(zipPath));
+                if (Directory.Exists(extractPath))
+                    continue;
+                using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
+                    foreach (var entry in archive.Entries) {
+                        string destinationPath = Path.Combine(modsPath, entry.FullName);
+                        if (string.IsNullOrEmpty(entry.Name)) {
+                            Directory.CreateDirectory(destinationPath);
+                        }
+                        else {
+                            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+                            entry.ExtractToFile(destinationPath, overwrite: true);
+                        }
+                    }
+                }
+                File.Delete(zipPath);
+            }
+
+            var modFolders = Directory.GetDirectories(modsPath);
+            foreach (string folder in modFolders) {
+                string modFolder = folder;
+                string? modPath = FindMod(modFolder);
+                if (modPath == null) {
+                    continue;
+                }
+                // Recopy mod folder if there are extra top level folders
+                if (modFolder != modPath) {
+                    if (Path.GetFileName(modFolder).Equals(Path.GetFileName(modPath), StringComparison.OrdinalIgnoreCase)) {
+                        string renamedPath = modFolder + "_renamed";
+                        modInstaller.CopyDirectory(modFolder, renamedPath);
+                        Directory.Delete(modFolder, recursive: true);
+                        modFolder = renamedPath;
+                    }
+
+                    string newModPath = Path.Combine(modsPath, Path.GetFileName(modPath));
+                    modInstaller.CopyDirectory(modPath, newModPath);
+                    Directory.Delete(modFolder, recursive: true);
+                }
+            }
+
+            fileSystemWatcher1.EnableRaisingEvents = true;
+        }
+        private string? FindMod(string root) {
+            var validModFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "code", "textures", "config", "ext", "audio" };
+            foreach (var subDir in Directory.GetDirectories(root, "*", SearchOption.AllDirectories)) {
+                if (validModFolders.Contains(Path.GetFileName(subDir))) {
+                    return Path.GetDirectoryName(subDir);
+                }
+            }
+            return null;
+        }
         private void ReloadMods() {
             if (InvokeRequired) {
                 Invoke(new Action(LoadMods));
             }
             else {
+                CleanupMods();
                 LoadMods();
             }
         }
         private List<string> GetEnabledMods() {
-            var mods = Directory.GetDirectories(modsPath).ToList();
             var enabledMods = new List<string>();
-            for (int i = 0; i < mods.Count; i++) {
-                if ((bool)dataGridView1.Rows[i].Cells[0].Value)
-                    enabledMods.Add(mods[i]);
+            foreach (DataGridViewRow row in dataGridView1.Rows) {
+                if ((bool)row.Cells[0].Value) {
+                    string modName = row.Cells[2].Value.ToString();
+                    string modPath = Path.Combine(modsPath, modName);
+                    enabledMods.Add(modPath);
+                }
             }
             return enabledMods;
         }
@@ -246,11 +348,14 @@ namespace UFO_50_MOD_INSTALLER
             var conflictResult = conflictChecker.CheckConflicts(modsPath, enabledMods);
             conflictsExist = conflictResult.Item1;
             conflictsText = conflictResult.Item2;
-            textBox1.Text = conflictsText;
+            otherText = conflictResult.Item3;
+            textBox1.Text = otherText + Environment.NewLine + conflictsText;
+            skipModdingSettings = conflictResult.Item4;
+            skipModdingIcons = conflictResult.Item5;
         }
         private void installMods() {
             enabledMods = GetEnabledMods();
-            modInstaller.installMods(currentPath, gamePath, enabledMods, conflictsExist);
+            modInstaller.installMods(currentPath, gamePath, enabledMods, conflictsExist, skipModdingSettings, skipModdingIcons);
         }
         private void HeaderCheckBoxClicked(bool state) {
             dataGridView1.EndEdit();
