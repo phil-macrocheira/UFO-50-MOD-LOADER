@@ -38,7 +38,7 @@ namespace UFO_50_MOD_INSTALLER
         private void InitializeApplication() {
             CheckGamePath();
             GetVanillaWin();
-            GetLocalization();
+            //GetLocalization();
             InitializeUI();
             InitializeFileSystemWatcher();
             CleanupMods();
@@ -112,7 +112,6 @@ namespace UFO_50_MOD_INSTALLER
             }
             return;
         }
-
         private bool IsValidGamePath(string path) {
             data_winPath = Path.Combine(path, "data.win");
             exePath = Path.Combine(path, "ufo50.exe");

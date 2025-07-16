@@ -97,6 +97,13 @@ namespace UFO_50_MOD_INSTALLER
                     string destSubFolder = Path.Combine(modsPath, Path.GetFileName(subFolder));
                     if (folderName == "ext")
                         destSubFolder = localizationPath;
+                    else if (folderName == "audio") {
+                        foreach (string audiogroup in Directory.GetFiles(subFolder)) {
+                            string destFile = Path.Combine(gamePath, Path.GetFileName(audiogroup));
+                            File.Copy(audiogroup, destFile, true);
+                        }
+                        continue;
+                    }
                     else if (folderName == "dll") {
                         foreach (string dll in Directory.GetFiles(subFolder)) {
                             string destFile = Path.Combine(gamePath, Path.GetFileName(dll));
@@ -106,8 +113,7 @@ namespace UFO_50_MOD_INSTALLER
                     }
 
                     List<string> skipList = new List<string>();
-                    if (subFolder == "code" && Path.GetFileName(mod) == "UFO 50 Modding Framework") {
-                        MessageBox.Show(Path.GetFileName(mod) + " " + subFolder, "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (Path.GetFileName(subFolder) == "code" && Path.GetFileName(mod) == "UFO 50 Modding Framework") {
                         if (skipModdingSettings)
                             skipList.AddRange(ModSettingsFiles);
                         if (skipModdingIcons)
