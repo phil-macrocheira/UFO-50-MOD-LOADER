@@ -15,22 +15,7 @@ namespace UFO_50_MOD_INSTALLER
         public string? mods_basePath = "";
         public string? ufo50_data_winPath = "";
         public string? modded_data_winPath = "";
-        private List<string> ModSettingsFiles = new List<string> {
-            "gml_GlobalScript_scrAch.gml",
-            "gml_Object_oLibrary_Create_0.gml",
-            "gml_Object_oModding_Create_0.gml",
-            "gml_Object_oModding_Other_10.gml",
-            "gml_Object_oPauseMenu_Create_0.gml",
-            "gml_Object_oPauseMenu_Draw_0.gml",
-            "gml_Object_oPauseMenu_Other_22.gml",
-            "gml_Object_oPauseMenu_Other_24.gml"
-        };
-        private List<string> ModIconsFiles = new List<string>
-        {
-            "gml_Object_oIcon_Draw_0.gml",
-            "gml_Object_oLibrary_Draw_0.gml"
-        };
-        public void installMods(string currentPath, string gamePath_arg, List<string> enabledMods_arg, bool conflictsExist, bool skipModdingSettings, bool skipModdingIcons) {
+        public void installMods(string currentPath, string gamePath_arg, List<string> enabledMods_arg, bool conflictsExist) {
             enabledMods = enabledMods_arg;
             rootPath = currentPath;
             gamePath = gamePath_arg;
@@ -55,7 +40,7 @@ namespace UFO_50_MOD_INSTALLER
             }
 
             addModNames();
-            generateModsFolder(vanillaPath, skipModdingSettings, skipModdingIcons);
+            generateModsFolder(vanillaPath);
 
             if (runGMLoader()) {
                 File.Copy(modded_data_winPath, ufo50_data_winPath, overwrite: true);
@@ -80,7 +65,7 @@ namespace UFO_50_MOD_INSTALLER
                 return false;
             }
         }
-        private void generateModsFolder(string vanillaPath, bool skipModdingSettings, bool skipModdingIcons) {
+        private void generateModsFolder(string vanillaPath) {
             string localizationPath = Path.Combine(gamePath, "ext");
             string vanilla_localizationPath = Path.Combine(rootPath, "localization", "vanilla", "ext");
             string modded_localizationPath = Path.Combine(rootPath, "modded", "vanilla", "ext");
@@ -97,13 +82,13 @@ namespace UFO_50_MOD_INSTALLER
                     string destSubFolder = Path.Combine(modsPath, Path.GetFileName(subFolder));
                     if (folderName == "ext")
                         destSubFolder = localizationPath;
-                    else if (folderName == "audio") {
+                    /*else if (folderName == "audio") {
                         foreach (string audiogroup in Directory.GetFiles(subFolder)) {
                             string destFile = Path.Combine(gamePath, Path.GetFileName(audiogroup));
                             File.Copy(audiogroup, destFile, true);
                         }
                         continue;
-                    }
+                    }*/
                     else if (folderName == "dll") {
                         foreach (string dll in Directory.GetFiles(subFolder)) {
                             string destFile = Path.Combine(gamePath, Path.GetFileName(dll));
@@ -112,15 +97,7 @@ namespace UFO_50_MOD_INSTALLER
                         continue;
                     }
 
-                    List<string> skipList = new List<string>();
-                    if (Path.GetFileName(subFolder) == "code" && Path.GetFileName(mod) == "UFO 50 Modding Framework") {
-                        if (skipModdingSettings)
-                            skipList.AddRange(ModSettingsFiles);
-                        if (skipModdingIcons)
-                            skipList.AddRange(ModIconsFiles);
-                    }
-
-                    CopyDirectory(subFolder, destSubFolder, skipList);
+                    CopyDirectory(subFolder, destSubFolder);
                 }
             }
         }

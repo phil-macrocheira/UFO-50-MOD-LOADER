@@ -19,9 +19,6 @@ namespace UFO_50_MOD_INSTALLER
         private ConflictChecker conflictChecker = new ConflictChecker();
         public bool conflictsExist = true;
         public string? conflictsText = "";
-        public string? otherText = "";
-        private bool skipModdingSettings = false;
-        private bool skipModdingIcons = false;
         public List<string> enabledMods = new List<string>();
 
         public MainForm() {
@@ -347,14 +344,11 @@ namespace UFO_50_MOD_INSTALLER
             var conflictResult = conflictChecker.CheckConflicts(modsPath, enabledMods);
             conflictsExist = conflictResult.Item1;
             conflictsText = conflictResult.Item2;
-            otherText = conflictResult.Item3;
-            textBox1.Text = otherText + Environment.NewLine + conflictsText;
-            skipModdingSettings = conflictResult.Item4;
-            skipModdingIcons = conflictResult.Item5;
+            textBox1.Text = conflictsText;
         }
         private void installMods() {
             enabledMods = GetEnabledMods();
-            modInstaller.installMods(currentPath, gamePath, enabledMods, conflictsExist, skipModdingSettings, skipModdingIcons);
+            modInstaller.installMods(currentPath, gamePath, enabledMods, conflictsExist);
         }
         private void HeaderCheckBoxClicked(bool state) {
             dataGridView1.EndEdit();
