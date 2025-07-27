@@ -16,22 +16,24 @@ namespace UFO_50_MOD_INSTALLER
         public string? vanilla_localizationPath = "";
         private Image defaultIcon = null!;
         private ModInstaller modInstaller = new ModInstaller();
+        private ModDownloader modDownloader = new ModDownloader();
         private ConflictChecker conflictChecker = new ConflictChecker();
         public bool conflictsExist = true;
         public string? conflictsText = "";
         public List<string> enabledMods = new List<string>();
+        public bool DOWNLOADING_MODS = false;
 
         public MainForm() {
             InitializeComponent();
             Load += (s, e) => InitializeApplication();
             Resize += (s, e) => ResizeControls();
             buttonInstall.Click += (s, e) => installMods();
+            buttonDownload.Click += async (s, e) => await downloadMods();
         }
         private void ResizeControls() {
             dataGridView1.Size = new Size(ClientSize.Width - 24, ClientSize.Height - textBox1.Height - 24 - 74);
             textBox1.Location = new Point(12, ClientSize.Height - textBox1.Height - 12);
         }
-
         private void InitializeApplication() {
             CheckGamePath();
             GetVanillaWin();
@@ -202,7 +204,6 @@ namespace UFO_50_MOD_INSTALLER
                 }
             };
         }
-
         private Image ResizeImage(Image image, int width, int height) {
             Bitmap resized = new Bitmap(width, height);
             using (Graphics g = Graphics.FromImage(resized)) {
@@ -320,6 +321,9 @@ namespace UFO_50_MOD_INSTALLER
             return null;
         }
         private void ReloadMods() {
+            if (DOWNLOADING_MODS)
+                return;
+
             if (InvokeRequired) {
                 Invoke(new Action(LoadMods));
             }
@@ -349,6 +353,43 @@ namespace UFO_50_MOD_INSTALLER
         private void installMods() {
             enabledMods = GetEnabledMods();
             modInstaller.installMods(currentPath, gamePath, enabledMods, conflictsExist);
+        }
+        private async Task downloadMods() {
+            DOWNLOADING_MODS = true;
+            buttonDownload.Enabled = false;
+            buttonInstall.Enabled = false;
+            buttonDownload.Text = "Downloading...";
+            bool skipExistingMods = true;
+            string downloadedModsPath = Path.Combine(currentPath, "Downloaded_Mods.txt");
+            List<string> downloadedMods = new List<string>();
+
+            using (var dialog = new DownloadOptionsDialog()) {
+                if (dialog.ShowDialog() == DialogResult.OK) {
+                    skipExistingMods = (dialog.Result == DownloadOptionsDialog.DownloadOption.SkipExisting);
+                }
+                else {
+                    buttonDownload.Enabled = true;
+                    buttonInstall.Enabled = true;
+                    buttonDownload.Text = "Download Mods";
+                    DOWNLOADING_MODS = false;
+                    return;
+                }
+            }
+            
+            try {
+                await modDownloader.DownloadMods(modsPath, skipExistingMods, downloadedModsPath);
+                MessageBox.Show("Mods Downloaded!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex) {
+                MessageBox.Show($"Mod download failed: {ex.Message}");
+            }
+            finally {
+                buttonDownload.Enabled = true;
+                buttonInstall.Enabled = true;
+                buttonDownload.Text = "Download Mods";
+                DOWNLOADING_MODS = false;
+                ReloadMods();
+            }
         }
         private void HeaderCheckBoxClicked(bool state) {
             dataGridView1.EndEdit();
