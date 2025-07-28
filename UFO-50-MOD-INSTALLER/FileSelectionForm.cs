@@ -7,16 +7,14 @@
         private Button buttonCancel;
         public ModFile SelectedFile { get; private set; }
 
-        public FileSelectionForm(string modName, List<ModFile> files)
-        {
+        public FileSelectionForm(string modName, List<ModFile> files) {
             InitializeComponent();
             this.Text = $"Select a file for '{modName}'";
             listBoxFiles.DataSource = files;
             listBoxFiles.DisplayMember = "FileName";
         }
 
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
             this.Size = new Size(400, 250);
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.StartPosition = FormStartPosition.CenterParent;
@@ -24,7 +22,7 @@
             this.ForeColor = Color.White;
 
             listBoxFiles = new ListBox { Dock = DockStyle.Fill, BackColor = Color.FromArgb(63, 63, 70), ForeColor = Color.White, BorderStyle = BorderStyle.None };
-            
+
             var buttonPanel = new Panel { Dock = DockStyle.Bottom, Height = 40, Padding = new Padding(5) };
             buttonOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Dock = DockStyle.Right, Width = 80, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(0, 122, 204), ForeColor = Color.White };
             buttonOk.FlatAppearance.BorderSize = 0;
@@ -33,7 +31,7 @@
 
             buttonPanel.Controls.Add(buttonOk);
             buttonPanel.Controls.Add(buttonCancel);
-            
+
             this.Controls.Add(listBoxFiles);
             this.Controls.Add(buttonPanel);
 
@@ -41,8 +39,7 @@
             this.CancelButton = buttonCancel;
 
             buttonOk.Click += (s, e) => {
-                if (listBoxFiles.SelectedItem != null)
-                {
+                if (listBoxFiles.SelectedItem != null) {
                     SelectedFile = (ModFile)listBoxFiles.SelectedItem;
                 }
             };

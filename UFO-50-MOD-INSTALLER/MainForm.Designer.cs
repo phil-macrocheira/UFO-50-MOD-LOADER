@@ -35,6 +35,8 @@ namespace UFO_50_MOD_INSTALLER
             buttonInstall = new Button();
             textBox1 = new TextBox();
             buttonDownload = new Button();
+            buttonLaunch = new Button();
+            buttonSettings = new Button();
             ((System.ComponentModel.ISupportInitialize)fileSystemWatcher1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             SuspendLayout();
@@ -80,8 +82,7 @@ namespace UFO_50_MOD_INSTALLER
             // 
             // buttonDownload
             // 
-            buttonDownload.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            buttonDownload.Location = new Point(1245, 12);
+            buttonDownload.Location = new Point(185, 11);
             buttonDownload.Margin = new Padding(2);
             buttonDownload.Name = "buttonDownload";
             buttonDownload.Size = new Size(182, 47);
@@ -89,28 +90,26 @@ namespace UFO_50_MOD_INSTALLER
             buttonDownload.Text = "Download Mods";
             buttonDownload.UseVisualStyleBackColor = true;
             // 
-            // buttonLaunch 
+            // buttonLaunch
             // 
-            buttonLaunch = new Button();
-            buttonLaunch.Anchor = AnchorStyles.Top | AnchorStyles.Left;
-            buttonLaunch.Location = new Point(165, 12);
+            buttonLaunch.Location = new Point(393, 11);
             buttonLaunch.Margin = new Padding(2);
             buttonLaunch.Name = "buttonLaunch";
-            buttonLaunch.Size = new Size(182, 47);
+            buttonLaunch.Size = new Size(160, 47);
             buttonLaunch.TabIndex = 4;
             buttonLaunch.Text = "Launch Game";
             buttonLaunch.UseVisualStyleBackColor = true;
             // 
             // buttonSettings
             // 
-            buttonSettings = new Button();
-            buttonSettings.Anchor = AnchorStyles.Top | AnchorStyles.Left;
-            buttonSettings.Location = new Point(351, 12);
+            buttonSettings.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            buttonSettings.Location = new Point(1326, 11);
             buttonSettings.Name = "buttonSettings";
             buttonSettings.Size = new Size(100, 47);
             buttonSettings.TabIndex = 6;
             buttonSettings.Text = "Settings";
             buttonSettings.UseVisualStyleBackColor = true;
+            buttonSettings.Click += buttonSettings_Click;
             // 
             // MainForm
             // 

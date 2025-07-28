@@ -2,7 +2,7 @@
 {
     public class AppSettings
     {
-        public bool DarkModeEnabled { get; set; } = false;
+        public bool DarkModeEnabled { get; set; } = true;
         public bool AlwaysSelectFile { get; set; } = false;
         public bool AllowReinstall { get; set; } = false;
         public string? GamePath { get; set; }

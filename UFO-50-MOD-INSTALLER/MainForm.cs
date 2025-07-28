@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Drawing.Drawing2D;
-using System.IO;
 using System.IO.Compression;
 using System.Reflection;
 
@@ -24,44 +23,37 @@ namespace UFO_50_MOD_INSTALLER
         public List<string> enabledMods = new List<string>();
         public bool DOWNLOADING_MODS = false;
 
-        public MainForm()
-        {
+        public MainForm() {
             InitializeComponent();
             this.Size = SettingsService.Settings.MainWindowSize; // Restore window size
-            
+
             Load += (s, e) => InitializeApplication();
             FormClosing += (s, e) => SaveModStates(); // Save settings on close
             Resize += (s, e) => ResizeControls();
             buttonInstall.Click += (s, e) => installMods();
             buttonDownload.Click += async (s, e) => await downloadMods();
             buttonLaunch.Click += (s, e) => LaunchGame();
-            buttonSettings.Click += (s, e) => OpenSettings(); // New settings button event
+            buttonSettings.Click += (s, e) => OpenSettings();
         }
-        private void SaveModStates()
-        {
+        private void SaveModStates() {
             SettingsService.Settings.MainWindowSize = this.Size;
             SettingsService.Settings.EnabledMods.Clear();
-            foreach (DataGridViewRow row in dataGridView1.Rows)
-            {
-                if ((bool)row.Cells[0].Value)
-                {
+            foreach (DataGridViewRow row in dataGridView1.Rows) {
+                if ((bool)row.Cells[0].Value) {
                     SettingsService.Settings.EnabledMods.Add(row.Cells[2].Value.ToString());
                 }
             }
             SettingsService.Save();
         }
 
-        private void OpenSettings()
-        {
-            using (var settingsForm = new SettingsForm())
-            {
+        private void OpenSettings() {
+            using (var settingsForm = new SettingsForm()) {
                 // Apply theme to the settings form as well
                 bool isDarkMode = SettingsService.Settings.DarkModeEnabled;
                 settingsForm.BackColor = isDarkMode ? Color.FromArgb(45, 45, 48) : SystemColors.Control;
                 settingsForm.ForeColor = isDarkMode ? Color.White : SystemColors.ControlText;
 
-                if (settingsForm.ShowDialog() == DialogResult.OK)
-                {
+                if (settingsForm.ShowDialog() == DialogResult.OK) {
                     settingsForm.SaveSettings();
                     ApplyTheme();
                 }
@@ -80,17 +72,11 @@ namespace UFO_50_MOD_INSTALLER
             CleanupMods();
             LoadMods();
             CheckForConflicts();
-            if (SettingsService.Settings.IsFirstRun)
-            {
-                SettingsService.Settings.IsFirstRun = false;
-            }
         }
 
-        private void CheckGamePath()
-        {
+        private void CheckGamePath() {
             // Use the centralized settings service to get the game path
-            if (!string.IsNullOrEmpty(SettingsService.Settings.GamePath) && IsValidGamePath(SettingsService.Settings.GamePath))
-            {
+            if (!string.IsNullOrEmpty(SettingsService.Settings.GamePath) && IsValidGamePath(SettingsService.Settings.GamePath)) {
                 gamePath = SettingsService.Settings.GamePath;
                 return;
             }
@@ -102,10 +88,8 @@ namespace UFO_50_MOD_INSTALLER
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Steam", "steamapps", "common", "UFO 50")
             };
 
-            foreach (string path in possiblePaths)
-            {
-                if (IsValidGamePath(path))
-                {
+            foreach (string path in possiblePaths) {
+                if (IsValidGamePath(path)) {
                     gamePath = path;
                     SettingsService.Settings.GamePath = gamePath; // Save the found path
                     SettingsService.Save();
@@ -114,23 +98,18 @@ namespace UFO_50_MOD_INSTALLER
             }
 
             // If still not found, prompt the user
-            while (true)
-            {
-                using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
-                {
+            while (true) {
+                using (FolderBrowserDialog folderDialog = new FolderBrowserDialog()) {
                     MessageBox.Show("UFO 50 install folder not found. Please select the game's installation folder.");
-                    if (folderDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        if (IsValidGamePath(folderDialog.SelectedPath))
-                        {
+                    if (folderDialog.ShowDialog() == DialogResult.OK) {
+                        if (IsValidGamePath(folderDialog.SelectedPath)) {
                             gamePath = folderDialog.SelectedPath;
                             SettingsService.Settings.GamePath = gamePath; // Save the user's selected path
                             SettingsService.Save();
                             return;
                         }
                     }
-                    else
-                    {
+                    else {
                         Application.Exit();
                         return;
                     }
@@ -168,21 +147,18 @@ namespace UFO_50_MOD_INSTALLER
             exePath = Path.Combine(path, "ufo50.exe");
             return File.Exists(data_winPath) && File.Exists(exePath);
         }
-        
-        private void ApplyTheme()
-        {
+
+        private void ApplyTheme() {
             bool isDarkMode = SettingsService.Settings.DarkModeEnabled;
             Color formBgColor, controlBgColor, textColor, borderColor;
 
-            if (isDarkMode)
-            {
+            if (isDarkMode) {
                 formBgColor = Color.FromArgb(45, 45, 48);
                 controlBgColor = Color.FromArgb(63, 63, 70);
                 textColor = Color.FromArgb(241, 241, 241);
                 borderColor = Color.FromArgb(85, 85, 85);
             }
-            else
-            {
+            else {
                 formBgColor = SystemColors.Control;
                 controlBgColor = SystemColors.Window;
                 textColor = SystemColors.ControlText;
@@ -190,11 +166,10 @@ namespace UFO_50_MOD_INSTALLER
             }
 
             this.BackColor = formBgColor;
-            
+
             // Apply theme to all buttons, including the Settings button
             var buttons = new[] { buttonInstall, buttonDownload, buttonLaunch, buttonSettings };
-            foreach (var btn in buttons)
-            {
+            foreach (var btn in buttons) {
                 btn.FlatStyle = FlatStyle.Flat;
                 btn.BackColor = controlBgColor;
                 btn.ForeColor = textColor;
@@ -204,7 +179,7 @@ namespace UFO_50_MOD_INSTALLER
             textBox1.BackColor = controlBgColor;
             textBox1.ForeColor = textColor;
             textBox1.BorderStyle = BorderStyle.FixedSingle;
-            
+
             dataGridView1.BackgroundColor = controlBgColor;
             dataGridView1.GridColor = borderColor;
             dataGridView1.DefaultCellStyle.BackColor = formBgColor;
@@ -221,7 +196,7 @@ namespace UFO_50_MOD_INSTALLER
             dataGridView1.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
             this.Refresh();
         }
-        
+
         private void InitializeUI() {
             var assembly = Assembly.GetExecutingAssembly();
             using Stream stream = assembly.GetManifestResourceStream("UFO_50_MOD_INSTALLER.wrench.ico");
@@ -231,13 +206,11 @@ namespace UFO_50_MOD_INSTALLER
             modsPath = Path.Combine(currentPath, "my mods");
             if (!Directory.Exists(modsPath)) Directory.CreateDirectory(modsPath);
             InitializeDataGridView();
-            ApplyTheme(); 
+            ApplyTheme();
         }
-        
-        private void LaunchGame()
-        {
-            try
-            {
+
+        private void LaunchGame() {
+            try {
                 // The Steam AppID for UFO 50 is 1147860
                 // Using "steam://run/" is the official way to launch games via Steam protocol.
                 ProcessStartInfo psi = new ProcessStartInfo
@@ -247,12 +220,11 @@ namespace UFO_50_MOD_INSTALLER
                 };
                 Process.Start(psi);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 MessageBox.Show($"Failed to launch game via Steam: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         private void InitializeFileSystemWatcher() {
             fileSystemWatcher1.Path = modsPath;
             fileSystemWatcher1.IncludeSubdirectories = true;
@@ -278,6 +250,7 @@ namespace UFO_50_MOD_INSTALLER
             dataGridView1.ClearSelection();
             dataGridView1.DefaultCellStyle.SelectionBackColor = dataGridView1.DefaultCellStyle.BackColor;
             dataGridView1.DefaultCellStyle.SelectionForeColor = dataGridView1.DefaultCellStyle.ForeColor;
+            dataGridView1.SelectionChanged += (s, e) => dataGridView1.ClearSelection();
 
             DataGridViewCheckBoxColumn checkColumn = new DataGridViewCheckBoxColumn();
             checkColumn.Width = 80;
@@ -351,21 +324,17 @@ namespace UFO_50_MOD_INSTALLER
 
                 var modFolders = Directory.GetDirectories(modsPath);
 
-                foreach (string modFolder in modFolders)
-                {
+                foreach (string modFolder in modFolders) {
                     string? modPath = FindMod(modFolder);
                     if (modPath == null) continue;
 
                     string? folderName = Path.GetFileName(modFolder);
                     string? iconPath = Directory.GetFiles(modFolder, "*.png").FirstOrDefault();
                     Image? modIcon = defaultIcon;
-                    if (!string.IsNullOrEmpty(iconPath))
-                    {
-                        try
-                        {
+                    if (!string.IsNullOrEmpty(iconPath)) {
+                        try {
                             using (FileStream stream = new FileStream(iconPath, FileMode.Open, FileAccess.Read))
-                            using (Image img = Image.FromStream(stream))
-                            {
+                            using (Image img = Image.FromStream(stream)) {
                                 modIcon = ResizeImage(new Bitmap(img), 80, 80);
                             }
                         }
@@ -374,10 +343,8 @@ namespace UFO_50_MOD_INSTALLER
 
                     string? txtPath = Directory.GetFiles(modFolder, "*.txt").FirstOrDefault();
                     string creator = "", desc = "";
-                    if (!string.IsNullOrEmpty(txtPath))
-                    {
-                        try
-                        {
+                    if (!string.IsNullOrEmpty(txtPath)) {
+                        try {
                             var lines = File.ReadLines(txtPath).Take(2).ToArray();
                             if (lines.Length > 0) creator = lines[0];
                             if (lines.Length > 1) desc = lines[1];
@@ -385,17 +352,7 @@ namespace UFO_50_MOD_INSTALLER
                         catch { }
                     }
 
-                    bool isEnabled;
-                    if (SettingsService.Settings.IsFirstRun)
-                    {
-                        // If it's the first time running the app, enable all mods by default.
-                        isEnabled = true;
-                    }
-                    else
-                    {
-                        // On subsequent runs, load the user's saved preferences.
-                        isEnabled = SettingsService.Settings.EnabledMods.Contains(folderName);
-                    }
+                    bool isEnabled = SettingsService.Settings.EnabledMods.Contains(folderName);
                     dataGridView1.Rows.Add(isEnabled, modIcon, folderName, creator, desc);
                 }
                 dataGridView1.ClearSelection();
@@ -409,13 +366,11 @@ namespace UFO_50_MOD_INSTALLER
             var modZips = Directory.GetFiles(modsPath, "*.zip");
             foreach (string zipPath in modZips) {
                 string extractPath = Path.Combine(modsPath, Path.GetFileNameWithoutExtension(zipPath));
-                if (Directory.Exists(extractPath))
-                {
+                if (Directory.Exists(extractPath)) {
                     continue;
                 }
-                
-                try
-                {
+
+                try {
                     using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
                         foreach (var entry in archive.Entries) {
                             string destinationPath = Path.Combine(modsPath, entry.FullName);
@@ -430,8 +385,7 @@ namespace UFO_50_MOD_INSTALLER
                     }
                     File.Delete(zipPath);
                 }
-                catch (InvalidDataException)
-                {
+                catch (InvalidDataException) {
                     Console.WriteLine($"Skipping incomplete or invalid zip file: {Path.GetFileName(zipPath)}");
                 }
             }
@@ -502,45 +456,37 @@ namespace UFO_50_MOD_INSTALLER
             enabledMods = GetEnabledMods();
             modInstaller.installMods(currentPath, gamePath, enabledMods, conflictsExist);
         }
-        private async Task downloadMods()
-        {
-            DOWNLOADING_MODS = true;
-            buttonDownload.Enabled = false;
-            buttonInstall.Enabled = false;
-            buttonDownload.Text = "Downloading...";
-
-            try
-            {
+        private async Task downloadMods() {
+            try {
                 var installedModNames = new List<string>();
-                foreach (DataGridViewRow row in dataGridView1.Rows)
-                {
+                foreach (DataGridViewRow row in dataGridView1.Rows) {
                     installedModNames.Add(row.Cells[2].Value.ToString());
                 }
-                
+
                 string localModInfoPath = Path.Combine(currentPath, "local_mod_info.json");
-                
-                using (var selectionForm = new DownloadSelectionForm(installedModNames, localModInfoPath))
-                {
-                    if (selectionForm.ShowDialog() == DialogResult.OK)
-                    {
+
+                using (var selectionForm = new DownloadSelectionForm(installedModNames, localModInfoPath)) {
+                    if (selectionForm.ShowDialog() == DialogResult.OK) {
+                        DOWNLOADING_MODS = true;
+                        buttonDownload.Enabled = false;
+                        buttonInstall.Enabled = false;
+                        buttonDownload.Text = "Downloading...";
+
                         await selectionForm.FinalizeSelection();
                         var filesToDownload = selectionForm.FinalFilesToDownload;
                         var fileToModInfoMap = selectionForm.FileToModInfoMap;
 
-                        if (filesToDownload.Count > 0)
-                        {
+                        if (filesToDownload.Count > 0) {
                             await modDownloader.DownloadMods(modsPath, filesToDownload, localModInfoPath, fileToModInfoMap);
                             MessageBox.Show("Selected mods downloaded successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
                 }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 MessageBox.Show($"Mod download failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            finally
-            {
+            finally {
                 buttonDownload.Enabled = true;
                 buttonInstall.Enabled = true;
                 buttonDownload.Text = "Download Mods";
@@ -561,13 +507,17 @@ namespace UFO_50_MOD_INSTALLER
             }
             CheckForConflicts();
         }
+
+        private void buttonSettings_Click(object sender, EventArgs e) {
+
+        }
     }
     public class DataGridViewCheckBoxHeaderCell : DataGridViewColumnHeaderCell
     {
         public delegate void CheckBoxClickedHandler(bool state);
         public event CheckBoxClickedHandler OnCheckBoxClicked;
 
-        private bool _checked = true;
+        private bool _checked = false;
         private Point _location;
         private Size _size;
 
@@ -575,7 +525,7 @@ namespace UFO_50_MOD_INSTALLER
             base.Paint(graphics, clipBounds, cellBounds, rowIndex, dataGridViewElementState, value, formattedValue, errorText, cellStyle, advancedBorderStyle, paintParts);
 
             Point p = new Point();
-            p.X = cellBounds.Location.X + (cellBounds.Width / 2) - 7;
+            p.X = cellBounds.Location.X + (cellBounds.Width / 2) - 10;
             p.Y = cellBounds.Location.Y + (cellBounds.Height / 2) - 7;
             _location = p;
             _size = new Size(14, 14);
