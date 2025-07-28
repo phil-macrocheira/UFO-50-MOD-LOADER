@@ -10,6 +10,7 @@ namespace UFO_50_MOD_INSTALLER
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
+            SettingsService.Load();
             Application.Run(new MainForm());
         }
     }

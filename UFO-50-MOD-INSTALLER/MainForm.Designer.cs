@@ -89,15 +89,40 @@ namespace UFO_50_MOD_INSTALLER
             buttonDownload.Text = "Download Mods";
             buttonDownload.UseVisualStyleBackColor = true;
             // 
+            // buttonLaunch 
+            // 
+            buttonLaunch = new Button();
+            buttonLaunch.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            buttonLaunch.Location = new Point(165, 12);
+            buttonLaunch.Margin = new Padding(2);
+            buttonLaunch.Name = "buttonLaunch";
+            buttonLaunch.Size = new Size(182, 47);
+            buttonLaunch.TabIndex = 4;
+            buttonLaunch.Text = "Launch Game";
+            buttonLaunch.UseVisualStyleBackColor = true;
+            // 
+            // buttonSettings
+            // 
+            buttonSettings = new Button();
+            buttonSettings.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            buttonSettings.Location = new Point(351, 12);
+            buttonSettings.Name = "buttonSettings";
+            buttonSettings.Size = new Size(100, 47);
+            buttonSettings.TabIndex = 6;
+            buttonSettings.Text = "Settings";
+            buttonSettings.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(12F, 30F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1438, 905);
             Controls.Add(buttonDownload);
+            Controls.Add(buttonLaunch);
             Controls.Add(textBox1);
             Controls.Add(buttonInstall);
             Controls.Add(dataGridView1);
+            Controls.Add(buttonSettings);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Margin = new Padding(2);
             Name = "MainForm";
@@ -115,5 +140,7 @@ namespace UFO_50_MOD_INSTALLER
         private Button buttonInstall;
         private TextBox textBox1;
         private Button buttonDownload;
+        private Button buttonLaunch;
+        private Button buttonSettings;
     }
 }
