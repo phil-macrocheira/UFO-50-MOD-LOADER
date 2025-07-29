@@ -105,11 +105,10 @@ namespace UFO_50_MOD_INSTALLER
             buttonSettings.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             buttonSettings.Location = new Point(1326, 11);
             buttonSettings.Name = "buttonSettings";
-            buttonSettings.Size = new Size(100, 47);
+            buttonSettings.Size = new Size(102, 47);
             buttonSettings.TabIndex = 6;
             buttonSettings.Text = "Settings";
             buttonSettings.UseVisualStyleBackColor = true;
-            buttonSettings.Click += buttonSettings_Click;
             // 
             // MainForm
             // 

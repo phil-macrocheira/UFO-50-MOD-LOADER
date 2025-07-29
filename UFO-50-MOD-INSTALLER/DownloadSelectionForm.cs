@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
+using System.Drawing;
+using System.Net.Http;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace UFO_50_MOD_INSTALLER
@@ -20,68 +21,116 @@ namespace UFO_50_MOD_INSTALLER
         // Properties and Data
         public List<ModFile> FinalFilesToDownload { get; private set; } = new List<ModFile>();
         public Dictionary<string, ModInfo> FileToModInfoMap { get; private set; } = new Dictionary<string, ModInfo>();
-        private List<string> _installedModNames;
+        private Dictionary<string, (string version, long date)> _installedModVersions;
         private List<ModInfo> _allMods = new List<ModInfo>();
-        private Dictionary<string, LocalModInfo> _localMods = new Dictionary<string, LocalModInfo>();
         private static HttpClient _httpClient = new HttpClient();
-        public DownloadSelectionForm(List<string> installedModNames, string localModInfoPath) {
-            _installedModNames = installedModNames;
-            if (File.Exists(localModInfoPath)) {
-                var json = File.ReadAllText(localModInfoPath);
-                _localMods = JsonSerializer.Deserialize<Dictionary<string, LocalModInfo>>(json) ?? new Dictionary<string, LocalModInfo>();
-            }
+
+        // Using the corrected constructor
+        public DownloadSelectionForm(Dictionary<string, (string version, long date)> installedModVersions)
+        {
+            _installedModVersions = installedModVersions;
             InitializeComponent();
             this.Load += async (s, e) => await LoadModsList();
         }
-        private void InitializeComponent() {
+
+        private void InitializeComponent()
+        {
             this.Text = "Select Mods to Download";
             this.Size = new Size(1400, 900);
             this.StartPosition = FormStartPosition.CenterParent;
-            this.BackColor = Color.FromArgb(45, 45, 48);
-            this.ForeColor = Color.White;
+            bool isDarkMode = SettingsService.Settings.DarkModeEnabled;
+            Color formBgColor, controlBgColor, textColor, borderColor, selectionBgColor, subPanelColor, linkColor, activeLinkColor, visitedLinkColor, dimTextColor;
 
+            if (isDarkMode)
+            {
+                formBgColor = Color.FromArgb(45, 45, 48);
+                controlBgColor = Color.FromArgb(63, 63, 70);
+                textColor = Color.White;
+                dimTextColor = Color.Gray;
+                borderColor = Color.FromArgb(85, 85, 85);
+                selectionBgColor = Color.FromArgb(0, 122, 204);
+                subPanelColor = Color.FromArgb(30, 30, 30);
+                linkColor = Color.White;
+                activeLinkColor = Color.LightCyan;
+                visitedLinkColor = Color.Cyan;
+            }
+            else
+            {
+                formBgColor = SystemColors.Control;
+                controlBgColor = SystemColors.Window;
+                textColor = SystemColors.ControlText;
+                dimTextColor = SystemColors.GrayText;
+                borderColor = SystemColors.ControlDark;
+                selectionBgColor = SystemColors.Highlight;
+                subPanelColor = SystemColors.Control;
+                linkColor = Color.Black;
+                activeLinkColor = Color.Red;
+                visitedLinkColor = Color.Purple;
+            }
+
+            this.BackColor = formBgColor;
+            this.ForeColor = textColor;
+            
             splitContainer = new SplitContainer { Dock = DockStyle.Fill, SplitterDistance = 620, IsSplitterFixed = true, BackColor = Color.FromArgb(85, 85, 85) };
-
+            splitContainer.Panel1.BackColor = formBgColor;
+            splitContainer.Panel2.BackColor = formBgColor;
+            
             dataGridViewMods = new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, MultiSelect = false, RowTemplate = { Height = 40 }, AllowUserToResizeRows = false };
             splitContainer.Panel1.Controls.Add(dataGridViewMods);
             dataGridViewMods.SelectionChanged += DataGridViewMods_SelectionChanged;
             dataGridViewMods.CellContentClick += DataGridViewMods_CellContentClick;
-            SetupDataGridViewStyles();
-
+            
             // Select All button
             var checkHeaderCell = new DataGridViewCheckBoxHeaderCellDownload();
             checkHeaderCell.OnCheckBoxClicked += (state) =>
             {
                 dataGridViewMods.EndEdit();
-                foreach (DataGridViewRow row in dataGridViewMods.Rows) {
-                    row.Cells["select"].Value = state;
+                foreach (DataGridViewRow row in dataGridViewMods.Rows)
+                {
+                    // Only change if the checkbox is not read-only
+                    if (!row.Cells["select"].ReadOnly)
+                    {
+                        row.Cells["select"].Value = state;
+                    }
                 }
                 dataGridViewMods.RefreshEdit();
             };
-
+            
+            var linkStyle = new DataGridViewCellStyle { Font = new Font("Segoe UI", 9F, FontStyle.Regular), ForeColor = textColor, SelectionForeColor = textColor };
             var checkColumn = new DataGridViewCheckBoxColumn { HeaderText = "", Width = 60, Name = "select", Resizable = DataGridViewTriState.False, HeaderCell = checkHeaderCell };
-            var nameColumn = new DataGridViewLinkColumn { HeaderText = "Mod", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill, Resizable = DataGridViewTriState.False, SortMode = DataGridViewColumnSortMode.Automatic, Name = "name", ReadOnly = true, TrackVisitedState = false, LinkColor = Color.Cyan, ActiveLinkColor = Color.LightCyan };
+            var nameColumn = new DataGridViewLinkColumn { 
+                HeaderText = "Mod", 
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill, 
+                Resizable = DataGridViewTriState.False, 
+                Name = "name", 
+                ReadOnly = true, 
+                TrackVisitedState = true, // Set to true to see color change
+                LinkColor = linkColor,
+                ActiveLinkColor = activeLinkColor,
+                VisitedLinkColor = visitedLinkColor
+            };
+            var versionColumn = new DataGridViewTextBoxColumn { HeaderText = "Latest Version", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells, Name = "version", ReadOnly = true };
             var creatorColumn = new DataGridViewTextBoxColumn { HeaderText = "Modder", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells, Name = "creator", ReadOnly = true };
             var statusColumn = new DataGridViewTextBoxColumn { HeaderText = "Status", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells, Name = "status", ReadOnly = true };
-            dataGridViewMods.Columns.AddRange(new DataGridViewColumn[] { checkColumn, nameColumn, creatorColumn, statusColumn });
-
-            this.Controls.Add(splitContainer);
+            dataGridViewMods.Columns.AddRange(new DataGridViewColumn[] { checkColumn, nameColumn,versionColumn, creatorColumn, statusColumn });
+            
+            Controls.Add(splitContainer);
             splitContainer.SplitterDistance = this.ClientSize.Width - 450;
             splitContainer.IsSplitterFixed = false;
-            var rightPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10) };
-            pictureBoxPreview = new PictureBox { Dock = DockStyle.Top, Height = 220, SizeMode = PictureBoxSizeMode.Zoom, BackColor = Color.FromArgb(30, 30, 30) };
+            var rightPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10), BackColor = formBgColor};
+            pictureBoxPreview = new PictureBox { Dock = DockStyle.Top, Height = 220, SizeMode = PictureBoxSizeMode.Zoom, BackColor = subPanelColor };
             labelModTitle = new Label { Dock = DockStyle.Top, Padding = new Padding(0, 8, 0, 0), Font = new Font("Segoe UI", 12F, FontStyle.Bold), Height = 40, AutoSize = false, TextAlign = ContentAlignment.BottomLeft };
-            labelModder = new Label { Dock = DockStyle.Top, Font = new Font("Segoe UI", 9F, FontStyle.Italic), ForeColor = Color.Gray, Height = 30 };
+            labelModder = new Label { Dock = DockStyle.Top, Font = new Font("Segoe UI", 9F, FontStyle.Italic), ForeColor = dimTextColor, Height = 30 };
             textBoxDescription = new RichTextBox {
                 Dock = DockStyle.Fill,
                 ReadOnly = true,
-                BackColor = Color.FromArgb(55, 55, 58),
-                ForeColor = Color.White,
+                BackColor = controlBgColor,
+                ForeColor = textColor,
                 BorderStyle = BorderStyle.FixedSingle,
                 Font = new Font("Segoe UI", 9F),
-                Padding = new Padding(8),
                 ScrollBars = RichTextBoxScrollBars.Vertical
             };
+            textBoxDescription.SetInnerMargins(8, 8, 8, 8); // Custom method to add padding
 
             var buttonPanel = new Panel { Dock = DockStyle.Bottom, Height = 50, Padding = new Padding(0, 10, 0, 0) };
             labelMetadata = new Label { Dock = DockStyle.Fill, ForeColor = Color.Gray, TextAlign = ContentAlignment.MiddleLeft };
@@ -90,7 +139,7 @@ namespace UFO_50_MOD_INSTALLER
 
             buttonPanel.Controls.Add(labelMetadata);
             buttonPanel.Controls.Add(buttonDownloadSelected);
-
+            
             rightPanel.Controls.Add(textBoxDescription);
             rightPanel.Controls.Add(labelModder);
             rightPanel.Controls.Add(labelModTitle);
@@ -100,155 +149,174 @@ namespace UFO_50_MOD_INSTALLER
 
             this.Controls.Add(splitContainer);
             this.AcceptButton = buttonDownloadSelected;
+            SetupDataGridViewStyles(formBgColor, controlBgColor, textColor, borderColor, selectionBgColor);
         }
 
-        private async Task LoadModsList() {
-            try {
+        private async Task LoadModsList()
+        {
+            try
+            {
                 this.Text = "Fetching Mod List...";
                 _allMods = await ModDownloader.GetModInfo("23000");
 
                 dataGridViewMods.Rows.Clear();
-                foreach (var mod in _allMods) {
-                    var rowIndex = dataGridViewMods.Rows.Add(true, mod.Name, mod.Creator, "");
-                    dataGridViewMods.Rows[rowIndex].Tag = mod;
-
+                foreach (var mod in _allMods)
+                {
                     string status = "";
-                    bool isInstalled = _installedModNames.Contains(mod.Name, StringComparer.OrdinalIgnoreCase);
-
-                    if (isInstalled) {
-                        status = "Installed";
-                        var checkboxCell = (DataGridViewCheckBoxCell)dataGridViewMods.Rows[rowIndex].Cells["select"];
-                        checkboxCell.Value = false;
-                        checkboxCell.ReadOnly = false; // Always allow re-selection
-                        dataGridViewMods.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.DimGray;
-
-                        if (_localMods.TryGetValue(mod.Id, out var localInfo) && mod.DateUpdated > localInfo.DateUpdated) {
+                    string version = mod.Version ?? "1.0"; // Default to 1.0
+                    
+                    if (_installedModVersions.TryGetValue(mod.Id, out var localVersion))
+                    {
+                        status = $"Installed ({localVersion.version ?? "1.0"})";
+                        if (mod.DateUpdated > localVersion.date || mod.Version != localVersion.version)
+                        {
                             status = "Update Available";
-                            dataGridViewMods.Rows[rowIndex].DefaultCellStyle.BackColor = Color.FromArgb(40, 80, 40);
-                            dataGridViewMods.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.LightGreen;
                         }
                     }
-                    dataGridViewMods.Rows[rowIndex].Cells["status"].Value = status;
+
+                    var rowIndex = dataGridViewMods.Rows.Add(status == "Update Available", mod.Name, version, mod.Creator, status);
+                    dataGridViewMods.Rows[rowIndex].Tag = mod;
+
+                    var checkboxCell = (DataGridViewCheckBoxCell)dataGridViewMods.Rows[rowIndex].Cells["select"];
+                    
+                    if (status.StartsWith("Installed"))
+                    {
+                        dataGridViewMods.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.DimGray;
+                    }
+                    if (status == "Update Available")
+                    {
+                        dataGridViewMods.Rows[rowIndex].DefaultCellStyle.BackColor = Color.FromArgb(40, 80, 40);
+                        dataGridViewMods.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.LightGreen;
+                    }
+
+                    checkboxCell.ReadOnly = status.StartsWith("Installed") && !SettingsService.Settings.AllowReinstall;
                 }
-                this.Text = "Select Mods to Download";
+                this.Text = "Download & Check for Updates";
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 MessageBox.Show($"Failed to fetch mod list from Gamebanana: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 this.DialogResult = DialogResult.Cancel;
                 this.Close();
             }
         }
 
-        // In DownloadSelectionForm.cs
-        private async void DataGridViewMods_SelectionChanged(object sender, EventArgs e) {
-            if (dataGridViewMods.SelectedRows.Count > 0) {
+        private async void DataGridViewMods_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dataGridViewMods.SelectedRows.Count > 0)
+            {
                 var mod = dataGridViewMods.SelectedRows[0].Tag as ModInfo;
-                if (mod != null) {
+                if (mod != null)
+                {
                     labelModTitle.Text = mod.Name;
                     labelModder.Text = $"by {mod.Creator}";
                     var addedDate = FormatUnixTimestamp(mod.DateAdded);
                     var updatedDate = FormatUnixTimestamp(mod.DateUpdated);
-                    if (updatedDate == "N/A")
-                        labelMetadata.Text = $"Last Updated: {addedDate}";
-                    else
-                        labelMetadata.Text = $"Last Updated: {updatedDate}";
+                    labelMetadata.Text = updatedDate == "N/A" ? $"Last Updated: {addedDate}" : $"Last Updated: {updatedDate}";
 
-                    // Show the short summary from the main API call immediately
-                    if (mod.Description == "")
-                        textBoxDescription.Text = "Loading full details...";
-                    else
-                        textBoxDescription.Text = $"{mod.Description}\n\nLoading full details...";
+                    textBoxDescription.Text = string.IsNullOrEmpty(mod.Description) ? "Loading full details..." : $"{mod.Description}\n\nLoading full details...";
 
                     await LoadPreviewImageAsync(mod.ImageUrl);
-
-                    // Fetch the full description asynchronously
                     string fullDescription = await ModDownloader.GetModFullDescription(mod.Id);
 
-                    // Check if the user is still on the same mod before updating the text
-                    if (dataGridViewMods.SelectedRows.Count > 0 && (dataGridViewMods.SelectedRows[0].Tag as ModInfo)?.Id == mod.Id) {
+                    if (dataGridViewMods.SelectedRows.Count > 0 && (dataGridViewMods.SelectedRows[0].Tag as ModInfo)?.Id == mod.Id)
+                    {
                         textBoxDescription.Text = fullDescription;
                     }
                 }
             }
         }
-        private string FormatUnixTimestamp(long unixTimestamp) {
+        
+        private string FormatUnixTimestamp(long unixTimestamp)
+        {
             if (unixTimestamp == 0) return "N/A";
             var dateTime = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp).LocalDateTime;
             return dateTime.ToString("yyyy-MM-dd");
         }
-        private void DataGridViewMods_CellContentClick(object sender, DataGridViewCellEventArgs e) {
+        
+        private void DataGridViewMods_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
             if (e.RowIndex < 0) return;
-            if (e.ColumnIndex == dataGridViewMods.Columns["name"].Index) {
+            if (e.ColumnIndex == dataGridViewMods.Columns["name"].Index)
+            {
                 var mod = dataGridViewMods.Rows[e.RowIndex].Tag as ModInfo;
-                if (mod != null && !string.IsNullOrEmpty(mod.PageUrl)) {
+                if (mod != null && !string.IsNullOrEmpty(mod.PageUrl))
+                {
                     try { Process.Start(new ProcessStartInfo(mod.PageUrl) { UseShellExecute = true }); }
                     catch (Exception ex) { MessageBox.Show($"Could not open link: {ex.Message}"); }
                 }
             }
         }
 
-        private async Task LoadPreviewImageAsync(string imageUrl) {
+        private async Task LoadPreviewImageAsync(string imageUrl)
+        {
             pictureBoxPreview.Image = null;
             if (string.IsNullOrEmpty(imageUrl)) return;
-            try {
+            try
+            {
                 var response = await _httpClient.GetAsync(imageUrl);
                 response.EnsureSuccessStatusCode();
-                using (var stream = await response.Content.ReadAsStreamAsync()) {
+                using (var stream = await response.Content.ReadAsStreamAsync())
+                {
                     pictureBoxPreview.Image = Image.FromStream(stream);
                 }
             }
             catch (Exception) { }
         }
-        public async Task FinalizeSelection() {
-            foreach (DataGridViewRow row in dataGridViewMods.Rows) {
-                if (Convert.ToBoolean(row.Cells["select"].Value)) {
+        
+        public async Task FinalizeSelection()
+        {
+            foreach (DataGridViewRow row in dataGridViewMods.Rows)
+            {
+                if (Convert.ToBoolean(row.Cells["select"].Value))
+                {
                     var mod = row.Tag as ModInfo;
                     if (mod == null) continue;
 
-                    bool isInstalled = _installedModNames.Contains(mod.Name, StringComparer.OrdinalIgnoreCase);
-                    bool hasUpdate = row.Cells["status"].Value.ToString() == "Update Available";
-
-                    // Respect the "AllowReinstall" setting
-                    if (isInstalled && !hasUpdate && SettingsService.Settings.AllowReinstall) {
-                        var result = MessageBox.Show($"The mod '{mod.Name}' is already installed. Do you want to reinstall it?",
-                            "Reinstall Mod?", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                        if (result == DialogResult.No) continue;
+                    bool isInstalled = _installedModVersions.ContainsKey(mod.Id);
+                    if (isInstalled && !SettingsService.Settings.AllowReinstall && row.Cells["status"].Value.ToString() != "Update Available")
+                    {
+                        continue;
                     }
 
                     List<ModFile> availableFiles = await ModDownloader.GetModFileInfo(mod.Id);
-                    if (availableFiles.Count > 1 && SettingsService.Settings.AlwaysSelectFile) {
-                        // Show file selection form
-                        using (var fileForm = new FileSelectionForm(mod.Name, availableFiles)) {
-                            if (fileForm.ShowDialog() == DialogResult.OK && fileForm.SelectedFile != null) {
+                    if (availableFiles.Count > 1 && SettingsService.Settings.AlwaysSelectFile)
+                    {
+                        using (var fileForm = new FileSelectionForm(mod.Name, availableFiles))
+                        {
+                            if (fileForm.ShowDialog() == DialogResult.OK && fileForm.SelectedFile != null)
+                            {
                                 FinalFilesToDownload.Add(fileForm.SelectedFile);
                                 FileToModInfoMap[fileForm.SelectedFile.FileName] = mod;
                             }
                         }
                     }
-                    else if (availableFiles.Count > 0) {
-                        // Auto-select the first file
+                    else if (availableFiles.Count > 0)
+                    {
                         FinalFilesToDownload.Add(availableFiles[0]);
                         FileToModInfoMap[availableFiles[0].FileName] = mod;
                     }
                 }
             }
         }
-        private void SetupDataGridViewStyles() {
-            dataGridViewMods.BackgroundColor = Color.FromArgb(63, 63, 70);
+
+        private void SetupDataGridViewStyles(Color formBgColor, Color controlBgColor, Color textColor, Color borderColor, Color selectionBgColor) {
+            dataGridViewMods.BackgroundColor = controlBgColor;
             dataGridViewMods.BorderStyle = BorderStyle.None;
-            dataGridViewMods.GridColor = Color.FromArgb(85, 85, 85);
-            dataGridViewMods.DefaultCellStyle.BackColor = Color.FromArgb(45, 45, 48);
-            dataGridViewMods.DefaultCellStyle.ForeColor = Color.White;
-            dataGridViewMods.DefaultCellStyle.SelectionBackColor = Color.FromArgb(0, 122, 204);
-            dataGridViewMods.DefaultCellStyle.SelectionForeColor = Color.White;
-            dataGridViewMods.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(63, 63, 70);
-            dataGridViewMods.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            dataGridViewMods.ColumnHeadersDefaultCellStyle.SelectionBackColor = Color.FromArgb(63, 63, 70);
+            dataGridViewMods.GridColor = borderColor;
+            dataGridViewMods.DefaultCellStyle.BackColor = formBgColor;
+            dataGridViewMods.DefaultCellStyle.ForeColor = textColor;
+            dataGridViewMods.DefaultCellStyle.SelectionBackColor = selectionBgColor;
+            dataGridViewMods.DefaultCellStyle.SelectionForeColor = textColor;
+            dataGridViewMods.ColumnHeadersDefaultCellStyle.BackColor = controlBgColor;
+            dataGridViewMods.ColumnHeadersDefaultCellStyle.ForeColor = textColor;
+            dataGridViewMods.ColumnHeadersDefaultCellStyle.SelectionBackColor = controlBgColor;
             dataGridViewMods.EnableHeadersVisualStyles = false;
             dataGridViewMods.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dataGridViewMods.ColumnHeadersHeight = 40;
         }
     }
+
     public class DataGridViewCheckBoxHeaderCellDownload : DataGridViewColumnHeaderCell
     {
         public delegate void CheckBoxClickedHandler(bool state);
@@ -262,7 +330,8 @@ namespace UFO_50_MOD_INSTALLER
             int rowIndex, DataGridViewElementStates dataGridViewElementState,
             object value, object formattedValue, string errorText,
             DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle,
-            DataGridViewPaintParts paintParts) {
+            DataGridViewPaintParts paintParts)
+        {
             base.Paint(graphics, clipBounds, cellBounds, rowIndex, dataGridViewElementState,
                 "", "", errorText, cellStyle, advancedBorderStyle,
                 paintParts & ~DataGridViewPaintParts.ContentForeground);
@@ -278,17 +347,45 @@ namespace UFO_50_MOD_INSTALLER
                 : System.Windows.Forms.VisualStyles.CheckBoxState.UncheckedNormal);
         }
 
-        protected override void OnMouseClick(DataGridViewCellMouseEventArgs e) {
+        protected override void OnMouseClick(DataGridViewCellMouseEventArgs e)
+        {
             Rectangle rect = new Rectangle(_location, _size);
             Point clickLocation = new Point(e.X, e.Y);
-            if (rect.Contains(clickLocation)) {
+            if (rect.Contains(clickLocation))
+            {
                 _checked = !_checked;
-                if (OnCheckBoxClicked != null) {
-                    OnCheckBoxClicked(_checked);
-                }
+                OnCheckBoxClicked?.Invoke(_checked);
                 this.DataGridView.InvalidateCell(this);
             }
             base.OnMouseClick(e);
+        }
+    }
+
+    // Helper extension for RichTextBox padding
+    public static class RichTextBoxExtensions
+    {
+        public static void SetInnerMargins(this RichTextBox richTextBox, int left, int top, int right, int bottom)
+        {
+            Rectangle r = richTextBox.ClientRectangle;
+            richTextBox.SelectAll();
+            richTextBox.SelectionIndent = left;
+            richTextBox.SelectionRightIndent = right;
+            richTextBox.DeselectAll();
+        }
+    }
+    
+    public class CustomLinkLabel : LinkLabel
+    {
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            // Do not call the base OnPaint to prevent default underlining
+            // MyBase.OnPaint(e); // This line is commented out
+
+            using (SolidBrush brush = new SolidBrush(this.ForeColor))
+            {
+                // Draw the text without any underline
+                e.Graphics.DrawString(this.Text, this.Font, brush, e.ClipRectangle.X, e.ClipRectangle.Y);
+            }
         }
     }
 }
