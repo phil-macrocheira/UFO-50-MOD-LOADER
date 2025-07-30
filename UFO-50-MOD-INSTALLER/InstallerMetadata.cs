@@ -19,37 +19,30 @@ namespace UFO_50_MOD_INSTALLER
         public string? Version { get; set; }
 
         private static readonly JsonSerializerOptions _options = new() { WriteIndented = true, ReferenceHandler = ReferenceHandler.Preserve };
-        
-        public static InstallerMetadata? Load(string modDirectory)
-        {
+
+        public static InstallerMetadata? Load(string modDirectory) {
             var jsonPath = Directory.GetFiles(modDirectory, "*.json", SearchOption.TopDirectoryOnly).FirstOrDefault();
-            if (jsonPath == null || !File.Exists(jsonPath))
-            {
+            if (jsonPath == null || !File.Exists(jsonPath)) {
                 return null;
             }
-            try
-            {
+            try {
                 var json = File.ReadAllText(jsonPath);
                 return JsonSerializer.Deserialize<InstallerMetadata>(json);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Console.WriteLine($"Error loading JSON for {Path.GetFileName(modDirectory)}: {ex.Message}");
                 return null;
             }
         }
-        
-        public void Save(string modDirectory)
-        {
+
+        public void Save(string modDirectory) {
             // Always save to a consistent filename to avoid creating multiple .json files.
             string path = Path.Combine(modDirectory, "installer_managed.json");
-            try
-            {
+            try {
                 var json = JsonSerializer.Serialize(this, _options);
                 File.WriteAllText(path, json);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Console.WriteLine($"Error saving JSON for {Path.GetFileName(modDirectory)}: {ex.Message}");
             }
         }

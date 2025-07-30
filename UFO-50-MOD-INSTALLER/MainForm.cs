@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Drawing.Drawing2D;
-using System.IO;
 using System.IO.Compression;
 using System.Reflection;
 
@@ -23,7 +22,7 @@ namespace UFO_50_MOD_INSTALLER
         public string? conflictsText = "";
         public List<string> enabledMods = new List<string>();
         public bool DOWNLOADING_MODS = false;
-        
+
         private List<ModInfo>? _allModsCache = null;
 
         private class ModRowTag
@@ -32,12 +31,11 @@ namespace UFO_50_MOD_INSTALLER
             public InstallerMetadata? Metadata { get; set; }
         }
 
-        public MainForm()
-        {
+        public MainForm() {
             InitializeComponent();
             this.Size = SettingsService.Settings.MainWindowSize;
-            
-            Load += async (s, e) => await InitializeApplication();
+
+            Load += async (s, e) => InitializeApplication();
             FormClosing += (s, e) => SaveModStates();
             Resize += (s, e) => ResizeControls();
             buttonInstall.Click += (s, e) => installMods();
@@ -45,31 +43,25 @@ namespace UFO_50_MOD_INSTALLER
             buttonLaunch.Click += (s, e) => LaunchGame();
             buttonSettings.Click += (s, e) => OpenSettings();
         }
-        private void SaveModStates()
-        {
+        private void SaveModStates() {
             SettingsService.Settings.MainWindowSize = this.Size;
             SettingsService.Settings.EnabledMods.Clear();
-            foreach (DataGridViewRow row in dataGridView1.Rows)
-            {
-                if (row.Tag is ModRowTag tag && (bool)row.Cells["Enabled"].Value)
-                {
+            foreach (DataGridViewRow row in dataGridView1.Rows) {
+                if (row.Tag is ModRowTag tag && (bool)row.Cells["Enabled"].Value) {
                     SettingsService.Settings.EnabledMods.Add(Path.GetFileName(tag.FolderPath));
                 }
             }
             SettingsService.Save();
         }
 
-        private void OpenSettings()
-        {
-            using (var settingsForm = new SettingsForm())
-            {
+        private void OpenSettings() {
+            using (var settingsForm = new SettingsForm()) {
                 bool isDarkMode = SettingsService.Settings.DarkModeEnabled;
                 settingsForm.BackColor = isDarkMode ? Color.FromArgb(45, 45, 48) : SystemColors.Control;
                 settingsForm.ForeColor = isDarkMode ? Color.White : SystemColors.ControlText;
-                
 
-                if (settingsForm.ShowDialog() == DialogResult.OK)
-                {
+
+                if (settingsForm.ShowDialog() == DialogResult.OK) {
                     settingsForm.SaveSettings();
                     ApplyTheme();
                 }
@@ -79,20 +71,19 @@ namespace UFO_50_MOD_INSTALLER
             dataGridView1.Size = new Size(ClientSize.Width - 24, ClientSize.Height - textBox1.Height - 24 - 74);
             textBox1.Location = new Point(12, ClientSize.Height - textBox1.Height - 12);
         }
-        private async Task InitializeApplication() {
+        private void InitializeApplication() {
             CheckGamePath();
             GetVanillaWin();
+            //GetLocalization();
             InitializeUI();
             InitializeFileSystemWatcher();
             CleanupMods();
-            await LoadAndLinkMods();
+            LoadMods();
             CheckForConflicts();
         }
 
-        private void CheckGamePath()
-        {
-            if (!string.IsNullOrEmpty(SettingsService.Settings.GamePath) && IsValidGamePath(SettingsService.Settings.GamePath))
-            {
+        private void CheckGamePath() {
+            if (!string.IsNullOrEmpty(SettingsService.Settings.GamePath) && IsValidGamePath(SettingsService.Settings.GamePath)) {
                 gamePath = SettingsService.Settings.GamePath;
                 return;
             }
@@ -103,10 +94,8 @@ namespace UFO_50_MOD_INSTALLER
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Steam", "steamapps", "common", "UFO 50")
             };
 
-            foreach (string path in possiblePaths)
-            {
-                if (IsValidGamePath(path))
-                {
+            foreach (string path in possiblePaths) {
+                if (IsValidGamePath(path)) {
                     gamePath = path;
                     SettingsService.Settings.GamePath = gamePath;
                     SettingsService.Save();
@@ -114,23 +103,18 @@ namespace UFO_50_MOD_INSTALLER
                 }
             }
 
-            while (true)
-            {
-                using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
-                {
+            while (true) {
+                using (FolderBrowserDialog folderDialog = new FolderBrowserDialog()) {
                     MessageBox.Show("UFO 50 install folder not found. Please select the game's installation folder.");
-                    if (folderDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        if (IsValidGamePath(folderDialog.SelectedPath))
-                        {
+                    if (folderDialog.ShowDialog() == DialogResult.OK) {
+                        if (IsValidGamePath(folderDialog.SelectedPath)) {
                             gamePath = folderDialog.SelectedPath;
                             SettingsService.Settings.GamePath = gamePath;
                             SettingsService.Save();
                             return;
                         }
                     }
-                    else
-                    {
+                    else {
                         Application.Exit();
                         return;
                     }
@@ -153,13 +137,23 @@ namespace UFO_50_MOD_INSTALLER
             }
             return;
         }
-        
+        private void GetLocalization() {
+            localizationPath = Path.Combine(gamePath, "ext");
+            vanilla_localizationPath = Path.Combine(currentPath, "localization", "vanilla", "ext");
+
+            // ext files in game path are assumed to be vanilla for now, no hash checking
+            if (!Directory.Exists(vanilla_localizationPath)) {
+                modInstaller.CopyDirectory(localizationPath, vanilla_localizationPath);
+            }
+            return;
+        }
+
         private bool IsValidGamePath(string path) {
             data_winPath = Path.Combine(path, "data.win");
             exePath = Path.Combine(path, "ufo50.exe");
             return File.Exists(data_winPath) && File.Exists(exePath);
         }
-        
+
         private void ApplyTheme() {
             bool isDarkMode = SettingsService.Settings.DarkModeEnabled;
             Color formBgColor, controlBgColor, textColor, borderColor;
@@ -206,9 +200,11 @@ namespace UFO_50_MOD_INSTALLER
             dataGridView1.RowHeadersDefaultCellStyle.SelectionBackColor = controlBgColor;
             dataGridView1.RowHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
             dataGridView1.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+            dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            dataGridView1.ColumnHeadersHeight = 50;
             this.Refresh();
         }
-        
+
         private void InitializeUI() {
             var assembly = Assembly.GetExecutingAssembly();
             using Stream stream = assembly.GetManifestResourceStream("UFO_50_MOD_INSTALLER.wrench.ico");
@@ -218,13 +214,11 @@ namespace UFO_50_MOD_INSTALLER
             modsPath = Path.Combine(currentPath, "my mods");
             if (!Directory.Exists(modsPath)) Directory.CreateDirectory(modsPath);
             InitializeDataGridView();
-            ApplyTheme(); 
+            ApplyTheme();
         }
-        
-        private void LaunchGame()
-        {
-            try
-            {
+
+        private void LaunchGame() {
+            try {
                 ProcessStartInfo psi = new ProcessStartInfo
                 {
                     FileName = "steam://run/1147860",
@@ -232,23 +226,23 @@ namespace UFO_50_MOD_INSTALLER
                 };
                 Process.Start(psi);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 MessageBox.Show($"Failed to launch game via Steam: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         private void InitializeFileSystemWatcher() {
             fileSystemWatcher1.Path = modsPath;
             fileSystemWatcher1.IncludeSubdirectories = true;
             fileSystemWatcher1.EnableRaisingEvents = true;
-            fileSystemWatcher1.Created += async (s, e) => await ReloadMods();
-            fileSystemWatcher1.Deleted += async (s, e) => await ReloadMods();
-            fileSystemWatcher1.Renamed += async (s, e) => await ReloadMods();
-            fileSystemWatcher1.Changed += async (s, e) => await ReloadMods();
+            fileSystemWatcher1.Created += async (s, e) => ReloadMods();
+            fileSystemWatcher1.Deleted += async (s, e) => ReloadMods();
+            fileSystemWatcher1.Renamed += async (s, e) => ReloadMods();
+            fileSystemWatcher1.Changed += async (s, e) => ReloadMods();
         }
 
         private void InitializeDataGridView() {
+            dataGridView1.Rows.Clear();
             dataGridView1.Columns.Clear();
             dataGridView1.AllowUserToAddRows = false;
             dataGridView1.RowHeadersVisible = false;
@@ -263,34 +257,57 @@ namespace UFO_50_MOD_INSTALLER
             dataGridView1.DefaultCellStyle.SelectionBackColor = dataGridView1.DefaultCellStyle.BackColor;
             dataGridView1.DefaultCellStyle.SelectionForeColor = dataGridView1.DefaultCellStyle.ForeColor;
             dataGridView1.SelectionChanged += (s, e) => dataGridView1.ClearSelection();
-            dataGridView1.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
 
-            var checkColumn = new DataGridViewCheckBoxColumn { Width = 60, Resizable = DataGridViewTriState.False, Name = "Enabled", HeaderCell = new DataGridViewCheckBoxHeaderCell { Value = "" } };
-            ((DataGridViewCheckBoxHeaderCell)checkColumn.HeaderCell).OnCheckBoxClicked += HeaderCheckBoxClicked;
+            DataGridViewCheckBoxColumn checkColumn = new DataGridViewCheckBoxColumn();
+            checkColumn.Width = 80;
+            checkColumn.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            checkColumn.Resizable = DataGridViewTriState.False;
+            checkColumn.HeaderCell = new DataGridViewCheckBoxHeaderCell();
+            checkColumn.HeaderCell.Value = "";
             dataGridView1.Columns.Add(checkColumn);
+            ((DataGridViewCheckBoxHeaderCell)checkColumn.HeaderCell).OnCheckBoxClicked += HeaderCheckBoxClicked;
 
-            var iconColumn = new DataGridViewImageColumn { HeaderText = "", Width = 80, ImageLayout = DataGridViewImageCellLayout.Zoom, Resizable = DataGridViewTriState.False, ReadOnly = true, Name = "Icon" };
+            DataGridViewImageColumn iconColumn = new DataGridViewImageColumn();
+            iconColumn.HeaderText = "";
+            iconColumn.Width = 80;
+            iconColumn.ImageLayout = DataGridViewImageCellLayout.Zoom;
+            iconColumn.Resizable = DataGridViewTriState.False;
+            iconColumn.ReadOnly = true;
             dataGridView1.Columns.Add(iconColumn);
 
-            var titleColumn = new DataGridViewTextBoxColumn { HeaderText = "Mod", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells, ReadOnly = true, Name = "Title" };
-            dataGridView1.Columns.Add(titleColumn);
-            
-            var creatorColumn = new DataGridViewTextBoxColumn { HeaderText = "Creator", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells, ReadOnly = true, Name = "Creator" };
+            DataGridViewTextBoxColumn nameColumn = new DataGridViewTextBoxColumn();
+            nameColumn.HeaderText = "Mod";
+            nameColumn.SortMode = DataGridViewColumnSortMode.Automatic;
+            nameColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            nameColumn.ReadOnly = true;
+            dataGridView1.Columns.Add(nameColumn);
+
+            DataGridViewTextBoxColumn creatorColumn = new DataGridViewTextBoxColumn();
+            creatorColumn.HeaderText = "Modder";
+            creatorColumn.SortMode = DataGridViewColumnSortMode.Automatic;
+            creatorColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            creatorColumn.ReadOnly = true;
+
             dataGridView1.Columns.Add(creatorColumn);
-            
-            var statusColumn = new DataGridViewTextBoxColumn { HeaderText = "Status", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells, ReadOnly = true, Name = "Status" };
-            dataGridView1.Columns.Add(statusColumn);
-            
-            var descCellStyle = new DataGridViewCellStyle {
-                WrapMode = DataGridViewTriState.True,
-                Padding = new Padding(5, 10, 5, 10) // Adds padding around the text
-            };
-            
-            var descColumn = new DataGridViewTextBoxColumn { HeaderText = "Description", DefaultCellStyle = descCellStyle, AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill, ReadOnly = true, Name = "Description" };
+
+            DataGridViewTextBoxColumn descColumn = new DataGridViewTextBoxColumn();
+            descColumn.HeaderText = "Description";
+            descColumn.DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            descColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
+            descColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            descColumn.ReadOnly = true;
             dataGridView1.Columns.Add(descColumn);
-            
-            dataGridView1.CellValueChanged += (s, e) => { if (e.ColumnIndex == 0) CheckForConflicts(); };
-            dataGridView1.CurrentCellDirtyStateChanged += (s, e) => { if (dataGridView1.IsCurrentCellDirty) dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit); };
+
+            dataGridView1.CellValueChanged += (s, e) => {
+                if (e.ColumnIndex == 0) {
+                    CheckForConflicts();
+                }
+            };
+            dataGridView1.CurrentCellDirtyStateChanged += (s, e) => {
+                if (dataGridView1.IsCurrentCellDirty) {
+                    dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                }
+            };
         }
         private Image ResizeImage(Image image, int width, int height) {
             Bitmap resized = new Bitmap(width, height);
@@ -301,108 +318,52 @@ namespace UFO_50_MOD_INSTALLER
             }
             return resized;
         }
-
-        private async Task LoadAndLinkMods() {
-            
-            if (modsPath == null) return;
-        
-            dataGridView1.Rows.Clear();
-            var modFolders = Directory.GetDirectories(modsPath);
-        
-            if (_allModsCache == null)
-            {
-                try { _allModsCache = await ModDownloader.GetModInfo("23000"); }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Could not fetch mod list from GameBanana. Update checks will be disabled. Error: {ex.Message}", "Network Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    _allModsCache = new List<ModInfo>();
+        private void LoadMods() {
+            dataGridView1.Invoke((System.Windows.Forms.MethodInvoker)delegate {
+                var modStates = new Dictionary<string, bool>();
+                foreach (DataGridViewRow row in dataGridView1.Rows) {
+                    string modName = row.Cells[2].Value.ToString();
+                    bool isEnabled = (bool)row.Cells[0].Value;
+                    modStates[modName] = isEnabled;
                 }
-            }
-        
-            foreach (string modFolder in modFolders)
-            {
-                string folderName = Path.GetFileName(modFolder);
-                var metadata = InstallerMetadata.Load(modFolder) ?? new InstallerMetadata();
-                bool needsSave = false;
-                
-                string? titleFromTxt = null, creatorFromTxt = null, descriptionFromTxt = null;
-                var txtPath = Directory.GetFiles(modFolder, "*.txt", SearchOption.TopDirectoryOnly).FirstOrDefault();
-                if (txtPath != null)
-                {
-                    var lines = File.ReadAllLines(txtPath);
-                    if (lines.Length >= 3) {
-                        creatorFromTxt = lines[0]; descriptionFromTxt = lines[1]; titleFromTxt = lines[2];
-                    } else if (lines.Length >= 2) {
-                        creatorFromTxt = lines[0]; descriptionFromTxt = lines[1];
-                    }
-                }
-                
-                string title = titleFromTxt ?? metadata.Title ?? folderName;
-                string creator = metadata.Creator ?? creatorFromTxt ?? "Unknown";
-                string description = metadata.Description ?? descriptionFromTxt ?? "No description found.";
+                dataGridView1.Rows.Clear();
 
-                if (metadata.Title != title) { metadata.Title = title; needsSave = true; }
-                if (metadata.Creator != creator) { metadata.Creator = creator; needsSave = true; }
-                if (metadata.Description != description) { metadata.Description = description; needsSave = true; }
-                
-                string status = "";
+                var modFolders = Directory.GetDirectories(modsPath);
 
-                if (folderName.Equals("UFO 50 Modding Framework", StringComparison.OrdinalIgnoreCase))
-                {
-                    status = "Framework";
-                }
-                else if (metadata.GameBananaId == 0)
-                {
-                    status = "Linking...";
-                    var bestMatch = ModDownloader.FindBestModMatch(_allModsCache, title, creator);
-                    
-                    if (bestMatch == null && creator != "Unknown")
-                    {
-                        var modsByAuthor = _allModsCache.Where(m => m.Creator.Equals(creator, StringComparison.OrdinalIgnoreCase)).ToList();
-                        bestMatch = ModDownloader.FindBestModMatch(modsByAuthor, title, creator);
-                    }
+                foreach (string modFolder in modFolders) {
+                    string? modPath = FindMod(modFolder);
+                    if (modPath == null) continue;
 
-                    if (bestMatch != null && long.TryParse(bestMatch.Id, out long gameBananaId))
-                    {
-                        metadata.GameBananaId = gameBananaId;
-                        metadata.LatestVersionDate = bestMatch.DateUpdated;
-                        metadata.Version = bestMatch.Version; // Save version on link
-                        status = "Installed"; 
-                        needsSave = true;
-                    } else { status = "Unlinked"; }
-                }
-                else
-                {
-                    status = "Installed";
-                    var remoteMod = _allModsCache.FirstOrDefault(m => m.Id == metadata.GameBananaId.ToString());
-                    if (remoteMod != null)
-                    {
-                        // Update check using both date and version string
-                        if (remoteMod.DateUpdated > metadata.LatestVersionDate || remoteMod.Version != metadata.Version)
-                        {
-                            status = "Update Available";
+                    string? folderName = Path.GetFileName(modFolder);
+                    string? iconPath = Directory.GetFiles(modFolder, "*.png").FirstOrDefault();
+                    Image? modIcon = defaultIcon;
+                    if (!string.IsNullOrEmpty(iconPath)) {
+                        try {
+                            using (FileStream stream = new FileStream(iconPath, FileMode.Open, FileAccess.Read))
+                            using (Image img = Image.FromStream(stream)) {
+                                modIcon = ResizeImage(new Bitmap(img), 80, 80);
+                            }
                         }
+                        catch { modIcon = defaultIcon; }
                     }
-                }
-                
-                if (needsSave) metadata.Save(modFolder);
 
-                Image modIcon = defaultIcon;
-                string? iconPath = Directory.GetFiles(modFolder, "*.png", SearchOption.TopDirectoryOnly).FirstOrDefault();
-                if (!string.IsNullOrEmpty(iconPath))
-                {
-                    try { using (var bmpTemp = new Bitmap(iconPath)) { modIcon = new Bitmap(bmpTemp); } }
-                    catch { /* Use default icon on failure */ }
+                    string? txtPath = Directory.GetFiles(modFolder, "*.txt").FirstOrDefault();
+                    string creator = "", desc = "";
+                    if (!string.IsNullOrEmpty(txtPath)) {
+                        try {
+                            var lines = File.ReadLines(txtPath).Take(2).ToArray();
+                            if (lines.Length > 0) creator = lines[0];
+                            if (lines.Length > 1) desc = lines[1];
+                        }
+                        catch { }
+                    }
+
+                    bool isEnabled = SettingsService.Settings.EnabledMods.Contains(folderName);
+                    dataGridView1.Rows.Add(isEnabled, modIcon, folderName, creator, desc);
                 }
-                
-                bool isEnabled = SettingsService.Settings.EnabledMods.Contains(folderName);
-                
-                var rowIndex = dataGridView1.Rows.Add(isEnabled, modIcon, title, creator, status, description);
-                dataGridView1.Rows[rowIndex].Tag = new ModRowTag { FolderPath = modFolder, Metadata = metadata };
-            }
+                dataGridView1.ClearSelection();
+            });
         }
-
-
         private void CleanupMods() {
             fileSystemWatcher1.EnableRaisingEvents = false;
             if (string.IsNullOrEmpty(modsPath)) return;
@@ -411,17 +372,24 @@ namespace UFO_50_MOD_INSTALLER
             foreach (string zipPath in modZips) {
                 string extractPath = Path.Combine(modsPath, Path.GetFileNameWithoutExtension(zipPath));
                 if (Directory.Exists(extractPath))
-                {
                     continue;
-                }
-                
-                try
-                {
-                    ZipFile.ExtractToDirectory(zipPath, extractPath, true);
+
+                try {
+                    using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
+                        foreach (var entry in archive.Entries) {
+                            string destinationPath = Path.Combine(modsPath, entry.FullName);
+                            if (string.IsNullOrEmpty(entry.Name)) {
+                                Directory.CreateDirectory(destinationPath);
+                            }
+                            else {
+                                Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+                                entry.ExtractToFile(destinationPath, overwrite: true);
+                            }
+                        }
+                    }
                     File.Delete(zipPath);
                 }
-                catch (InvalidDataException)
-                {
+                catch (InvalidDataException) {
                     Console.WriteLine($"Skipping incomplete or invalid zip file: {Path.GetFileName(zipPath)}");
                 }
             }
@@ -456,34 +424,30 @@ namespace UFO_50_MOD_INSTALLER
                     return Path.GetDirectoryName(subDir);
                 }
             }
-            var rootFiles = Directory.GetFiles(root).Where(f => !f.ToLower().EndsWith("info.txt") && !f.ToLower().EndsWith(".png") && !f.ToLower().EndsWith(".json"));
-            if(rootFiles.Any()) return root;
-            
             return null;
         }
-        private async Task ReloadMods() {
+        private void ReloadMods() {
             if (DOWNLOADING_MODS)
                 return;
 
             if (InvokeRequired) {
-                await Invoke(new Func<Task>(async () => {
-                    CleanupMods();
-                    await LoadAndLinkMods();
-                }));
+                Invoke(new Action(LoadMods));
             }
             else {
                 CleanupMods();
-                await LoadAndLinkMods();
+                LoadMods();
             }
         }
         private List<string> GetEnabledMods() {
-            var enabledModPaths = new List<string>();
+            var enabledMods = new List<string>();
             foreach (DataGridViewRow row in dataGridView1.Rows) {
-                if (row.Tag is ModRowTag tag && (bool)row.Cells["Enabled"].Value) {
-                    enabledModPaths.Add(tag.FolderPath);
+                if ((bool)row.Cells[0].Value) {
+                    string modName = row.Cells[2].Value.ToString();
+                    string modPath = Path.Combine(modsPath, modName);
+                    enabledMods.Add(modPath);
                 }
             }
-            return enabledModPaths;
+            return enabledMods;
         }
         private void CheckForConflicts() {
             enabledMods = GetEnabledMods();
@@ -496,46 +460,35 @@ namespace UFO_50_MOD_INSTALLER
             enabledMods = GetEnabledMods();
             modInstaller.installMods(currentPath, gamePath, enabledMods, conflictsExist);
         }
-        private async Task downloadMods()
-        {
+        private async Task downloadMods() {
             DOWNLOADING_MODS = true;
             buttonDownload.Enabled = false;
             buttonInstall.Enabled = false;
             buttonDownload.Text = "Downloading...";
 
-            try
-            {
+            try {
                 var installedModVersions = new Dictionary<string, (string version, long date)>();
-                foreach (DataGridViewRow row in dataGridView1.Rows)
-                {
-                   if (row.Tag is ModRowTag { Metadata: not null } tag && tag.Metadata.GameBananaId > 0)
-                   {
-                       installedModVersions[tag.Metadata.GameBananaId.ToString()] = (tag.Metadata.Version ?? "N/A", tag.Metadata.LatestVersionDate);
-                   }
+                foreach (DataGridViewRow row in dataGridView1.Rows) {
+                    if (row.Tag is ModRowTag { Metadata: not null } tag && tag.Metadata.GameBananaId > 0) {
+                        installedModVersions[tag.Metadata.GameBananaId.ToString()] = (tag.Metadata.Version ?? "N/A", tag.Metadata.LatestVersionDate);
+                    }
                 }
-                
-                using (var selectionForm = new DownloadSelectionForm(installedModVersions))
-                {
-                    if (selectionForm.ShowDialog() == DialogResult.OK)
-                    {
+
+                using (var selectionForm = new DownloadSelectionForm(installedModVersions)) {
+                    if (selectionForm.ShowDialog() == DialogResult.OK) {
                         await selectionForm.FinalizeSelection();
                         var filesToDownload = selectionForm.FinalFilesToDownload;
                         var fileToModInfoMap = selectionForm.FileToModInfoMap;
 
-                        if (filesToDownload.Count > 0)
-                        {
+                        if (filesToDownload.Count > 0) {
                             await modDownloader.DownloadMods(modsPath, filesToDownload, null, fileToModInfoMap);
-                            foreach (var modInfo in fileToModInfoMap.Values)
-                            {
+                            foreach (var modInfo in fileToModInfoMap.Values) {
                                 // Find the corresponding row in our main grid to get the folder path
-                                foreach (DataGridViewRow row in dataGridView1.Rows)
-                                {
-                                    if (row.Tag is ModRowTag tag && tag.Metadata?.GameBananaId.ToString() == modInfo.Id)
-                                    {
+                                foreach (DataGridViewRow row in dataGridView1.Rows) {
+                                    if (row.Tag is ModRowTag tag && tag.Metadata?.GameBananaId.ToString() == modInfo.Id) {
                                         // Load the existing metadata, update it, and save.
                                         var metadata = InstallerMetadata.Load(tag.FolderPath);
-                                        if (metadata != null)
-                                        {
+                                        if (metadata != null) {
                                             metadata.LatestVersionDate = modInfo.DateUpdated;
                                             metadata.Version = modInfo.Version;
                                             metadata.Save(tag.FolderPath);
@@ -549,28 +502,27 @@ namespace UFO_50_MOD_INSTALLER
                     }
                 }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 MessageBox.Show($"Mod download failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            finally
-            {
+            finally {
                 buttonDownload.Enabled = true;
                 buttonInstall.Enabled = true;
                 buttonDownload.Text = "Download Mods";
                 DOWNLOADING_MODS = false;
-                await ReloadMods();
+                ReloadMods();
             }
         }
         private void HeaderCheckBoxClicked(bool state) {
             dataGridView1.EndEdit();
 
             foreach (DataGridViewRow row in dataGridView1.Rows) {
-                if (row.Cells["Title"].Value.ToString() == "UFO 50 Modding Framework") {
-                    if (row.Cells["Enabled"].Value is bool isChecked && isChecked)
+                string modName = row.Cells[2].Value.ToString();
+                if (modName == "UFO 50 Modding Framework") {
+                    if (row.Cells[0].Value is bool isChecked && isChecked)
                         continue;
                 }
-                row.Cells["Enabled"].Value = state;
+                row.Cells[0].Value = state;
             }
             CheckForConflicts();
         }
@@ -588,7 +540,7 @@ namespace UFO_50_MOD_INSTALLER
             base.Paint(graphics, clipBounds, cellBounds, rowIndex, dataGridViewElementState, value, formattedValue, errorText, cellStyle, advancedBorderStyle, paintParts);
 
             Point p = new Point();
-            p.X = cellBounds.Location.X + (cellBounds.Width / 2) - 7;
+            p.X = cellBounds.Location.X + (cellBounds.Width / 2) - 10;
             p.Y = cellBounds.Location.Y + (cellBounds.Height / 2) - 7;
             _location = p;
             _size = new Size(14, 14);
