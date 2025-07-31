@@ -40,7 +40,7 @@ namespace UFO_50_MOD_INSTALLER
             string path = Path.Combine(modDirectory, "installer_managed.json");
             try {
                 var json = JsonSerializer.Serialize(this, _options);
-                File.WriteAllText(path, json);
+                //File.WriteAllText(path, json); // TEMPORARILY DISABLE FOR v1.2.0
             }
             catch (Exception ex) {
                 Console.WriteLine($"Error saving JSON for {Path.GetFileName(modDirectory)}: {ex.Message}");
