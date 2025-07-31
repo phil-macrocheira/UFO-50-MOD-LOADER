@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Windows.Forms;
 
 namespace UFO_50_MOD_INSTALLER
 {
@@ -291,6 +292,10 @@ namespace UFO_50_MOD_INSTALLER
             dataGridViewMods.EnableHeadersVisualStyles = false;
             dataGridViewMods.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dataGridViewMods.ColumnHeadersHeight = 40;
+
+            // TEMPORARILY HIDE UNTIL THEY ARE FULLY IMPLEMENTED
+            dataGridViewMods.Columns["creator"].Visible = false;
+            dataGridViewMods.Columns["status"].Visible = false;
         }
     }
 
@@ -299,7 +304,7 @@ namespace UFO_50_MOD_INSTALLER
         public delegate void CheckBoxClickedHandler(bool state);
         public event CheckBoxClickedHandler OnCheckBoxClicked;
 
-        private bool _checked = true;
+        private bool _checked = false;
         private Point _location;
         private Size _size;
 

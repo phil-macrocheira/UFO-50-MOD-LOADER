@@ -1,14 +1,63 @@
-﻿namespace UFO_50_MOD_INSTALLER
+﻿using System.IO;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+
+namespace UFO_50_MOD_INSTALLER
 {
     internal class ConflictChecker
     {
+        public Dictionary<string, List<(string find, string targetFile)>> YamlDict = new();
+        public List<string> conflicts = new List<string>();
+        public bool hasNormalConflicts = false;
+        public bool hasPatchConflicts = false;
+        public void GetYamlData(string file, string mod) {
+            var deserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
+            var yaml = File.ReadAllText(file);
+            var yaml_data = deserializer.Deserialize<Dictionary<string, List<Dictionary<string, string>>>>(yaml);
+
+            if (!YamlDict.ContainsKey(mod))
+                YamlDict[mod] = new List<(string, string)>();
+
+            foreach (var entry in yaml_data) {
+                var targetFile = entry.Key;
+                foreach (var item in entry.Value) {
+                    if (item.TryGetValue("find", out var findStr)) {
+                        YamlDict[mod].Add((findStr, targetFile));
+                    }
+                }
+            }
+        }
+        public void FindYamlConflicts() {
+            var valueMap = new Dictionary<(string findStr, string targetFile), HashSet<string>>();
+
+            foreach (var kvp in YamlDict) {
+                var mod = kvp.Key;
+                var uniquePairs = new HashSet<(string, string)>(kvp.Value);
+                foreach (var pair in uniquePairs) {
+                    if (!valueMap.TryGetValue(pair, out var mods))
+                        valueMap[pair] = mods = new HashSet<string>();
+                    mods.Add(mod);
+                }
+            }
+
+            foreach (var kvp in valueMap) {
+                if (kvp.Value.Count > 1) {
+                    hasNormalConflicts = true;
+                    string mods = string.Join(" and ", kvp.Value);
+                    string targetFile = kvp.Key.targetFile;
+                    string findStr = kvp.Key.findStr;
+                    conflicts.Add($"{mods} are incompatible due to a code find-and-replace conflict with {targetFile}");
+                }
+            }
+        }
         public (bool, string) CheckConflicts(string myModsPath, List<string> enabledMods) {
-            var conflicts = new List<string>();
+            conflicts.Clear();
+            YamlDict.Clear();
+            hasNormalConflicts = false;
+            hasPatchConflicts = false;
             var mods = enabledMods.ToArray();
             var modFiles = new Dictionary<string, Dictionary<string, string>>();
             var modsWithFileList = new List<string>();
-            bool hasNormalConflicts = false;
-            bool hasPatchConflicts = false;
 
             foreach (var mod in mods) {
                 string modFilename = Path.GetFileName(mod);
@@ -17,6 +66,7 @@
                      .ToArray();
                 var relativePaths = new Dictionary<string, string>();
                 foreach (var file in files) {
+                    var parentDir = Path.GetFileName(Path.GetDirectoryName(file));
                     if (file.EndsWith("files.txt", StringComparison.OrdinalIgnoreCase)) {
                         var lines = File.ReadAllLines(file);
                         foreach (var line in lines) {
@@ -26,6 +76,10 @@
                         }
                         if (!modsWithFileList.Contains(modFilename))
                             modsWithFileList.Add(modFilename);
+                    }
+                    else if ((file.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase) || file.EndsWith(".yml", StringComparison.OrdinalIgnoreCase))
+                        && parentDir.Equals("code_patch", StringComparison.OrdinalIgnoreCase)) {
+                        GetYamlData(file, modFilename);
                     }
                     else {
                         var relativePath = Path.GetRelativePath(mod, file);
@@ -76,6 +130,8 @@
                     }
                 }
             }
+
+            FindYamlConflicts();
 
             if (!hasNormalConflicts) {
                 if (!hasPatchConflicts)

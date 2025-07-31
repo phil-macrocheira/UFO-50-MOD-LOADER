@@ -532,7 +532,7 @@ namespace UFO_50_MOD_INSTALLER
         public delegate void CheckBoxClickedHandler(bool state);
         public event CheckBoxClickedHandler OnCheckBoxClicked;
 
-        private bool _checked = true;
+        private bool _checked = false;
         private Point _location;
         private Size _size;
 
