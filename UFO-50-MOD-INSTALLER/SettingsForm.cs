@@ -25,9 +25,9 @@
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.StartPosition = FormStartPosition.CenterParent;
 
-            checkDarkMode = new CheckBox { Text = "Enable Dark Mode", Location = new Point(20, 20), AutoSize = true };
-            checkSelectFile = new CheckBox { Text = "Prompt to select file for multi-file mods", Location = new Point(20, 50), AutoSize = true };
-            checkAllowReinstall = new CheckBox { Text = "Confirm before reinstalling mods", Location = new Point(20, 80), AutoSize = true };
+            checkDarkMode = new CheckBox { Text = "Dark Mode", Location = new Point(20, 20), AutoSize = true };
+            checkSelectFile = new CheckBox { Text = "Select file when downloading mod", Location = new Point(20, 50), AutoSize = true };
+            checkAllowReinstall = new CheckBox { Text = "Confirm before redownloading mods", Location = new Point(20, 80), AutoSize = true };
 
             // --- NEW CONTROLS INITIALIZATION ---
             labelGamePath = new Label { Text = "UFO 50 Game Path:", Location = new Point(20, 120), AutoSize = true };
