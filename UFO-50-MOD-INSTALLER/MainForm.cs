@@ -24,36 +24,38 @@ namespace UFO_50_MOD_INSTALLER
         public bool DOWNLOADING_MODS = false;
 
         private List<ModInfo>? _allModsCache = null;
-
         private class ModRowTag
         {
             public required string FolderPath { get; set; }
             public InstallerMetadata? Metadata { get; set; }
         }
-
         public MainForm() {
             InitializeComponent();
             this.Size = SettingsService.Settings.MainWindowSize;
+            this.MinimumSize = new Size(700, 550);
 
             Load += async (s, e) => InitializeApplication();
-            FormClosing += (s, e) => SaveModStates();
+            FormClosing += (s, e) => SaveAfterClose();
             Resize += (s, e) => ResizeControls();
             buttonInstall.Click += (s, e) => installMods();
             buttonDownload.Click += async (s, e) => await downloadMods();
             buttonLaunch.Click += (s, e) => LaunchGame();
             buttonSettings.Click += (s, e) => OpenSettings();
         }
-        private void SaveModStates() {
+        private void SaveAfterClose() {
             SettingsService.Settings.MainWindowSize = this.Size;
+            SaveEnabledMods();
+        }
+        private void SaveEnabledMods() {
             SettingsService.Settings.EnabledMods.Clear();
             foreach (DataGridViewRow row in dataGridView1.Rows) {
-                if (row.Tag is ModRowTag tag && (bool)row.Cells["Enabled"].Value) {
+                if (row.Tag is ModRowTag tag && (bool)row.Cells["columnEnabled"].Value) {
                     SettingsService.Settings.EnabledMods.Add(Path.GetFileName(tag.FolderPath));
                 }
             }
+
             SettingsService.Save();
         }
-
         private void OpenSettings() {
             using (var settingsForm = new SettingsForm()) {
                 bool isDarkMode = SettingsService.Settings.DarkModeEnabled;
@@ -81,7 +83,6 @@ namespace UFO_50_MOD_INSTALLER
             LoadMods();
             CheckForConflicts();
         }
-
         private void CheckGamePath() {
             if (!string.IsNullOrEmpty(SettingsService.Settings.GamePath) && IsValidGamePath(SettingsService.Settings.GamePath)) {
                 gamePath = SettingsService.Settings.GamePath;
@@ -147,13 +148,11 @@ namespace UFO_50_MOD_INSTALLER
             }
             return;
         }
-
         private bool IsValidGamePath(string path) {
             data_winPath = Path.Combine(path, "data.win");
             exePath = Path.Combine(path, "ufo50.exe");
             return File.Exists(data_winPath) && File.Exists(exePath);
         }
-
         private void ApplyTheme() {
             bool isDarkMode = SettingsService.Settings.DarkModeEnabled;
             Color formBgColor, controlBgColor, textColor, borderColor;
@@ -204,7 +203,6 @@ namespace UFO_50_MOD_INSTALLER
             dataGridView1.ColumnHeadersHeight = 50;
             this.Refresh();
         }
-
         private void InitializeUI() {
             var assembly = Assembly.GetExecutingAssembly();
             using Stream stream = assembly.GetManifestResourceStream("UFO_50_MOD_INSTALLER.wrench.ico");
@@ -216,7 +214,6 @@ namespace UFO_50_MOD_INSTALLER
             InitializeDataGridView();
             ApplyTheme();
         }
-
         private void LaunchGame() {
             try {
                 ProcessStartInfo psi = new ProcessStartInfo
@@ -230,7 +227,6 @@ namespace UFO_50_MOD_INSTALLER
                 MessageBox.Show($"Failed to launch game via Steam: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
         private void InitializeFileSystemWatcher() {
             fileSystemWatcher1.Path = modsPath;
             fileSystemWatcher1.IncludeSubdirectories = true;
@@ -240,7 +236,6 @@ namespace UFO_50_MOD_INSTALLER
             fileSystemWatcher1.Renamed += async (s, e) => ReloadMods();
             fileSystemWatcher1.Changed += async (s, e) => ReloadMods();
         }
-
         private void InitializeDataGridView() {
             dataGridView1.Rows.Clear();
             dataGridView1.Columns.Clear();
@@ -259,6 +254,7 @@ namespace UFO_50_MOD_INSTALLER
             dataGridView1.SelectionChanged += (s, e) => dataGridView1.ClearSelection();
 
             DataGridViewCheckBoxColumn checkColumn = new DataGridViewCheckBoxColumn();
+            checkColumn.Name = "columnEnabled";
             checkColumn.Width = 80;
             checkColumn.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             checkColumn.Resizable = DataGridViewTriState.False;
@@ -359,7 +355,12 @@ namespace UFO_50_MOD_INSTALLER
                     }
 
                     bool isEnabled = SettingsService.Settings.EnabledMods.Contains(folderName);
-                    dataGridView1.Rows.Add(isEnabled, modIcon, folderName, creator, desc);
+                    int rowIndex = dataGridView1.Rows.Add(isEnabled, modIcon, folderName, creator, desc);
+                    dataGridView1.Rows[rowIndex].Tag = new ModRowTag
+                    {
+                        FolderPath = Path.Combine(modsPath, folderName),
+                        Metadata = InstallerMetadata.Load(Path.Combine(modsPath, folderName)) // if needed
+                    };
                 }
                 dataGridView1.ClearSelection();
             });
@@ -458,6 +459,7 @@ namespace UFO_50_MOD_INSTALLER
         }
         private void installMods() {
             enabledMods = GetEnabledMods();
+            SaveEnabledMods();
             modInstaller.installMods(currentPath, gamePath, enabledMods, conflictsExist);
         }
         private async Task downloadMods() {
@@ -546,7 +548,6 @@ namespace UFO_50_MOD_INSTALLER
             _size = new Size(14, 14);
             CheckBoxRenderer.DrawCheckBox(graphics, _location, _checked ? System.Windows.Forms.VisualStyles.CheckBoxState.CheckedNormal : System.Windows.Forms.VisualStyles.CheckBoxState.UncheckedNormal);
         }
-
         protected override void OnMouseClick(DataGridViewCellMouseEventArgs e) {
             Rectangle rect = new Rectangle(_location, _size);
             Point clickLocation = new Point(e.X, e.Y);

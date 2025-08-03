@@ -82,7 +82,8 @@ namespace UFO_50_MOD_INSTALLER
             // 
             // buttonDownload
             // 
-            buttonDownload.Location = new Point(185, 11);
+            buttonDownload.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            buttonDownload.Location = new Point(1123, 12);
             buttonDownload.Margin = new Padding(2);
             buttonDownload.Name = "buttonDownload";
             buttonDownload.Size = new Size(182, 47);
@@ -92,7 +93,7 @@ namespace UFO_50_MOD_INSTALLER
             // 
             // buttonLaunch
             // 
-            buttonLaunch.Location = new Point(393, 11);
+            buttonLaunch.Location = new Point(180, 12);
             buttonLaunch.Margin = new Padding(2);
             buttonLaunch.Name = "buttonLaunch";
             buttonLaunch.Size = new Size(160, 47);

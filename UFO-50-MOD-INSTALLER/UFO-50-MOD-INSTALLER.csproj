@@ -11,7 +11,7 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationIcon>wrench.ico</ApplicationIcon>
+    <ApplicationIcon>cosmic_cruiser.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

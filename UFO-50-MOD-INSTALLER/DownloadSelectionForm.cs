@@ -154,7 +154,6 @@ namespace UFO_50_MOD_INSTALLER
             try {
                 this.Text = "Fetching Mod List...";
                 _allMods = await ModDownloader.GetModInfo("23000");
-
                 dataGridViewMods.Rows.Clear();
                 foreach (var mod in _allMods) {
                     string status = "";
@@ -162,18 +161,19 @@ namespace UFO_50_MOD_INSTALLER
                     if (string.IsNullOrEmpty(version))
                         version = "1.0";
 
+                    /* Comment out for now
                     if (_installedModVersions.TryGetValue(mod.Id, out var localVersion)) {
                         status = $"Installed ({localVersion.version ?? "1.0"})";
                         if (mod.DateUpdated > localVersion.date || mod.Version != localVersion.version) {
                             status = "Update Available";
                         }
                     }
-
+                    */
                     var rowIndex = dataGridViewMods.Rows.Add(status == "Update Available", mod.Name, version, mod.Creator, status);
                     dataGridViewMods.Rows[rowIndex].Tag = mod;
 
                     var checkboxCell = (DataGridViewCheckBoxCell)dataGridViewMods.Rows[rowIndex].Cells["select"];
-
+                    /* Comment out for now
                     if (status.StartsWith("Installed")) {
                         dataGridViewMods.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.DimGray;
                     }
@@ -181,8 +181,8 @@ namespace UFO_50_MOD_INSTALLER
                         dataGridViewMods.Rows[rowIndex].DefaultCellStyle.BackColor = Color.FromArgb(40, 80, 40);
                         dataGridViewMods.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.LightGreen;
                     }
-
                     checkboxCell.ReadOnly = status.StartsWith("Installed") && !SettingsService.Settings.AllowReinstall;
+                    */
                 }
                 this.Text = "GameBanana Mod Downloader";
 
@@ -293,8 +293,7 @@ namespace UFO_50_MOD_INSTALLER
             dataGridViewMods.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dataGridViewMods.ColumnHeadersHeight = 40;
 
-            // TEMPORARILY HIDE UNTIL THEY ARE FULLY IMPLEMENTED
-            dataGridViewMods.Columns["creator"].Visible = false;
+            // TEMPORARILY HIDE UNTIL FULLY IMPLEMENTED
             dataGridViewMods.Columns["status"].Visible = false;
         }
     }
