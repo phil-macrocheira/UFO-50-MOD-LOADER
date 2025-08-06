@@ -11,20 +11,26 @@ namespace UFO_50_MOD_INSTALLER
         public bool hasNormalConflicts = false;
         public bool hasPatchConflicts = false;
         public void GetYamlData(string file, string mod) {
-            var deserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
-            var yaml = File.ReadAllText(file);
-            var yaml_data = deserializer.Deserialize<Dictionary<string, List<Dictionary<string, string>>>>(yaml);
+            try {
+                var deserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
+                var yaml = File.ReadAllText(file);
+                var yaml_data = deserializer.Deserialize<Dictionary<string, List<Dictionary<string, string>>>>(yaml);
 
-            if (!YamlDict.ContainsKey(mod))
-                YamlDict[mod] = new List<(string, string)>();
+                if (!YamlDict.ContainsKey(mod))
+                    YamlDict[mod] = new List<(string, string)>();
 
-            foreach (var entry in yaml_data) {
-                var targetFile = entry.Key;
-                foreach (var item in entry.Value) {
-                    if (item.TryGetValue("find", out var findStr)) {
-                        YamlDict[mod].Add((findStr, targetFile));
+                foreach (var entry in yaml_data) {
+                    var targetFile = entry.Key;
+                    foreach (var item in entry.Value) {
+                        if (item.TryGetValue("find", out var findStr)) {
+                            YamlDict[mod].Add((findStr, targetFile));
+                        }
                     }
                 }
+            }
+            catch (YamlDotNet.Core.YamlException ex) {
+                string filename = Path.GetFileName(file);
+                MessageBox.Show($"MOD: {mod}\nFILE: {filename}\n\n{ex.Message}","Warning: Invalid code_patch YAML",MessageBoxButtons.OK,MessageBoxIcon.Error);
             }
         }
         public void FindYamlConflicts() {

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace UFO_50_MOD_INSTALLER
@@ -195,6 +196,9 @@ namespace UFO_50_MOD_INSTALLER
                 MessageBox.Show($"Failed to fetch mod list from Gamebanana: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 this.DialogResult = DialogResult.Cancel;
                 this.Close();
+            }
+            finally {
+                dataGridViewMods.Sort(dataGridViewMods.Columns["name"], ListSortDirection.Ascending);
             }
         }
 
