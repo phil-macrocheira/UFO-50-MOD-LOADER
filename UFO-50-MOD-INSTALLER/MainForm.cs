@@ -1,8 +1,9 @@
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.IO.Compression;
 using System.Reflection;
+using SharpCompress.Archives;
+using SharpCompress.Common;
 
 namespace UFO_50_MOD_INSTALLER
 {
@@ -370,22 +371,35 @@ namespace UFO_50_MOD_INSTALLER
             fileSystemWatcher1.EnableRaisingEvents = false;
             if (string.IsNullOrEmpty(modsPath)) return;
 
-            var modZips = Directory.GetFiles(modsPath, "*.zip");
+            var modZips = Directory.GetFiles(modsPath, "*.*")
+                .Where(f => f.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ||
+                            f.EndsWith(".7z", StringComparison.OrdinalIgnoreCase));
             foreach (string zipPath in modZips) {
                 string extractPath = Path.Combine(modsPath, Path.GetFileNameWithoutExtension(zipPath));
                 if (Directory.Exists(extractPath))
                     continue;
 
                 try {
-                    using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
-                        foreach (var entry in archive.Entries) {
-                            string destinationPath = Path.Combine(modsPath, entry.FullName);
-                            if (string.IsNullOrEmpty(entry.Name)) {
-                                Directory.CreateDirectory(destinationPath);
+                    if (zipPath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) {
+                        using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
+                            foreach (var entry in archive.Entries) {
+                                string destinationPath = Path.Combine(modsPath, entry.FullName);
+                                if (string.IsNullOrEmpty(entry.Name)) {
+                                    Directory.CreateDirectory(destinationPath);
+                                }
+                                else {
+                                    Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+                                    entry.ExtractToFile(destinationPath, overwrite: true);
+                                }
                             }
-                            else {
+                        }
+                    }
+                    else {
+                        using (var archive = ArchiveFactory.Open(zipPath)) {
+                            foreach (var entry in archive.Entries.Where(e => !e.IsDirectory)) {
+                                string destinationPath = Path.Combine(modsPath, entry.Key);
                                 Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-                                entry.ExtractToFile(destinationPath, overwrite: true);
+                                entry.WriteToFile(destinationPath, new ExtractionOptions() { Overwrite = true });
                             }
                         }
                     }
