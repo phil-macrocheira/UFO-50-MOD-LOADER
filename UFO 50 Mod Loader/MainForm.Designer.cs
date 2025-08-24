@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace UFO_50_MOD_INSTALLER
+namespace UFO_50_Mod_Loader
 {
     partial class MainForm
     {
@@ -175,7 +175,7 @@ namespace UFO_50_MOD_INSTALLER
             Icon = (Icon)resources.GetObject("$this.Icon");
             Margin = new Padding(2);
             Name = "MainForm";
-            Text = "UFO 50 Mod Installer";
+            Text = "UFO 50 Mod Loader";
             ((System.ComponentModel.ISupportInitialize)fileSystemWatcher1).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
             ResumeLayout(false);

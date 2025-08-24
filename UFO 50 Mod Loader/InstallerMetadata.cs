@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace UFO_50_MOD_INSTALLER
+namespace UFO_50_Mod_Loader
 {
     public class InstallerMetadata
     {

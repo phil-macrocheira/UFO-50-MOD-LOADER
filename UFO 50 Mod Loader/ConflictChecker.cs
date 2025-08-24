@@ -2,7 +2,7 @@
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace UFO_50_MOD_INSTALLER
+namespace UFO_50_Mod_Loader
 {
     internal class ConflictChecker
     {

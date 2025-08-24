@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35931.197 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UFO-50-MOD-INSTALLER", "UFO-50-MOD-INSTALLER\UFO-50-MOD-INSTALLER.csproj", "{4B4D2C58-6188-47FE-85DE-1B59058DB139}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UFO 50 Mod Loader", "UFO 50 Mod Loader\UFO 50 Mod Loader.csproj", "{4B4D2C58-6188-47FE-85DE-1B59058DB139}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

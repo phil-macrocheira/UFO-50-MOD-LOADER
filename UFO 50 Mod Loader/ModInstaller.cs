@@ -1,7 +1,7 @@
 ﻿using Standart.Hash.xxHash;
 using System.Diagnostics;
 
-namespace UFO_50_MOD_INSTALLER
+namespace UFO_50_Mod_Loader
 {
     internal class ModInstaller
     {

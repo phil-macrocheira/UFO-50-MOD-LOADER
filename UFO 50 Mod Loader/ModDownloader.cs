@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Concurrent;
 using System.Text;
 
-namespace UFO_50_MOD_INSTALLER
+namespace UFO_50_Mod_Loader
 {
     public class ModInfo
     {

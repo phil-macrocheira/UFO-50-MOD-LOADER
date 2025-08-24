@@ -7,7 +7,7 @@ using System.Windows.Forms;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 
-namespace UFO_50_MOD_INSTALLER
+namespace UFO_50_Mod_Loader
 {
     public partial class MainForm : Form
     {
@@ -237,7 +237,7 @@ namespace UFO_50_MOD_INSTALLER
         }
         private void InitializeUI() {
             var assembly = Assembly.GetExecutingAssembly();
-            using Stream stream = assembly.GetManifestResourceStream("UFO_50_MOD_INSTALLER.wrench.ico");
+            using Stream stream = assembly.GetManifestResourceStream("UFO_50_Mod_Loader.wrench.ico");
             var icon = new Icon(stream);
             defaultIcon = icon.ToBitmap();
 

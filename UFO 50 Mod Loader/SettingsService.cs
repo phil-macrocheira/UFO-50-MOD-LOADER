@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace UFO_50_MOD_INSTALLER
+namespace UFO_50_Mod_Loader
 {
     public static class SettingsService
     {
