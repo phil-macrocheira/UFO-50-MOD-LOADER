@@ -44,7 +44,7 @@ namespace UFO_50_MOD_INSTALLER
 
             if (runGMLoader()) {
                 File.Copy(modded_data_winPath, ufo50_data_winPath, overwrite: true);
-                MessageBox.Show("Mods Installed!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Mods Installed!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1, (MessageBoxOptions)0x40000);
             }
             else {
                 MessageBox.Show("ERROR: GMLoader did not run successfully. Ask for help!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -57,9 +57,20 @@ namespace UFO_50_MOD_INSTALLER
                 return false;
             }
             try {
-                var process = Process.Start(GMLoaderPath);
-                process.WaitForExit();
-                return process.ExitCode == 0;
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = GMLoaderPath,
+                    UseShellExecute = true,
+                    WindowStyle = ProcessWindowStyle.Normal
+                };
+                using (var process = Process.Start(startInfo)) {
+                    process.WaitForExit();
+                    var mainForm = Application.OpenForms[0];
+                    if (mainForm.WindowState == FormWindowState.Minimized)
+                        mainForm.WindowState = FormWindowState.Normal;
+                    mainForm.Activate();
+                    return process.ExitCode == 0;
+                }
             }
             catch {
                 return false;
@@ -67,7 +78,6 @@ namespace UFO_50_MOD_INSTALLER
         }
         private void generateModsFolder(string vanillaPath) {
             string localizationPath = Path.Combine(gamePath, "ext");
-            string vanilla_localizationPath = Path.Combine(rootPath, "localization", "vanilla", "ext");
             string modded_localizationPath = Path.Combine(rootPath, "modded", "vanilla", "ext");
 
             File.Copy(vanillaPath, modded_data_winPath, overwrite: true);
@@ -75,20 +85,20 @@ namespace UFO_50_MOD_INSTALLER
                 Directory.Delete(modsPath, recursive: true);
             CopyDirectory(mods_basePath, modsPath);
 
-            var modPaths = enabledMods.OrderBy(m => Path.GetFileName(m) != "UFO 50 Modding Framework").ThenBy(m => m); // Ensures we copy the framework first
+            var modPaths = enabledMods.OrderBy(m => Path.GetFileName(m) != "UFO 50 Modding Settings").ThenBy(m => m); // Ensures we copy modding settings first
             foreach (string mod in modPaths) {
                 foreach (string subFolder in Directory.GetDirectories(mod)) {
                     string folderName = Path.GetFileName(subFolder);
                     string destSubFolder = Path.Combine(modsPath, Path.GetFileName(subFolder));
                     if (folderName == "ext")
                         destSubFolder = localizationPath;
-                    /*else if (folderName == "audio") {
+                    else if (folderName == "audio") {
                         foreach (string audiogroup in Directory.GetFiles(subFolder)) {
                             string destFile = Path.Combine(gamePath, Path.GetFileName(audiogroup));
                             File.Copy(audiogroup, destFile, true);
                         }
                         continue;
-                    }*/
+                    }
                     else if (folderName == "dll") {
                         foreach (string dll in Directory.GetFiles(subFolder)) {
                             string destFile = Path.Combine(gamePath, Path.GetFileName(dll));
@@ -101,29 +111,33 @@ namespace UFO_50_MOD_INSTALLER
                 }
             }
         }
-        public void CopyDirectory(string sourceDir, string destDir, List<string> skipList = null) {
+        public void CopyDirectory(string sourceDir, string destDir, bool copySubdirs = true, string? extension = null, List<string> skipList = null) {
             Directory.CreateDirectory(destDir);
             foreach (string file in Directory.GetFiles(sourceDir)) {
+                if (!string.IsNullOrEmpty(extension) && !string.Equals(Path.GetExtension(file), extension, StringComparison.OrdinalIgnoreCase))
+                    continue;
                 if (skipList != null && skipList.Contains(Path.GetFileName(file)))
                     continue;
                 string destFile = Path.Combine(destDir, Path.GetFileName(file));
                 File.Copy(file, destFile, true);
             }
-            foreach (string subDir in Directory.GetDirectories(sourceDir)) {
-                string destSubDir = Path.Combine(destDir, Path.GetFileName(subDir));
-                CopyDirectory(subDir, destSubDir, skipList);
+            if (copySubdirs) {
+                foreach (string subDir in Directory.GetDirectories(sourceDir)) {
+                    string destSubDir = Path.Combine(destDir, Path.GetFileName(subDir));
+                    CopyDirectory(subDir, destSubDir, copySubdirs, extension, skipList);
+                }
             }
         }
         private void addModNames() {
-            if (!Path.Exists(Path.Combine(myModsPath, "UFO 50 Modding Framework")))
+            if (!Path.Exists(Path.Combine(myModsPath, "UFO 50 Modding Settings")))
                 return;
 
-            string modNameListPath = Path.Combine(myModsPath, "UFO 50 Modding Framework", "code", "gml_Object_oModding_Other_10.gml");
+            string modNameListPath = Path.Combine(myModsPath, "UFO 50 Modding Settings", "code", "gml_Object_oModding_Other_10.gml");
             File.WriteAllText(modNameListPath, "global.mod_list = ds_list_create();\n");
 
             foreach (string modPath in enabledMods) {
                 string modName = Path.GetFileName(modPath);
-                if (modName == "UFO 50 Modding Framework")
+                if (modName == "UFO 50 Modding Settings")
                     continue;
                 using (var stream = new FileStream(modNameListPath, FileMode.Append, FileAccess.Write))
                 using (var writer = new StreamWriter(stream)) {

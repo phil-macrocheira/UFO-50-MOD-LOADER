@@ -37,6 +37,10 @@ namespace UFO_50_MOD_INSTALLER
             buttonDownload = new Button();
             buttonLaunch = new Button();
             buttonSettings = new Button();
+            textBoxSearch = new TextBox();
+            labelSearch = new Label();
+            buttonUninstall = new Button();
+            checkBoxHide = new CheckBox();
             ((System.ComponentModel.ISupportInitialize)fileSystemWatcher1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             SuspendLayout();
@@ -51,7 +55,7 @@ namespace UFO_50_MOD_INSTALLER
             dataGridView1.AllowUserToResizeRows = false;
             dataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.Location = new Point(12, 76);
+            dataGridView1.Location = new Point(11, 93);
             dataGridView1.Margin = new Padding(2);
             dataGridView1.Name = "dataGridView1";
             dataGridView1.RowHeadersWidth = 62;
@@ -60,7 +64,7 @@ namespace UFO_50_MOD_INSTALLER
             // 
             // buttonInstall
             // 
-            buttonInstall.Location = new Point(12, 12);
+            buttonInstall.Location = new Point(11, 31);
             buttonInstall.Margin = new Padding(2);
             buttonInstall.Name = "buttonInstall";
             buttonInstall.Size = new Size(149, 47);
@@ -83,7 +87,7 @@ namespace UFO_50_MOD_INSTALLER
             // buttonDownload
             // 
             buttonDownload.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            buttonDownload.Location = new Point(1123, 12);
+            buttonDownload.Location = new Point(931, 31);
             buttonDownload.Margin = new Padding(2);
             buttonDownload.Name = "buttonDownload";
             buttonDownload.Size = new Size(182, 47);
@@ -93,7 +97,7 @@ namespace UFO_50_MOD_INSTALLER
             // 
             // buttonLaunch
             // 
-            buttonLaunch.Location = new Point(180, 12);
+            buttonLaunch.Location = new Point(180, 31);
             buttonLaunch.Margin = new Padding(2);
             buttonLaunch.Name = "buttonLaunch";
             buttonLaunch.Size = new Size(160, 47);
@@ -104,18 +108,64 @@ namespace UFO_50_MOD_INSTALLER
             // buttonSettings
             // 
             buttonSettings.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            buttonSettings.Location = new Point(1326, 11);
+            buttonSettings.Location = new Point(1324, 31);
             buttonSettings.Name = "buttonSettings";
             buttonSettings.Size = new Size(102, 47);
             buttonSettings.TabIndex = 6;
             buttonSettings.Text = "Settings";
             buttonSettings.UseVisualStyleBackColor = true;
             // 
+            // textBoxSearch
+            // 
+            textBoxSearch.BorderStyle = BorderStyle.None;
+            textBoxSearch.Location = new Point(364, 44);
+            textBoxSearch.MaxLength = 100;
+            textBoxSearch.Name = "textBoxSearch";
+            textBoxSearch.Size = new Size(329, 28);
+            textBoxSearch.TabIndex = 7;
+            textBoxSearch.KeyDown += textBoxSearch_KeyDown;
+            // 
+            // labelSearch
+            // 
+            labelSearch.AutoSize = true;
+            labelSearch.Location = new Point(360, 9);
+            labelSearch.Name = "labelSearch";
+            labelSearch.Size = new Size(75, 30);
+            labelSearch.TabIndex = 8;
+            labelSearch.Text = "Search";
+            // 
+            // buttonUninstall
+            // 
+            buttonUninstall.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            buttonUninstall.Location = new Point(1137, 31);
+            buttonUninstall.Margin = new Padding(2);
+            buttonUninstall.Name = "buttonUninstall";
+            buttonUninstall.Size = new Size(166, 47);
+            buttonUninstall.TabIndex = 9;
+            buttonUninstall.Text = "Uninstall Mods";
+            buttonUninstall.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxHide
+            // 
+            checkBoxHide.AutoSize = true;
+            checkBoxHide.Location = new Point(733, 38);
+            checkBoxHide.Name = "checkBoxHide";
+            checkBoxHide.Size = new Size(168, 34);
+            checkBoxHide.TabIndex = 10;
+            checkBoxHide.Text = "Hide Disabled";
+            checkBoxHide.UseVisualStyleBackColor = true;
+            checkBoxHide.Checked = false;
+            checkBoxHide.CheckedChanged += checkBoxHide_CheckedChanged;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(12F, 30F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1438, 905);
+            Controls.Add(checkBoxHide);
+            Controls.Add(buttonUninstall);
+            Controls.Add(labelSearch);
+            Controls.Add(textBoxSearch);
             Controls.Add(buttonDownload);
             Controls.Add(buttonLaunch);
             Controls.Add(textBox1);
@@ -141,5 +191,9 @@ namespace UFO_50_MOD_INSTALLER
         private Button buttonDownload;
         private Button buttonLaunch;
         private Button buttonSettings;
+        private TextBox textBoxSearch;
+        private Label labelSearch;
+        private Button buttonUninstall;
+        private CheckBox checkBoxHide;
     }
 }

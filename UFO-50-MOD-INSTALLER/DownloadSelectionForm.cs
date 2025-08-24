@@ -94,6 +94,7 @@ namespace UFO_50_MOD_INSTALLER
                 HeaderText = "Mod",
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
                 Resizable = DataGridViewTriState.False,
+                SortMode = DataGridViewColumnSortMode.Automatic,
                 Name = "name",
                 ReadOnly = true,
                 TrackVisitedState = true, // Set to true to see color change
@@ -101,10 +102,11 @@ namespace UFO_50_MOD_INSTALLER
                 ActiveLinkColor = activeLinkColor,
                 VisitedLinkColor = visitedLinkColor
             };
-            var versionColumn = new DataGridViewTextBoxColumn { HeaderText = "Latest Version", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells, Name = "version", ReadOnly = true };
+            var versionColumn = new DataGridViewTextBoxColumn { HeaderText = "Version", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells, Name = "version", ReadOnly = true };
             var creatorColumn = new DataGridViewTextBoxColumn { HeaderText = "Modder", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells, Name = "creator", ReadOnly = true };
-            var statusColumn = new DataGridViewTextBoxColumn { HeaderText = "Status", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells, Name = "status", ReadOnly = true };
-            dataGridViewMods.Columns.AddRange(new DataGridViewColumn[] { checkColumn, nameColumn, versionColumn, creatorColumn, statusColumn });
+            var dateColumn = new DataGridViewTextBoxColumn { HeaderText = "Updated", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells, Name = "date", ReadOnly = true };
+            //var statusColumn = new DataGridViewTextBoxColumn { HeaderText = "Status", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells, Name = "status", ReadOnly = true };
+            dataGridViewMods.Columns.AddRange(new DataGridViewColumn[] { checkColumn, nameColumn, versionColumn, creatorColumn, dateColumn});
 
             Controls.Add(splitContainer);
             splitContainer.SplitterDistance = this.ClientSize.Width - 450;
@@ -162,6 +164,10 @@ namespace UFO_50_MOD_INSTALLER
                     if (string.IsNullOrEmpty(version))
                         version = "1.0";
 
+                    var updatedDate = FormatUnixTimestamp(mod.DateUpdated);
+                    var addedDate = FormatUnixTimestamp(mod.DateAdded);
+                    var date = updatedDate == "N/A" ? addedDate : updatedDate;
+
                     /* Comment out for now
                     if (_installedModVersions.TryGetValue(mod.Id, out var localVersion)) {
                         status = $"Installed ({localVersion.version ?? "1.0"})";
@@ -170,7 +176,7 @@ namespace UFO_50_MOD_INSTALLER
                         }
                     }
                     */
-                    var rowIndex = dataGridViewMods.Rows.Add(status == "Update Available", mod.Name, version, mod.Creator, status);
+                    var rowIndex = dataGridViewMods.Rows.Add(status == "Update Available", mod.Name, version, mod.Creator, date);
                     dataGridViewMods.Rows[rowIndex].Tag = mod;
 
                     var checkboxCell = (DataGridViewCheckBoxCell)dataGridViewMods.Rows[rowIndex].Cells["select"];
@@ -186,11 +192,6 @@ namespace UFO_50_MOD_INSTALLER
                     */
                 }
                 this.Text = "GameBanana Mod Downloader";
-
-                if (dataGridViewMods.Rows.Count > 0) {
-                    dataGridViewMods.ClearSelection();
-                    dataGridViewMods.Rows[0].Selected = true;
-                }
             }
             catch (Exception ex) {
                 MessageBox.Show($"Failed to fetch mod list from Gamebanana: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -198,7 +199,11 @@ namespace UFO_50_MOD_INSTALLER
                 this.Close();
             }
             finally {
-                dataGridViewMods.Sort(dataGridViewMods.Columns["name"], ListSortDirection.Ascending);
+                dataGridViewMods.Sort(dataGridViewMods.Columns["date"], ListSortDirection.Descending);
+                if (dataGridViewMods.Rows.Count > 0) {
+                    dataGridViewMods.ClearSelection();
+                    dataGridViewMods.Rows[0].Selected = true;
+                }
             }
         }
 
@@ -209,8 +214,7 @@ namespace UFO_50_MOD_INSTALLER
                     labelModTitle.Text = mod.Name;
                     labelModder.Text = $"by {mod.Creator}";
                     var addedDate = FormatUnixTimestamp(mod.DateAdded);
-                    var updatedDate = FormatUnixTimestamp(mod.DateUpdated);
-                    labelMetadata.Text = updatedDate == "N/A" ? $"Last Updated: {addedDate}" : $"Last Updated: {updatedDate}";
+                    labelMetadata.Text = $"Uploaded: {addedDate}";
 
                     textBoxDescription.Text = string.IsNullOrEmpty(mod.Description) ? "Loading full details..." : $"{mod.Description}\n\nLoading full details...";
 
@@ -296,9 +300,6 @@ namespace UFO_50_MOD_INSTALLER
             dataGridViewMods.EnableHeadersVisualStyles = false;
             dataGridViewMods.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dataGridViewMods.ColumnHeadersHeight = 40;
-
-            // TEMPORARILY HIDE UNTIL FULLY IMPLEMENTED
-            dataGridViewMods.Columns["status"].Visible = false;
         }
     }
 

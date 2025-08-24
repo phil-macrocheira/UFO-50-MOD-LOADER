@@ -126,9 +126,6 @@ namespace UFO_50_MOD_INSTALLER
                                 File.Move(modFiles[mod2][relativePath], newName2);
                             }
                             else {
-                                if (fileName.Contains("sIconCart", StringComparison.OrdinalIgnoreCase))
-                                    continue;
-
                                 conflicts.Add($"{mod1} and {mod2} are incompatible due to a file conflict with {fileName}");
                                 hasNormalConflicts = true;
                             }

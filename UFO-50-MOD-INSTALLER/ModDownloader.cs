@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Collections.Concurrent;
+using System.Text;
 
 namespace UFO_50_MOD_INSTALLER
 {
@@ -246,7 +247,13 @@ namespace UFO_50_MOD_INSTALLER
                     // 2. Replace <br> with newline
                     string plainText = Regex.Replace(decodedText, @"<br\s*/?>", "\n", RegexOptions.IgnoreCase);
 
-                    // 3. Use a regular expression to strip out all remaining HTML tags
+                    // 3. Replace </li> with newline
+                    plainText = plainText.Replace("</li>", "\n");
+
+                    // 4. Replace closing header tags </h1> to </h6> with newline
+                    plainText = Regex.Replace(plainText, @"</h[1-6]>", "\n", RegexOptions.IgnoreCase);
+
+                    // 5. Use a regular expression to strip out all remaining HTML tags
                     plainText = Regex.Replace(plainText, "<.*?>", String.Empty);
 
                     return plainText.Trim();

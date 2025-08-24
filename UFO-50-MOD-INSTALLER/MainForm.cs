@@ -1,7 +1,9 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.IO.Compression;
 using System.Reflection;
+using System.Windows.Forms;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 
@@ -16,14 +18,18 @@ namespace UFO_50_MOD_INSTALLER
         public string? exePath = "";
         public string? localizationPath = "";
         public string? vanilla_localizationPath = "";
+        public string? vanilla_audioPath = "";
         private Image defaultIcon = null!;
         private ModInstaller modInstaller = new ModInstaller();
+        private ModUninstaller modUninstaller = new ModUninstaller();
         private ModDownloader modDownloader = new ModDownloader();
         private ConflictChecker conflictChecker = new ConflictChecker();
         public bool conflictsExist = true;
         public string? conflictsText = "";
         public List<string> enabledMods = new List<string>();
         public bool DOWNLOADING_MODS = false;
+        private int lastSearchRowIndex = -1;
+        private string lastSearchQuery = "";
 
         private List<ModInfo>? _allModsCache = null;
         private class ModRowTag
@@ -40,6 +46,7 @@ namespace UFO_50_MOD_INSTALLER
             FormClosing += (s, e) => SaveAfterClose();
             Resize += (s, e) => ResizeControls();
             buttonInstall.Click += (s, e) => installMods();
+            buttonUninstall.Click += (s, e) => uninstallMods();
             buttonDownload.Click += async (s, e) => await downloadMods();
             buttonLaunch.Click += (s, e) => LaunchGame();
             buttonSettings.Click += (s, e) => OpenSettings();
@@ -51,11 +58,9 @@ namespace UFO_50_MOD_INSTALLER
         private void SaveEnabledMods() {
             SettingsService.Settings.EnabledMods.Clear();
             foreach (DataGridViewRow row in dataGridView1.Rows) {
-                if (row.Tag is ModRowTag tag && (bool)row.Cells["columnEnabled"].Value) {
+                if (row.Tag is ModRowTag tag && (bool)row.Cells["columnEnabled"].Value)
                     SettingsService.Settings.EnabledMods.Add(Path.GetFileName(tag.FolderPath));
-                }
             }
-
             SettingsService.Save();
         }
         private void OpenSettings() {
@@ -63,7 +68,6 @@ namespace UFO_50_MOD_INSTALLER
                 bool isDarkMode = SettingsService.Settings.DarkModeEnabled;
                 settingsForm.BackColor = isDarkMode ? Color.FromArgb(45, 45, 48) : SystemColors.Control;
                 settingsForm.ForeColor = isDarkMode ? Color.White : SystemColors.ControlText;
-
 
                 if (settingsForm.ShowDialog() == DialogResult.OK) {
                     settingsForm.SaveSettings();
@@ -77,8 +81,11 @@ namespace UFO_50_MOD_INSTALLER
         }
         private void InitializeApplication() {
             CheckGamePath();
-            GetVanillaWin();
-            //GetLocalization();
+            bool IsVanilla = GetVanillaWin();
+            if (IsVanilla && !CheckLocalization())
+                GetLocalization();
+            if (IsVanilla && !CheckAudio())
+                GetAudio();
             InitializeUI();
             InitializeFileSystemWatcher();
             CleanupMods();
@@ -124,7 +131,7 @@ namespace UFO_50_MOD_INSTALLER
                 }
             }
         }
-        private void GetVanillaWin() {
+        private bool GetVanillaWin() {
             string vanillaPath = Path.Combine(currentPath, "vanilla.win");
             string iniPath = Path.Combine(currentPath, "GMLoader.ini");
 
@@ -133,12 +140,15 @@ namespace UFO_50_MOD_INSTALLER
 
                 if (!modInstaller.checkVanillaHash(data_winPath, iniPath)) {
                     MessageBox.Show("Currently installed version of UFO 50 is either outdated or modded. If it is modded, please replace the vanilla.win in this folder with an unmodded data.win file.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
                 }
+                return true;
             }
             else if (!modInstaller.checkVanillaHash(vanillaPath, iniPath)) {
                 MessageBox.Show("The vanilla.win in this folder is either outdated or modded. If it is modded, please replace the vanilla.win with an unmodded data.win file.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
             }
-            return;
+            return true;
         }
         private void GetLocalization() {
             localizationPath = Path.Combine(gamePath, "ext");
@@ -149,6 +159,21 @@ namespace UFO_50_MOD_INSTALLER
                 modInstaller.CopyDirectory(localizationPath, vanilla_localizationPath);
             }
             return;
+        }
+        private void GetAudio() {
+            vanilla_audioPath = Path.Combine(currentPath, "audio", "vanilla");
+            // audio files in game path are assumed to be vanilla for now, no hash checking
+            if (!Directory.Exists(vanilla_audioPath)) {
+                modInstaller.CopyDirectory(gamePath, vanilla_audioPath, false, ".dat");
+            }
+        }
+        private bool CheckLocalization() {
+            string test_vanilla_localizationPath = Path.Combine(currentPath, "localization", "vanilla", "ext", "ENGLISH", "0_Text.json");
+            return File.Exists(test_vanilla_localizationPath);
+        }
+        private bool CheckAudio() {
+            string test_vanilla_audioPath = Path.Combine(currentPath, "audio", "vanilla", "audiogroup1.dat");
+            return File.Exists(test_vanilla_audioPath);
         }
         private bool IsValidGamePath(string path) {
             data_winPath = Path.Combine(path, "data.win");
@@ -175,7 +200,7 @@ namespace UFO_50_MOD_INSTALLER
             this.BackColor = formBgColor;
 
             // Apply theme to all buttons, including the Settings button
-            var buttons = new[] { buttonInstall, buttonDownload, buttonLaunch, buttonSettings };
+            var buttons = new[] { buttonInstall, buttonDownload, buttonLaunch, buttonSettings, buttonUninstall };
             foreach (var btn in buttons) {
                 btn.FlatStyle = FlatStyle.Flat;
                 btn.BackColor = controlBgColor;
@@ -186,6 +211,10 @@ namespace UFO_50_MOD_INSTALLER
             textBox1.BackColor = controlBgColor;
             textBox1.ForeColor = textColor;
             textBox1.BorderStyle = BorderStyle.FixedSingle;
+            textBoxSearch.BackColor = controlBgColor;
+            textBoxSearch.ForeColor = textColor;
+            labelSearch.ForeColor = textColor;
+            checkBoxHide.ForeColor = textColor;
 
             dataGridView1.BackgroundColor = controlBgColor;
             dataGridView1.GridColor = borderColor;
@@ -203,6 +232,7 @@ namespace UFO_50_MOD_INSTALLER
             dataGridView1.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dataGridView1.ColumnHeadersHeight = 50;
+            dataGridView1.Location = new Point(11, 100);
             this.Refresh();
         }
         private void InitializeUI() {
@@ -257,12 +287,15 @@ namespace UFO_50_MOD_INSTALLER
 
             DataGridViewCheckBoxColumn checkColumn = new DataGridViewCheckBoxColumn();
             checkColumn.Name = "columnEnabled";
+            //checkColumn.SortMode = DataGridViewColumnSortMode.Automatic; // This breaks saving unfortunately
             checkColumn.Width = 80;
             checkColumn.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             checkColumn.Resizable = DataGridViewTriState.False;
             checkColumn.HeaderCell = new DataGridViewCheckBoxHeaderCell();
             checkColumn.HeaderCell.Value = "";
             dataGridView1.Columns.Add(checkColumn);
+            // dataGridView1.Sort(checkColumn, ListSortDirection.Descending); // This breaks saving unfortunately
+            // dataGridView1.RowsAdded += (s, e) => { dataGridView1.Sort(checkColumn, ListSortDirection.Descending); }; // This breaks saving unfortunately
             ((DataGridViewCheckBoxHeaderCell)checkColumn.HeaderCell).OnCheckBoxClicked += HeaderCheckBoxClicked;
 
             DataGridViewImageColumn iconColumn = new DataGridViewImageColumn();
@@ -274,6 +307,7 @@ namespace UFO_50_MOD_INSTALLER
             dataGridView1.Columns.Add(iconColumn);
 
             DataGridViewTextBoxColumn nameColumn = new DataGridViewTextBoxColumn();
+            nameColumn.Name = "columnModName";
             nameColumn.HeaderText = "Mod";
             nameColumn.SortMode = DataGridViewColumnSortMode.Automatic;
             nameColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
@@ -361,7 +395,6 @@ namespace UFO_50_MOD_INSTALLER
                     dataGridView1.Rows[rowIndex].Tag = new ModRowTag
                     {
                         FolderPath = Path.Combine(modsPath, folderName),
-                        Metadata = InstallerMetadata.Load(Path.Combine(modsPath, folderName)) // if needed
                     };
                 }
                 dataGridView1.ClearSelection();
@@ -452,6 +485,8 @@ namespace UFO_50_MOD_INSTALLER
             else {
                 CleanupMods();
                 LoadMods();
+                if (checkBoxHide.Checked)
+                    ToggleHideDisabledMods(true);
             }
         }
         private List<string> GetEnabledMods() {
@@ -476,6 +511,9 @@ namespace UFO_50_MOD_INSTALLER
             enabledMods = GetEnabledMods();
             SaveEnabledMods();
             modInstaller.installMods(currentPath, gamePath, enabledMods, conflictsExist);
+        }
+        private void uninstallMods() {
+            modUninstaller.uninstallMods(currentPath, gamePath);
         }
         private async Task downloadMods() {
             DOWNLOADING_MODS = true;
@@ -535,13 +573,61 @@ namespace UFO_50_MOD_INSTALLER
 
             foreach (DataGridViewRow row in dataGridView1.Rows) {
                 string modName = row.Cells[2].Value.ToString();
-                if (modName == "UFO 50 Modding Framework") {
+                if (modName == "UFO 50 Modding Settings") {
                     if (row.Cells[0].Value is bool isChecked && isChecked)
                         continue;
                 }
                 row.Cells[0].Value = state;
             }
             CheckForConflicts();
+        }
+
+        private void textBoxSearch_KeyDown(object sender, KeyEventArgs e) {
+            if (e.KeyCode == Keys.Enter) {
+                e.SuppressKeyPress = true;
+                string query = textBoxSearch.Text.Trim().ToLower();
+                if (string.IsNullOrEmpty(query)) return;
+                if (query != lastSearchQuery) {
+                    lastSearchQuery = query;
+                    lastSearchRowIndex = -1;
+                }
+
+                int startRow = lastSearchRowIndex + 1;
+                bool found = false;
+
+                for (int i = startRow; i < dataGridView1.Rows.Count; i++) {
+                    if (dataGridView1.Rows[i].IsNewRow) continue;
+                    if (!dataGridView1.Rows[i].Visible) continue;
+
+                    string modName = dataGridView1.Rows[i].Cells["columnModName"].Value?.ToString().ToLower() ?? "";
+                    if (modName.Contains(query)) {
+                        dataGridView1.ClearSelection();
+                        dataGridView1.Rows[i].Selected = true;
+                        dataGridView1.FirstDisplayedScrollingRowIndex = i;
+
+                        lastSearchRowIndex = i;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    lastSearchRowIndex = -1;
+                }
+            }
+        }
+        private void checkBoxHide_CheckedChanged(object sender, EventArgs e) {
+            ToggleHideDisabledMods(checkBoxHide.Checked);
+        }
+        private void ToggleHideDisabledMods(bool hideDisabled) {
+            foreach (DataGridViewRow row in dataGridView1.Rows) {
+                if (row.IsNewRow) continue;
+
+                bool isEnabled = false;
+                if (row.Cells["columnEnabled"].Value is bool b)
+                    isEnabled = b;
+
+                row.Visible = !hideDisabled || isEnabled;
+            }
         }
     }
     public class DataGridViewCheckBoxHeaderCell : DataGridViewColumnHeaderCell
