@@ -1,4 +1,5 @@
 ﻿using Standart.Hash.xxHash;
+using System.ComponentModel;
 using System.Diagnostics;
 
 namespace UFO_50_Mod_Loader
@@ -46,9 +47,6 @@ namespace UFO_50_Mod_Loader
                 File.Copy(modded_data_winPath, ufo50_data_winPath, overwrite: true);
                 MessageBox.Show("Mods Installed!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1, (MessageBoxOptions)0x40000);
             }
-            else {
-                MessageBox.Show("ERROR: GMLoader did not run successfully. Ask for help!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
             return;
         }
         private bool runGMLoader() {
@@ -63,16 +61,35 @@ namespace UFO_50_Mod_Loader
                     UseShellExecute = true,
                     WindowStyle = ProcessWindowStyle.Normal
                 };
+
                 using (var process = Process.Start(startInfo)) {
+                    if (process == null)
+                        throw new InvalidOperationException("Failed to start process. Process.Start returned null.");
+
                     process.WaitForExit();
+
                     var mainForm = Application.OpenForms[0];
                     if (mainForm.WindowState == FormWindowState.Minimized)
                         mainForm.WindowState = FormWindowState.Normal;
                     mainForm.Activate();
+
                     return process.ExitCode == 0;
                 }
             }
-            catch {
+            catch (FileNotFoundException ex) {
+                MessageBox.Show($"GMLoader.exe not found", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            catch (Win32Exception ex) {
+                MessageBox.Show($"Failed to start process.\n\nError: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            catch (InvalidOperationException ex) {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            catch (Exception ex) {
+                MessageBox.Show($"Unexpected error:\n\n{ex}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
         }
