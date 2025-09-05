@@ -6,7 +6,7 @@ namespace UFO_50_Mod_Loader
 {
     internal class ModInstaller
     {
-        public ulong supportedDataHash = 876354219589866315; // 1.7.6
+        public ulong supportedDataHash = 6108879701418348074; // 1.7.8.21
         public List<string> enabledMods;
         public string? rootPath = "";
         public string? gamePath = "";
