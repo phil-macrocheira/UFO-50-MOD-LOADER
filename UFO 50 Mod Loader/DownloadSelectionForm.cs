@@ -264,10 +264,12 @@ namespace UFO_50_Mod_Loader
                     var mod = row.Tag as ModInfo;
                     if (mod == null) continue;
 
+                    /* Comment out for now
                     bool isInstalled = _installedModVersions.ContainsKey(mod.Id);
                     if (isInstalled && !SettingsService.Settings.AllowReinstall && row.Cells["status"].Value.ToString() != "Update Available") {
                         continue;
                     }
+                    */
 
                     List<ModFile> availableFiles = await ModDownloader.GetModFileInfo(mod.Id);
                     if (availableFiles.Count > 1 && SettingsService.Settings.AlwaysSelectFile) {

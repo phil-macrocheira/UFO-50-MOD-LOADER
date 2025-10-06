@@ -441,6 +441,9 @@ namespace UFO_50_Mod_Loader
                 catch (InvalidDataException) {
                     Console.WriteLine($"Skipping incomplete or invalid zip file: {Path.GetFileName(zipPath)}");
                 }
+                catch (IOException ex) {
+                    Console.WriteLine($"Cannot open zip file: {Path.GetFileName(zipPath)}");
+                }
             }
 
             var modFolders = Directory.GetDirectories(modsPath);

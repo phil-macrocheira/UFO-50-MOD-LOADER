@@ -45,7 +45,8 @@ namespace UFO_50_Mod_Loader
 
             if (runGMLoader()) {
                 File.Copy(modded_data_winPath, ufo50_data_winPath, overwrite: true);
-                MessageBox.Show("Mods Installed!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1, (MessageBoxOptions)0x40000);
+                if (!SettingsService.Settings.QuickInstall)
+                    MessageBox.Show("Mods Installed!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1, (MessageBoxOptions)0x40000);
             }
             return;
         }
@@ -81,7 +82,7 @@ namespace UFO_50_Mod_Loader
                 return false;
             }
             catch (Win32Exception ex) {
-                MessageBox.Show($"Failed to start process.\n\nError: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error: {ex.Message}\n\nThis error usually happens because Windows does not trust this program to open GMLoader.exe. You can fix it by running GMLoader.exe manually first, then trying again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
             catch (InvalidOperationException ex) {

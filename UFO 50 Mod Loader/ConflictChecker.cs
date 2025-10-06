@@ -22,6 +22,10 @@ namespace UFO_50_Mod_Loader
                 foreach (var entry in yaml_data) {
                     var targetFile = entry.Key;
                     foreach (var item in entry.Value) {
+                        if (item.TryGetValue("type", out var type)) {
+                            if (type.StartsWith("findappend") || type.StartsWith("findprepend"))
+                                continue;
+                        }
                         if (item.TryGetValue("find", out var findStr)) {
                             YamlDict[mod].Add((findStr, targetFile));
                         }
