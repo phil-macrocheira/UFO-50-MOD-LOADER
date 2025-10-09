@@ -2,7 +2,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Collections.Concurrent;
-using System.Text;
 
 namespace UFO_50_Mod_Loader
 {
@@ -20,47 +19,25 @@ namespace UFO_50_Mod_Loader
         public int Likes { get; set; }
         public string Version { get; set; }
     }
-    public class LocalModInfo
-    {
-        public long DateUpdated { get; set; }
-    }
     public class ModFile
     {
         public string FileName { get; set; }
         public string DownloadUrl { get; set; }
+        public string Id { get; set; }
     }
     internal class ModDownloader
     {
         private static readonly HttpClient client = new HttpClient();
-        public async Task DownloadMods(string downloadPath, List<ModFile> filesToDownload, string? localModInfoPath, Dictionary<string, ModInfo> fileToModInfoMap) {
-            var localMods = new Dictionary<string, LocalModInfo>();
-            if (!string.IsNullOrEmpty(localModInfoPath)) {
-                if (File.Exists(localModInfoPath)) {
-                    var json = File.ReadAllText(localModInfoPath);
-                    localMods = JsonSerializer.Deserialize<Dictionary<string, LocalModInfo>>(json) ?? new Dictionary<string, LocalModInfo>();
-                }
-            }
-
+        public async Task DownloadMods(string downloadPath, List<ModFile> modsToDownload) {
             try {
-                foreach (var file in filesToDownload) {
-                    Console.WriteLine($"Downloading {file.FileName}...");
+                foreach (var file in modsToDownload) {
+                    //Console.WriteLine($"Downloading {file.FileName}...");
                     await DownloadFile(file.DownloadUrl, Path.Combine(downloadPath, file.FileName));
-
-
-                    if (fileToModInfoMap.TryGetValue(file.FileName, out var modInfo)) {
-                        localMods[modInfo.Id] = new LocalModInfo { DateUpdated = modInfo.DateUpdated };
-                    }
-                }
+    }
             }
             catch (Exception ex) {
-                Console.WriteLine($"Exception: {ex.Message}");
+                //Console.WriteLine($"Exception: {ex.Message}");
                 throw;
-            }
-            finally {
-                if (!string.IsNullOrEmpty(localModInfoPath)) {
-                    var updatedJson = JsonSerializer.Serialize(localMods, new JsonSerializerOptions { WriteIndented = true });
-                    File.WriteAllText(localModInfoPath, updatedJson);
-                }
             }
         }
         public static ModInfo? FindBestModMatch(List<ModInfo> allMods, string titleToMatch, string creatorToMatch) {
@@ -276,7 +253,8 @@ namespace UFO_50_Mod_Loader
                 files.Add(new ModFile
                 {
                     FileName = fileElement.GetProperty("_sFile").GetString() ?? "unknown.zip",
-                    DownloadUrl = fileElement.GetProperty("_sDownloadUrl").GetString() ?? ""
+                    DownloadUrl = fileElement.GetProperty("_sDownloadUrl").GetString() ?? "",
+                    Id = modId
                 });
             }
             return files;

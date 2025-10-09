@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
-using System.Windows.Forms;
 
 namespace UFO_50_Mod_Loader
 {
@@ -18,14 +17,11 @@ namespace UFO_50_Mod_Loader
 
         // Properties and Data
         public List<ModFile> FinalFilesToDownload { get; private set; } = new List<ModFile>();
-        public Dictionary<string, ModInfo> FileToModInfoMap { get; private set; } = new Dictionary<string, ModInfo>();
-        private Dictionary<string, (string version, long date)> _installedModVersions;
-        private List<ModInfo> _allMods = new List<ModInfo>();
+        public List<ModInfo> _allMods = new List<ModInfo>();
         private static HttpClient _httpClient = new HttpClient();
 
         // Using the corrected constructor
-        public DownloadSelectionForm(Dictionary<string, (string version, long date)> installedModVersions) {
-            _installedModVersions = installedModVersions;
+        public DownloadSelectionForm() {
             InitializeComponent();
             this.Load += async (s, e) => await LoadModsList();
         }
@@ -168,28 +164,10 @@ namespace UFO_50_Mod_Loader
                     var addedDate = FormatUnixTimestamp(mod.DateAdded);
                     var date = updatedDate == "N/A" ? addedDate : updatedDate;
 
-                    /* Comment out for now
-                    if (_installedModVersions.TryGetValue(mod.Id, out var localVersion)) {
-                        status = $"Installed ({localVersion.version ?? "1.0"})";
-                        if (mod.DateUpdated > localVersion.date || mod.Version != localVersion.version) {
-                            status = "Update Available";
-                        }
-                    }
-                    */
                     var rowIndex = dataGridViewMods.Rows.Add(status == "Update Available", mod.Name, version, mod.Creator, date);
                     dataGridViewMods.Rows[rowIndex].Tag = mod;
 
                     var checkboxCell = (DataGridViewCheckBoxCell)dataGridViewMods.Rows[rowIndex].Cells["select"];
-                    /* Comment out for now
-                    if (status.StartsWith("Installed")) {
-                        dataGridViewMods.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.DimGray;
-                    }
-                    if (status == "Update Available") {
-                        dataGridViewMods.Rows[rowIndex].DefaultCellStyle.BackColor = Color.FromArgb(40, 80, 40);
-                        dataGridViewMods.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.LightGreen;
-                    }
-                    checkboxCell.ReadOnly = status.StartsWith("Installed") && !SettingsService.Settings.AllowReinstall;
-                    */
                 }
                 this.Text = "GameBanana Mod Downloader";
             }
@@ -264,25 +242,16 @@ namespace UFO_50_Mod_Loader
                     var mod = row.Tag as ModInfo;
                     if (mod == null) continue;
 
-                    /* Comment out for now
-                    bool isInstalled = _installedModVersions.ContainsKey(mod.Id);
-                    if (isInstalled && !SettingsService.Settings.AllowReinstall && row.Cells["status"].Value.ToString() != "Update Available") {
-                        continue;
-                    }
-                    */
-
                     List<ModFile> availableFiles = await ModDownloader.GetModFileInfo(mod.Id);
                     if (availableFiles.Count > 1 && SettingsService.Settings.AlwaysSelectFile) {
                         using (var fileForm = new FileSelectionForm(mod.Name, availableFiles)) {
                             if (fileForm.ShowDialog() == DialogResult.OK && fileForm.SelectedFile != null) {
                                 FinalFilesToDownload.Add(fileForm.SelectedFile);
-                                FileToModInfoMap[fileForm.SelectedFile.FileName] = mod;
                             }
                         }
                     }
                     else if (availableFiles.Count > 0) {
                         FinalFilesToDownload.Add(availableFiles[0]);
-                        FileToModInfoMap[availableFiles[0].FileName] = mod;
                     }
                 }
             }

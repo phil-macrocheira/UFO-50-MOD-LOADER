@@ -1,17 +1,18 @@
-using System.ComponentModel;
+using SharpCompress.Archives;
+using SharpCompress.Common;
 using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.IO.Compression;
 using System.Reflection;
-using System.Windows.Forms;
-using SharpCompress.Archives;
-using SharpCompress.Common;
+using System.Text.Json;
 
 namespace UFO_50_Mod_Loader
 {
     public partial class MainForm : Form
     {
+        public static string version = "1.3.8";
         private string? currentPath = Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+        private string? downloadedModsJsonPath = "";
         private string? gamePath = "";
         private string? modsPath = "";
         public string? data_winPath = "";
@@ -35,10 +36,10 @@ namespace UFO_50_Mod_Loader
         private class ModRowTag
         {
             public required string FolderPath { get; set; }
-            public InstallerMetadata? Metadata { get; set; }
         }
         public MainForm() {
             InitializeComponent();
+            this.Text = $"{this.Text} v{version}";
             this.Size = SettingsService.Settings.MainWindowSize;
             this.MinimumSize = new Size(700, 550);
 
@@ -525,38 +526,43 @@ namespace UFO_50_Mod_Loader
             buttonDownload.Text = "Downloading...";
 
             try {
-                var installedModVersions = new Dictionary<string, (string version, long date)>();
-                foreach (DataGridViewRow row in dataGridView1.Rows) {
-                    if (row.Tag is ModRowTag { Metadata: not null } tag && tag.Metadata.GameBananaId > 0) {
-                        installedModVersions[tag.Metadata.GameBananaId.ToString()] = (tag.Metadata.Version ?? "N/A", tag.Metadata.LatestVersionDate);
-                    }
-                }
-
-                using (var selectionForm = new DownloadSelectionForm(installedModVersions)) {
+                using (var selectionForm = new DownloadSelectionForm()) {
                     if (selectionForm.ShowDialog() == DialogResult.OK) {
                         await selectionForm.FinalizeSelection();
                         var filesToDownload = selectionForm.FinalFilesToDownload;
-                        var fileToModInfoMap = selectionForm.FileToModInfoMap;
 
                         if (filesToDownload.Count > 0) {
-                            await modDownloader.DownloadMods(modsPath, filesToDownload, null, fileToModInfoMap);
-                            foreach (var modInfo in fileToModInfoMap.Values) {
-                                // Find the corresponding row in our main grid to get the folder path
-                                foreach (DataGridViewRow row in dataGridView1.Rows) {
-                                    if (row.Tag is ModRowTag tag && tag.Metadata?.GameBananaId.ToString() == modInfo.Id) {
-                                        // Load the existing metadata, update it, and save.
-                                        var metadata = InstallerMetadata.Load(tag.FolderPath);
-                                        if (metadata != null) {
-                                            metadata.LatestVersionDate = modInfo.DateUpdated;
-                                            metadata.Version = modInfo.Version;
-                                            metadata.Save(tag.FolderPath);
-                                        }
-                                        break; // Move to the next downloaded mod
-                                    }
-                                }
-                            }
+                            await modDownloader.DownloadMods(modsPath, filesToDownload);
                             MessageBox.Show("Selected mods downloaded successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
+
+                        // Save downloaded_mods.json
+                        downloadedModsJsonPath = Path.Combine(currentPath, "downloaded_mods.json");
+
+                        var previouslyDownloadedMods = File.Exists(downloadedModsJsonPath)
+                            ? JsonSerializer.Deserialize<List<Dictionary<string, object>>>(File.ReadAllText(downloadedModsJsonPath)) ?? new List<Dictionary<string, object>>()
+                            : new List<Dictionary<string, object>>();
+
+                        var newDownloadedMods = filesToDownload
+                            .Select(f => selectionForm._allMods.FirstOrDefault(m => m.Id == f.Id))
+                            .Where(m => m != null)
+                            .Select(m => new Dictionary<string, object>
+                            {
+                                ["Id"] = m!.Id,
+                                ["Name"] = m.Name,
+                                ["Creator"] = m.Creator,
+                                ["DateUpdated"] = m.DateUpdated,
+                                ["DateAdded"] = m.DateAdded,
+                                ["Version"] = m.Version
+                            })
+                            .ToList();
+
+                        var mergedMods = previouslyDownloadedMods
+                            .Concat(newDownloadedMods)
+                            .GroupBy(m => m["Id"])
+                            .Select(g => g.First())
+                            .ToList();
+                        File.WriteAllText(downloadedModsJsonPath, JsonSerializer.Serialize(mergedMods, new JsonSerializerOptions { WriteIndented = true }));
                     }
                 }
             }
