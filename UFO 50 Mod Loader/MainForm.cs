@@ -10,7 +10,7 @@ namespace UFO_50_Mod_Loader
 {
     public partial class MainForm : Form
     {
-        public static string version = "1.3.9";
+        public static string version = "1.3.11";
         private string? currentPath = Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
         private string? downloadedModsJsonPath = "";
         private string? gamePath = "";
