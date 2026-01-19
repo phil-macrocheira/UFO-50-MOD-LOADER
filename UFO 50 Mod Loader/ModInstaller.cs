@@ -48,6 +48,9 @@ namespace UFO_50_Mod_Loader
                 if (!SettingsService.Settings.QuickInstall)
                     MessageBox.Show("Mods Installed!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1, (MessageBoxOptions)0x40000);
             }
+            else {
+                MessageBox.Show("Mod Installation Failed", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1, (MessageBoxOptions)0x40000);
+            }
             return;
         }
         private bool runGMLoader() {
