@@ -1,0 +1,16 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="UFO_50_Mod_Loader.App"
+            RequestedThemeVariant="Dark">
+    <Application.Styles>
+        <FluentTheme>
+			<FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Dark" Accent="#cc68e4"/>
+            </FluentTheme.Palettes>
+        </FluentTheme>
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+    </Application.Styles>
+</Application>

@@ -1,4 +1,5 @@
 ## UFO 50 Mod Loader
 
-A GUI Windows Forms App for installing UFO 50 mods with [GMLoader for UFO 50](https://github.com/phil-macrocheira/GMLoader-UFO50)
+An Avalonia App for installing and downloading UFO 50 mods
 
+Installs mods with [GMLoader](https://github.com/Senjay-id/GMLoader)

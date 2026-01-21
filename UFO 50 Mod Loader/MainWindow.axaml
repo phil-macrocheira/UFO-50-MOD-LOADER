@@ -1,0 +1,328 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UFO_50_Mod_Loader"
+        mc:Ignorable="d"
+        x:Class="UFO_50_Mod_Loader.MainWindow"
+        x:DataType="local:MainWindow"
+        Width="700" Height="600"
+        MinWidth="700" MinHeight="450"
+        Title="UFO 50 Mod Loader"
+        Background="#1E1E1E">
+
+    <Window.Styles>
+        <!-- Row height -->
+        <Style Selector="DataGridRow">
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="Background" Value="#2D2D2D"/>
+        </Style>
+        <!-- Alternating row colors -->
+        <Style Selector="DataGridRow:nth-child(even)">
+            <Setter Property="Background" Value="#252525"/>
+        </Style>
+        <!-- Remove row highlighting -->
+        <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="Transparent"/>
+        </Style>
+        <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="Transparent"/>
+        </Style>
+        <!-- Remove cell highlighting and focus border -->
+        <Style Selector="DataGridCell:pointerover /template/ Rectangle">
+            <Setter Property="Fill" Value="Transparent"/>
+        </Style>
+        <Style Selector="DataGridCell:selected /template/ Rectangle">
+            <Setter Property="Fill" Value="Transparent"/>
+        </Style>
+        <Style Selector="DataGridCell:current /template/ Rectangle">
+            <Setter Property="Fill" Value="Transparent"/>
+        </Style>
+        <Style Selector="DataGridCell:current /template/ Grid#FocusVisual">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="DataGridCell">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <!-- Center cell content vertically -->
+        <Style Selector="DataGridCell ContentPresenter">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <!-- Bigger checkboxes -->
+        <Style Selector="DataGrid CheckBox">
+            <Setter Property="RenderTransform">
+                <ScaleTransform ScaleX="1.3" ScaleY="1.3"/>
+            </Setter>
+        </Style>
+        <!-- Font size for the DataGrid -->
+        <Style Selector="DataGrid">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Background" Value="#1E1E1E"/>
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+        </Style>
+        <!-- Dark header text with dark gray background -->
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Background" Value="#3C3C3C"/>
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+        </Style>
+        <Style Selector="DataGridColumnHeader:pointerover /template/ Grid#PART_ColumnHeaderRoot">
+            <Setter Property="Background" Value="#3C3C3C"/>
+        </Style>
+        <Style Selector="DataGridColumnHeader:pressed /template/ Grid#PART_ColumnHeaderRoot">
+            <Setter Property="Background" Value="#3C3C3C"/>
+        </Style>
+        <!-- Style for sort buttons in headers -->
+        <Style Selector="Button.SortButton">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="MinWidth" Value="20"/>
+            <Setter Property="MinHeight" Value="20"/>
+            <Setter Property="IsHitTestVisible" Value="True"/>
+            <Setter Property="Background" Value="#4A4A4A"/>
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+        </Style>
+        <Style Selector="Button.SortButton:pointerover">
+            <Setter Property="Background" Value="#5A5A5A"/>
+        </Style>
+        <!-- Keep scrollbar always in expanded state -->
+        <Style Selector="ScrollBar">
+            <Setter Property="AllowAutoHide" Value="False"/>
+        </Style>
+        <!-- Dark mode text -->
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+        </Style>
+        <!-- Dark mode TextBox -->
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#3C3C3C"/>
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+            <Setter Property="BorderBrush" Value="#5A5A5A"/>
+        </Style>
+        <!-- Dark mode buttons -->
+        <Style Selector="Button">
+            <Setter Property="Background" Value="#4A4A4A"/>
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+            <Setter Property="BorderBrush" Value="#5A5A5A"/>
+        </Style>
+        <Style Selector="Button:pointerover">
+            <Setter Property="Background" Value="#5A5A5A"/>
+        </Style>
+        <!-- Dark mode menu -->
+        <Style Selector="Menu">
+            <Setter Property="Background" Value="#2D2D2D"/>
+        </Style>
+        <Style Selector="MenuItem">
+            <Setter Property="Background" Value="#2D2D2D"/>
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+        </Style>
+        <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot">
+            <Setter Property="Background" Value="#3C3C3C"/>
+        </Style>
+    </Window.Styles>
+
+    <DockPanel LastChildFill="True">
+        <!-- Menu Bar -->
+        <Grid DockPanel.Dock="Top" Height="30" Background="#2D2D2D">
+            <Menu HorizontalAlignment="Left">
+                <!-- UFO 50 -->
+                <MenuItem Header="_UFO 50">
+                    <MenuItem Header="Launch Game" Click="OnLaunchGameClick"/>
+                    <MenuItem Header="Verify Vanilla Copy" Click="OnVerifyCopyClick"/>
+                    <MenuItem Header="Uninstall Mods" Click="OnUninstallClick"/>
+                </MenuItem>
+
+                <!-- Mod Loader -->
+                <MenuItem Header="_Mod Loader">
+                    <MenuItem Header="Save Current Mod List" Click="OnSaveModListClick"/>
+                    <MenuItem Header="Load Mod List" Click="OnLoadModListClick"/>
+                    <MenuItem Header="Uncheck All" Click="OnUncheckAllClick"/>
+                    <MenuItem Header="Check For Update" Click="OnCheckUpdateClick"/>
+                </MenuItem>
+
+                <!-- Settings -->
+                <MenuItem Header="_Settings">
+                    <MenuItem Header="UFO 50 Install Path" Click="OnGamePathMenuClick" Height="32"/>
+                    <MenuItem StaysOpenOnClick="True" Click="OnTemporaryInstallModeClick" Height="32">
+                        <MenuItem.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Temporary Install Mode" VerticalAlignment="Center" FontSize="14"/>
+                                <CheckBox Name="TemporaryInstallModeCheckBox" 
+                                            IsChecked="{Binding TemporaryInstallMode}"
+                                            IsHitTestVisible="False"/>
+                            </StackPanel>
+                        </MenuItem.Header>
+                    </MenuItem>
+                    <MenuItem StaysOpenOnClick="True" Click="OnSelectDownloadFileClick" Height="32">
+                        <MenuItem.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Select File To Download" VerticalAlignment="Center" FontSize="14"/>
+                                <CheckBox Name="SelectDownloadFileCheckBox" 
+                                            IsChecked="{Binding SelectDownloadFile}"
+                                            IsHitTestVisible="False"/>
+                            </StackPanel>
+                        </MenuItem.Header>
+                    </MenuItem>
+                </MenuItem>
+
+                <!-- Links -->
+                <MenuItem Header="_Links">
+                    <MenuItem Header="Modding Guide" Click="OnModdingGuideClick"/>
+                    <MenuItem Header="GameBanana" Click="OnGameBananaClick"/>
+                    <MenuItem Header="GitHub" Click="OnGitHubClick"/>
+                    <MenuItem Header="Discord" Click="OnDiscordClick"/>
+                </MenuItem>
+            </Menu>
+        </Grid>
+
+        <!-- Buttons & Search Bar -->
+        <Grid DockPanel.Dock="Top" Margin="12">
+            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Left">
+                <Button Content="Install Mods"/>
+            </StackPanel>
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="124,8,16,8">
+                <TextBox Name="SearchBox" Width="400" Watermark="Filter mods...">
+                    <TextBox.InnerRightContent>
+                        <Button Content="✕"
+                                Click="OnClearSearchClick"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="8,0"
+                                Cursor="Hand"
+                                IsVisible="{Binding Text.Length, ElementName=SearchBox}"/>
+                    </TextBox.InnerRightContent>
+                </TextBox>
+            </StackPanel>
+            <Button Content="Download Mods" HorizontalAlignment="Right"/>
+        </Grid>
+
+        <!-- Text Log -->
+        <Border DockPanel.Dock="Bottom" Height="145" BorderBrush="#5A5A5A" BorderThickness="1" Margin="12,8,12,12">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <TextBox Name="TextLogBox"
+                         IsReadOnly="True"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         BorderThickness="0"
+                         Background="#252525"/>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Mod Table -->
+        <Border Margin="12,0,12,0" BorderBrush="#5A5A5A" BorderThickness="1">
+            <DataGrid Name="ModDataGrid"
+                      AutoGenerateColumns="False"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="False"
+                      CanUserSortColumns="False"
+                      GridLinesVisibility="All"
+                      HorizontalGridLinesBrush="#3C3C3C"
+                      VerticalGridLinesBrush="#3C3C3C"
+                      HeadersVisibility="Column"
+                      SelectionMode="Single"
+                      IsReadOnly="False"
+                      BorderThickness="0">
+                <DataGrid.Columns>
+                    <!-- Checkboxes -->
+                    <DataGridTemplateColumn Width="40">
+                        <DataGridTemplateColumn.Header>
+                            <Button Content="↓"
+                                    Classes="SortButton"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,-15,0"
+                                    Click="SortByEnabled"/>
+                        </DataGridTemplateColumn.Header>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="local:Mod">
+                                <CheckBox IsChecked="{Binding IsEnabled}"
+                                          HorizontalAlignment="Center"
+                                          Margin="10,0,0,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Icon -->
+                    <DataGridTemplateColumn Width="50" CanUserSort="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="local:Mod">
+                                <Image Source="{Binding Icon}"
+                                       Width="50" Height="50"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Mod Name -->
+                    <DataGridTemplateColumn Width="Auto" CanUserSort="False">
+                        <DataGridTemplateColumn.Header>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" 
+                                           Text="Mod" 
+                                           VerticalAlignment="Center"
+                                           Margin="-8,0,0,0"
+                                           IsHitTestVisible="False"/>
+                                <Button Grid.Column="1"
+                                        Content="↓" 
+                                        Classes="SortButton"
+                                        Margin="0,0,-20,0"
+                                        Click="SortByMod"/>
+                            </Grid>
+                        </DataGridTemplateColumn.Header>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="local:Mod">
+                                <TextBlock Text="{Binding Name}"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Modder -->
+                    <DataGridTemplateColumn Width="150" CanUserSort="False">
+                        <DataGridTemplateColumn.Header>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" 
+                                           Text="Modder" 
+                                           VerticalAlignment="Center"
+                                           Margin="-8,0,0,0"
+                                           IsHitTestVisible="False"/>
+                                <Button Grid.Column="1"
+                                        Content="↓" 
+                                        Classes="SortButton"
+                                        Margin="0,0,-20,0"
+                                        Click="SortByModder"/>
+                            </Grid>
+                        </DataGridTemplateColumn.Header>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="local:Mod">
+                                <TextBlock Text="{Binding Author}"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Description -->
+                    <DataGridTemplateColumn Header="Description" Width="*" CanUserSort="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="local:Mod">
+                                <TextBlock Text="{Binding Description}"
+                                           TextWrapping="Wrap"
+                                           VerticalAlignment="Center"
+                                           Margin="5,2,20,2"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </DockPanel>
+</Window>

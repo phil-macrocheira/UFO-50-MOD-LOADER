@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35931.197 d17.13
+VisualStudioVersion = 17.14.36623.8 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UFO 50 Mod Loader", "UFO 50 Mod Loader\UFO 50 Mod Loader.csproj", "{4B4D2C58-6188-47FE-85DE-1B59058DB139}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UFO 50 Mod loader", "UFO 50 Mod loader\UFO 50 Mod loader.csproj", "{5EA2A5EC-198B-4C22-873C-BF2C9E2831BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4B4D2C58-6188-47FE-85DE-1B59058DB139}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4B4D2C58-6188-47FE-85DE-1B59058DB139}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4B4D2C58-6188-47FE-85DE-1B59058DB139}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4B4D2C58-6188-47FE-85DE-1B59058DB139}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EA2A5EC-198B-4C22-873C-BF2C9E2831BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EA2A5EC-198B-4C22-873C-BF2C9E2831BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EA2A5EC-198B-4C22-873C-BF2C9E2831BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EA2A5EC-198B-4C22-873C-BF2C9E2831BA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {B2405418-144F-48E6-8D7A-93413C255725}
+		SolutionGuid = {F4D7B68C-F551-49C4-BA32-B490872F337B}
 	EndGlobalSection
 EndGlobal
