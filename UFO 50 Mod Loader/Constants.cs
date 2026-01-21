@@ -16,7 +16,7 @@ namespace UFO_50_Mod_Loader
             get
             {
 #if DEBUG
-                return @"C:\Users\Phil\source\repos\UFO 50 Mod loader";
+                return @"C:\Users\Phil\source\repos\UFO 50 Mod Loader";
 #else
                 return AppDomain.CurrentDomain.BaseDirectory;
 #endif

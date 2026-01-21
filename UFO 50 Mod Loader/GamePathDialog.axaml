@@ -1,6 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        x:Class="UFO_50_Mod_loader.GamePathDialog"
+        x:Class="UFO_50_Mod_Loader.GamePathDialog"
         Title="UFO 50 Install Path"
         Width="500" Height="100"
         MinWidth="400" MinHeight="100"
