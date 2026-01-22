@@ -1,32 +1,28 @@
 ﻿using Avalonia;
 using Avalonia.Media.Imaging;
-using SkiaSharp;
-using System.IO;
-using System.Reflection;
 
 namespace UFO_50_Mod_Loader.Services;
 
 public class ModDatagridService : IDisposable
 {
-    private FileSystemWatcher? _watcher;
-    private string _mymodsFolder;
+    private readonly FileWatcherService _fileWatcher;
     private bool _disposed;
 
     public event Action? ModsChanged;
 
     public ModDatagridService()
     {
-        _mymodsFolder = Constants.MyModsPath;
+        _fileWatcher = new FileWatcherService(Constants.MyModsPath);
+        _fileWatcher.FolderChanged += OnFolderChanged;
     }
 
     public string ModsFolder
     {
-        get => _mymodsFolder;
+        get => _fileWatcher.WatchPath;
         set
         {
-            if (_mymodsFolder != value) {
-                _mymodsFolder = value;
-                RestartWatcher();
+            if (_fileWatcher.WatchPath != value) {
+                _fileWatcher.WatchPath = value;
                 ModsChanged?.Invoke();
             }
         }
@@ -34,15 +30,7 @@ public class ModDatagridService : IDisposable
 
     public void Initialize()
     {
-        EnsureModsFolderExists();
-        StartWatcher();
-    }
-
-    private void EnsureModsFolderExists()
-    {
-        if (!Directory.Exists(_mymodsFolder)) {
-            Directory.CreateDirectory(_mymodsFolder);
-        }
+        _fileWatcher.Start();
     }
 
     public List<Mod> LoadMods()
@@ -50,7 +38,7 @@ public class ModDatagridService : IDisposable
         var mods = new List<Mod>();
 
         try {
-            var modFolders = Directory.GetDirectories(_mymodsFolder);
+            var modFolders = Directory.GetDirectories(_fileWatcher.WatchPath);
             foreach (var modFolder in modFolders) {
                 var mod = LoadModFromFolder(modFolder);
                 if (mod != null) {
@@ -112,47 +100,7 @@ public class ModDatagridService : IDisposable
         }
     }
 
-    private void StartWatcher()
-    {
-        if (!Directory.Exists(_mymodsFolder))
-            return;
-
-        _watcher = new FileSystemWatcher(_mymodsFolder) {
-            NotifyFilter = NotifyFilters.DirectoryName | NotifyFilters.LastWrite,
-            IncludeSubdirectories = false,
-            EnableRaisingEvents = true
-        };
-
-        _watcher.Created += OnModsFolderChanged;
-        _watcher.Deleted += OnModsFolderChanged;
-        _watcher.Renamed += OnModsFolderRenamed;
-    }
-
-    private void StopWatcher()
-    {
-        if (_watcher != null) {
-            _watcher.EnableRaisingEvents = false;
-            _watcher.Created -= OnModsFolderChanged;
-            _watcher.Deleted -= OnModsFolderChanged;
-            _watcher.Renamed -= OnModsFolderRenamed;
-            _watcher.Dispose();
-            _watcher = null;
-        }
-    }
-
-    private void RestartWatcher()
-    {
-        StopWatcher();
-        EnsureModsFolderExists();
-        StartWatcher();
-    }
-
-    private void OnModsFolderChanged(object sender, FileSystemEventArgs e)
-    {
-        ModsChanged?.Invoke();
-    }
-
-    private void OnModsFolderRenamed(object sender, RenamedEventArgs e)
+    private void OnFolderChanged()
     {
         ModsChanged?.Invoke();
     }
@@ -160,7 +108,8 @@ public class ModDatagridService : IDisposable
     public void Dispose()
     {
         if (!_disposed) {
-            StopWatcher();
+            _fileWatcher.FolderChanged -= OnFolderChanged;
+            _fileWatcher.Dispose();
             _disposed = true;
         }
     }

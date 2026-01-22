@@ -33,11 +33,12 @@ public partial class MainWindow : Window
         // Set version
         Title = $"UFO 50 Mod Loader v{Constants.Version}";
 
-        // Subscribe to log service
-        LogService.OnLog += message => {
-            var timestamp = DateTime.Now.ToString("HH:mm:ss");
-            TextLogBox.Text += $"[{timestamp}] {message}\n";
-            TextLogBox.CaretIndex = TextLogBox.Text?.Length ?? 0;
+        // Subscribe to log services
+        LogService.OnLog += Log => {
+            Dispatcher.UIThread.Post(() => {
+                TextLogBox.Text = $"{Log}";
+                TextLogBox.CaretIndex = TextLogBox.Text?.Length ?? 0;
+            });
         };
 
         // Apply saved window size
@@ -85,7 +86,7 @@ public partial class MainWindow : Window
             }
         }
 
-        // Initialize mod datagrid service
+        // Initialize datagrid service
         _modDatagridService.ModsChanged += OnModsChanged;
         _modDatagridService.Initialize();
 
@@ -246,6 +247,10 @@ public partial class MainWindow : Window
         var mods = _modDatagridService.LoadMods();
         var enabledMods = new HashSet<string>(SettingsService.Settings.EnabledMods);
 
+        foreach (var mod in FilteredMods) {
+            mod.PropertyChanged -= Mod_PropertyChanged;
+        }
+
         FilteredMods.Clear();
 
         var filtered = string.IsNullOrWhiteSpace(searchText)
@@ -257,26 +262,51 @@ public partial class MainWindow : Window
             mod.PropertyChanged += Mod_PropertyChanged;
             FilteredMods.Add(mod);
         }
-    }
 
+        CheckConflicts();
+    }
     private void Mod_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(Mod.IsEnabled)) {
             SaveEnabledMods();
+            CheckConflicts();
         }
     }
+    private void CheckConflicts()
+    {
+        var enabledModPaths = FilteredMods
+            .Where(m => m.IsEnabled)
+            .Select(m => Path.Combine(Constants.MyModsPath, m.Name))
+            .ToList();
 
+        var result = ModConflictService.CheckConflicts(enabledModPaths);
+
+        if (result.HasBlockingConflicts || result.HasPatchWarnings) {
+            LogService.ShowConflicts(result.GetMessage());
+        }
+        else {
+            LogService.HideConflicts();
+        }
+    }
     private void SaveEnabledMods()
     {
-        SettingsService.Settings.EnabledMods.Clear();
-        foreach (var mod in FilteredMods) {
-            if (mod.IsEnabled) {
-                SettingsService.Settings.EnabledMods.Add(mod.Name);
-            }
-        }
+        // Get currently enabled mods from the UI
+        var enabledInUI = FilteredMods
+            .Where(m => m.IsEnabled)
+            .Select(m => m.Name)
+            .ToHashSet();
+
+        // Keep mods that are enabled but not currently visible (filtered out by search)
+        var allEnabled = SettingsService.Settings.EnabledMods
+            .Where(name => !FilteredMods.Any(m => m.Name == name)) // Not in current view
+            .ToHashSet();
+
+        // Add currently visible enabled mods
+        allEnabled.UnionWith(enabledInUI);
+
+        SettingsService.Settings.EnabledMods = allEnabled.ToList();
         SettingsService.Save();
     }
-
     private void SearchBox_TextChanged(object? sender, TextChangedEventArgs e)
     {
         LoadMods();
