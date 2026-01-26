@@ -119,6 +119,10 @@ public partial class MainWindow : Window
             }
         }
     }
+    private async void OnInstallClick(object? sender, RoutedEventArgs e)
+    {
+        InstallService.InstallMods();
+    }
     private async void OnUninstallClick(object? sender, RoutedEventArgs e)
     {
         bool CanCopy = await _gameService.GetGameVersionAsync(Constants.VanillaCopyPath, true);

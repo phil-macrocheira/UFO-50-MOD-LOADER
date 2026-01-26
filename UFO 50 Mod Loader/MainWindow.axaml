@@ -179,7 +179,7 @@
         <!-- Buttons & Search Bar -->
         <Grid DockPanel.Dock="Top" Margin="12">
             <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Left">
-                <Button Content="Install Mods"/>
+                <Button Content="Install Mods" Click="OnInstallClick"/>
             </StackPanel>
             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="124,8,16,8">
                 <TextBox Name="SearchBox" Width="400" Watermark="Filter mods...">

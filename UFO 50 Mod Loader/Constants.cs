@@ -27,6 +27,7 @@ namespace UFO_50_Mod_Loader
         public static string VanillaCopyPath => Path.Combine(ModLoaderPath, "UFO 50 Vanilla Copy");
         public static string SettingsPath => Path.Combine(ModLoaderPath, "settings.json");
         public static string HashDataPath => Path.Combine(ModLoaderPath, "Data", "ufo50_hashes.json");
+        public static string GMLoaderIniPath => Path.Combine(ModLoaderPath, "GMLoader", "GMLoader.ini");
         static Constants()
         {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UFO_50_Mod_Loader.wrench.ico");
