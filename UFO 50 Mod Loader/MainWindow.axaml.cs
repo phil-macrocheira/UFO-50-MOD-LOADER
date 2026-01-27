@@ -67,8 +67,8 @@ public partial class MainWindow : Window
     }
     private async void OnWindowLoaded(object? sender, EventArgs e)
     {
-        // Check game installation
-        if (!_gameService.GetGamePath()) {
+        // Check game installation (repeats until valid path supplied)
+        if (!await _gameService.GetGamePath()) {
             Close();
             return;
         }
@@ -80,24 +80,28 @@ public partial class MainWindow : Window
         }
 
         // Load hash data
-        _gameService.LoadHashData();
-
-        // Copy game if exe is recognized and game not copied before
-        if (_gameService.CheckExe() && !SettingsService.Settings.CopiedGameFiles) {
-            bool CanCopy = await _gameService.GetGameVersionAsync(SettingsService.Settings.GamePath);
-            if (CanCopy) {
-                CopyService.CopyDirectory(SettingsService.Settings.GamePath, Constants.VanillaCopyPath, ".dll", ".ini");
-                SettingsService.Settings.CopiedGameFiles = true;
-                SettingsService.Save();
-                Logger.Log($"Copied UFO 50 files to 'UFO 50 Vanilla Copy' folder.");
-            }
+        bool LoadHashDataSuccess = _gameService.LoadHashData();
+        if (!LoadHashDataSuccess) {
+            Logger.Log($"[ERROR] ufo50_hashes.json file not found! Cannot verify UFO 50 version!");
         }
+        else {
+            // Copy game if exe is recognized and game not copied before
+            if (_gameService.CheckExe() && !SettingsService.Settings.CopiedGameFiles) {
+                bool CanCopy = await _gameService.GetGameVersionAsync(SettingsService.Settings.GamePath);
+                if (CanCopy) {
+                    CopyService.CopyDirectory(SettingsService.Settings.GamePath, Constants.VanillaCopyPath, ".dll", ".ini");
+                    SettingsService.Settings.CopiedGameFiles = true;
+                    SettingsService.Save();
+                    Logger.Log($"Copied UFO 50 files to 'UFO 50 Vanilla Copy' folder.");
+                }
+            }
 
-        // Initialize datagrid service
-        _modDatagridService.ModsChanged += OnModsChanged;
-        _modDatagridService.Initialize();
+            // Initialize datagrid service
+            _modDatagridService.ModsChanged += OnModsChanged;
+            _modDatagridService.Initialize();
 
-        LoadMods();
+            LoadMods();
+        }
     }
     private void OnLaunchGameClick(object? sender, RoutedEventArgs e)
     {

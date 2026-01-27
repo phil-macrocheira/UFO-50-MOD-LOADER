@@ -38,7 +38,7 @@ public class InstalledGameService
     {
         _parentWindow = parentWindow;
     }
-    public bool GetGamePath()
+    public async Task<bool> GetGamePath()
     {
         // Check if valid path already saved
         if (!string.IsNullOrEmpty(SettingsService.Settings.GamePath) &&
@@ -60,7 +60,9 @@ public class InstalledGameService
         }
 
         while (true) {
-            var result = ShowFolderDialog();
+            await MessageBoxHelper.Show(_parentWindow, "Select UFO 50 Folder", "Could not find UFO 50 automatically.\nPlease select folder where UFO 50 is installed.");
+
+            var result = await ShowFolderDialog();
 
             // User cancelled - close app
             if (result == null) {
@@ -134,15 +136,15 @@ public class InstalledGameService
         return File.Exists(exePath) && File.Exists(dataWinPath);
     }
 
-    private string? ShowFolderDialog()
+    private async Task<string?> ShowFolderDialog()
     {
         var topLevel = TopLevel.GetTopLevel(_parentWindow);
         if (topLevel == null) return null;
 
-        var folders = topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions {
+        var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions {
             Title = "Select folder where UFO 50 is installed",
             AllowMultiple = false
-        }).GetAwaiter().GetResult();
+        });
 
         if (folders.Count > 0) {
             return folders[0].Path.LocalPath;
@@ -150,10 +152,22 @@ public class InstalledGameService
 
         return null;
     }
-    public void LoadHashData()
+    public bool LoadHashData()
     {
+        if (!Path.Exists(Constants.HashDataPath)) {
+            return false;
+        }
         using var stream = File.OpenRead(Constants.HashDataPath);
         hashData = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, long>>>(stream);
+
+        if (Constants.IsLinux) {
+            hashData = hashData.ToDictionary(
+                kvp => kvp.Key.Replace('\\', '/'),
+                kvp => kvp.Value
+            );
+        }
+
+        return true;
     }
     private uint HashFile(string file)
     {
@@ -176,6 +190,9 @@ public class InstalledGameService
     }
     public string GetFileVersion(string file, uint hash)
     {
+        if (hashData == null)
+            return "Unknown";
+
         if (hashData.TryGetValue(file, out var versions)) {
             foreach (var v in versions.Reverse()) {
                 if ((ulong)hash == (ulong)v.Value)
@@ -186,6 +203,9 @@ public class InstalledGameService
     }
     private string GetLatestVersion()
     {
+        if (hashData == null || hashData.Count == 0) {
+            return "0.0.0";
+        }
         return hashData.Values.First().Keys.Max(v => new Version(v)).ToString();
     }
     public async Task<bool> GetGameVersionAsync(string gamePath, bool uninstallMode=false)

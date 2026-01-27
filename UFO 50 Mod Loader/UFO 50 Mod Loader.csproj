@@ -4,27 +4,41 @@
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-
-    <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <AssemblyName>UFO_50_Mod_Loader</AssemblyName>
-    <ApplicationIcon>cosmic_cruiser.ico</ApplicationIcon>
+    <AssemblyName>UFO 50 Mod Loader</AssemblyName>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
-
-  <ItemGroup>
+  
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <OutputType>WinExe</OutputType>
+    <ApplicationIcon>cosmic_cruiser.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <OutputType>Exe</OutputType>
+    <ApplicationIcon>cosmic_cruiser.png</ApplicationIcon>
+  </PropertyGroup>
+  
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <None Remove="wrench.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Include="wrench.ico" />
   </ItemGroup>
-
+  
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <None Remove="wrench.png" />
+    <EmbeddedResource Include="wrench.png" />
+  </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.11" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.11" />
@@ -41,7 +55,6 @@
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Update="GamePathDialog.axaml.cs">
       <DependentUpon>GamePathDialog.axaml</DependentUpon>
@@ -50,8 +63,8 @@
 
   <ItemGroup>
     <Reference Include="GMLoader">
-      <HintPath>..\UFO 50 Mod Loader\bin\Debug\net9.0\win-x64\GMLoader\GMLoader.dll</HintPath>
-      <Private>true</Private>
+        <HintPath>..\GMLoader\GMLoader.dll</HintPath>
+        <Private>true</Private>
     </Reference>
   </ItemGroup>
 
