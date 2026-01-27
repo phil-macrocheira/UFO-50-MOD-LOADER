@@ -367,5 +367,9 @@ FodyWeavers.xsd
 
 # UFO 50 Mod Loader User Files
 UFO 50 Vanilla Copy
-my mods
+UFO 50 Modded Copy
 settings.json
+log.txt
+GMLoader/data.win
+GMLoader/mods
+my mods

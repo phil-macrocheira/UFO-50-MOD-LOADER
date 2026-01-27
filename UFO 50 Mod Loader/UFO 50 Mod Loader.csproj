@@ -6,13 +6,15 @@
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AssemblyName>UFO_50_Mod_Loader</AssemblyName>
     <ApplicationIcon>cosmic_cruiser.ico</ApplicationIcon>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,30 +35,10 @@
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Config.Net" Version="5.2.1" />
-    <PackageReference Include="Costura.Fody" Version="5.7.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Fody" Version="6.9.3">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.10.2" />
-    <PackageReference Include="Magick.NET.Core" Version="14.10.2" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.14.0" />
-    <PackageReference Include="PropertyChanged.Fody" Version="4.1.0" />
-    <PackageReference Include="Serilog" Version="4.3.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="SharpCompress" Version="0.44.3" />
-    <PackageReference Include="System.Drawing.Common" Version="9.0.9" />
-    <PackageReference Include="System.Text.Json" Version="10.0.2" />
-    <PackageReference Include="VYaml" Version="1.2.0" />
+    <PackageReference Include="Magick.NET-Q8-x64" Version="14.10.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="SharpCompress" Version="0.44.4" />
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
 
@@ -68,14 +50,8 @@
 
   <ItemGroup>
     <Reference Include="GMLoader">
-      <HintPath>..\GMLoader\GMLoader.dll</HintPath>
+      <HintPath>..\UFO 50 Mod Loader\bin\Debug\net9.0\win-x64\GMLoader\GMLoader.dll</HintPath>
       <Private>true</Private>
-    </Reference>
-    <Reference Include="Underanalyzer">
-      <HintPath>..GMLoader\lib\Underanalyzer.dll</HintPath>
-    </Reference>
-    <Reference Include="UndertaleModLib">
-      <HintPath>..GMLoader\lib\UndertaleModLib.dll</HintPath>
     </Reference>
   </ItemGroup>
 

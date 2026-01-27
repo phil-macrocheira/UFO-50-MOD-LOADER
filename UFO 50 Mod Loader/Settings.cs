@@ -6,7 +6,8 @@
         public string? GamePath { get; set; }
         public double MainWindowWidth { get; set; } = 700;
         public double MainWindowHeight { get; set; } = 630;
-        public bool TemporaryInstallMode { get; set; } = false;
+        public bool OverwriteMode { get; set; } = false;
+        // public bool EnabledTop { get; set; } = false;
         public bool SelectDownloadFile { get; set; } = false;
         public bool CopiedGameFiles { get; set; } = false;
         public List<string> EnabledMods { get; set; } = new();

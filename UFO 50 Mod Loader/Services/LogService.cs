@@ -25,4 +25,15 @@ public static class LogService
         _showingConflicts = false;
         OnLog?.Invoke(MainLog);
     }
+    public static void SaveLogToFile()
+    {
+        try {
+            if (string.IsNullOrWhiteSpace(MainLog))
+                return;
+            File.WriteAllText(Path.Combine(Constants.ModLoaderPath, "log.txt"), MainLog);
+        }
+        catch (Exception ex) {
+            OnLog?.Invoke($"Failed to save log to file: {ex.Message}");
+        }
+    }
 }

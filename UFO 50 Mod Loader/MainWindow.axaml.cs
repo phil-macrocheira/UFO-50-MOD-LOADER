@@ -10,13 +10,20 @@ public partial class MainWindow : Window
 {
     private readonly ModDatagridService _modDatagridService;
     private readonly InstalledGameService _gameService;
-    public ObservableCollection<Mod> FilteredMods { get; } = new();
+    public static ObservableCollection<Mod> FilteredMods { get; } = new();
 
-    public bool TemporaryInstallMode
+    public bool OverwriteMode
     {
-        get => SettingsService.Settings.TemporaryInstallMode;
-        set => SettingsService.Settings.TemporaryInstallMode = value;
+        get => SettingsService.Settings.OverwriteMode;
+        set => SettingsService.Settings.OverwriteMode = value;
     }
+    /*
+    public bool EnabledTop
+    {
+        get => SettingsService.Settings.EnabledTop;
+        set => SettingsService.Settings.EnabledTop = value;
+    }
+    */
     public bool SelectDownloadFile
     {
         get => SettingsService.Settings.SelectDownloadFile;
@@ -46,7 +53,7 @@ public partial class MainWindow : Window
         Height = SettingsService.Settings.MainWindowHeight;
 
         // Initialize checkbox states from settings
-        TemporaryInstallModeCheckBox.IsChecked = SettingsService.Settings.TemporaryInstallMode;
+        OverwriteModeCheckBox.IsChecked = SettingsService.Settings.OverwriteMode;
         SelectDownloadFileCheckBox.IsChecked = SettingsService.Settings.SelectDownloadFile;
 
         // Initialize Services
@@ -94,15 +101,31 @@ public partial class MainWindow : Window
     }
     private void OnLaunchGameClick(object? sender, RoutedEventArgs e)
     {
-        try {
-            ProcessStartInfo psi = new ProcessStartInfo {
-                FileName = "steam://run/1147860",
-                UseShellExecute = true
-            };
-            Process.Start(psi);
+        LaunchGame();
+    }
+    private void LaunchGame()
+    {
+        if (SettingsService.Settings.OverwriteMode) {
+            try {
+                Process.Start(new ProcessStartInfo {
+                    FileName = "steam://run/1147860",
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex) {
+                Logger.Log($"Failed to launch UFO 50 via Steam: {ex.Message}");
+            }
         }
-        catch (Exception ex) {
-            Logger.Log($"Failed to launch UFO 50 via Steam: {ex.Message}");
+        else {
+            try {
+                Process.Start(new ProcessStartInfo {
+                    FileName = Constants.ModdedCopyExePath,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex) {
+                Logger.Log($"Failed to launch UFO 50 Modded Copy: {ex.Message}");
+            }
         }
     }
     private async void OnVerifyCopyClick(object? sender, RoutedEventArgs e)
@@ -121,7 +144,20 @@ public partial class MainWindow : Window
     }
     private async void OnInstallClick(object? sender, RoutedEventArgs e)
     {
-        InstallService.InstallMods();
+        bool InstalledSuccessfully = false;
+        InstallButton.IsEnabled = false;
+        InstallButton.Content = "Installing Mods...";
+        Logger.Log("Installing mods...");
+        try {
+            InstalledSuccessfully = await Task.Run(() => InstallService.InstallMods());
+        }
+        finally {
+            InstallButton.IsEnabled = true;
+            InstallButton.Content = "Install Mods and Launch Game";
+            if (!SettingsService.Settings.OverwriteMode && InstalledSuccessfully == true) {
+                LaunchGame();
+            }
+        }
     }
     private async void OnUninstallClick(object? sender, RoutedEventArgs e)
     {
@@ -140,6 +176,8 @@ public partial class MainWindow : Window
     private void OnUncheckAllClick(object? sender, RoutedEventArgs e)
     {
         foreach (var mod in FilteredMods) {
+            if (mod.Name == "UFO 50 Modding Settings")
+                continue;
             mod.IsEnabled = false;
         }
     }
@@ -151,10 +189,25 @@ public partial class MainWindow : Window
         var dialog = new GamePathDialog(_gameService);
         dialog.ShowDialog(this);
     }
-    private void OnTemporaryInstallModeClick(object? sender, RoutedEventArgs e)
+    /*
+    private void EnabledTopClick(object? sender, RoutedEventArgs e)
     {
-        TemporaryInstallModeCheckBox.IsChecked = !TemporaryInstallModeCheckBox.IsChecked;
-        SaveCheckboxSetting("Temporary Install Mode", TemporaryInstallModeCheckBox.IsChecked);
+        EnabledTopCheckBox.IsChecked = !EnabledTopCheckBox.IsChecked;
+        SaveCheckboxSetting("Keep Enabled Mods On Top", EnabledTopCheckBox.IsChecked);
+        if (EnabledTopCheckBox.IsChecked == true)
+            SortByEnabled();
+    }
+    */
+    private void OnOverwriteModeClick(object? sender, RoutedEventArgs e)
+    {
+        OverwriteModeCheckBox.IsChecked = !OverwriteModeCheckBox.IsChecked;
+        if (OverwriteModeCheckBox.IsChecked == false) {
+            InstallButton.Content = "Install Mods and Launch Game";
+        }
+        else {
+            InstallButton.Content = "Install Mods";
+        }
+        SaveCheckboxSetting("Overwrite Installed Files", OverwriteModeCheckBox.IsChecked);
     }
     private void OnSelectDownloadFileClick(object? sender, RoutedEventArgs e)
     {
@@ -210,18 +263,18 @@ public partial class MainWindow : Window
             LoadMods();
         });
     }
-    private void SortByEnabled(object? sender, RoutedEventArgs e)
+    private void SortByEnabledClick(object? sender, RoutedEventArgs e)
     {
-        var sorted = FilteredMods
-            .OrderByDescending(item => item.IsEnabled)
-            .ToList();
-
+        SortByEnabled();
+    }
+    private void SortByEnabled()
+    {
+        var sorted = FilteredMods.OrderByDescending(item => item.IsEnabled).ToList();
         FilteredMods.Clear();
         foreach (var item in sorted) {
             FilteredMods.Add(item);
         }
     }
-
     private void SortByMod(object? sender, RoutedEventArgs e)
     {
         var sorted = FilteredMods
@@ -267,10 +320,15 @@ public partial class MainWindow : Window
             FilteredMods.Add(mod);
         }
 
+        //if (SettingsService.Settings.EnabledTop)
+        //    SortByEnabled();
+
         CheckConflicts();
     }
     private void Mod_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        //if (SettingsService.Settings.EnabledTop)
+        //    SortByEnabled();
         if (e.PropertyName == nameof(Mod.IsEnabled)) {
             SaveEnabledMods();
             CheckConflicts();
@@ -278,11 +336,7 @@ public partial class MainWindow : Window
     }
     private void CheckConflicts()
     {
-        var enabledModPaths = FilteredMods
-            .Where(m => m.IsEnabled)
-            .Select(m => Path.Combine(Constants.MyModsPath, m.Name))
-            .ToList();
-
+        var enabledModPaths = FilteredMods.Where(m => m.IsEnabled).Select(m => Path.Combine(Constants.MyModsPath, m.Name)).ToList();
         var result = ModConflictService.CheckConflicts(enabledModPaths);
 
         if (result.HasBlockingConflicts || result.HasPatchWarnings) {
@@ -290,6 +344,13 @@ public partial class MainWindow : Window
         }
         else {
             LogService.HideConflicts();
+        }
+
+        if (result.HasBlockingConflicts) {
+            InstallButton.IsEnabled = false;
+        }
+        else {
+            InstallButton.IsEnabled = true;
         }
     }
     private void SaveEnabledMods()
@@ -321,6 +382,8 @@ public partial class MainWindow : Window
         SettingsService.Settings.MainWindowWidth = Width;
         SettingsService.Settings.MainWindowHeight = Height;
         SettingsService.Save();
+
+        Logger.SaveLogToFile();
 
         base.OnClosing(e);
     }

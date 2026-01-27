@@ -6,8 +6,8 @@
         mc:Ignorable="d"
         x:Class="UFO_50_Mod_Loader.MainWindow"
         x:DataType="local:MainWindow"
-        Width="700" Height="600"
-        MinWidth="700" MinHeight="450"
+        Width="700" Height="585"
+        MinWidth="700" MinHeight="435"
         Title="UFO 50 Mod Loader"
         Background="#1E1E1E">
 
@@ -144,16 +144,30 @@
                 <!-- Settings -->
                 <MenuItem Header="_Settings">
                     <MenuItem Header="UFO 50 Install Path" Click="OnGamePathMenuClick" Height="32"/>
-                    <MenuItem StaysOpenOnClick="True" Click="OnTemporaryInstallModeClick" Height="32">
+                    <MenuItem StaysOpenOnClick="True" Click="OnOverwriteModeClick" Height="32">
                         <MenuItem.Header>
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="Temporary Install Mode" VerticalAlignment="Center" FontSize="14"/>
-                                <CheckBox Name="TemporaryInstallModeCheckBox" 
-                                            IsChecked="{Binding TemporaryInstallMode}"
+                                <TextBlock Text="Overwrite Installed Files" VerticalAlignment="Center" FontSize="14"/>
+                                <CheckBox Name="OverwriteModeCheckBox" 
+                                            IsChecked="{Binding OverwriteMode}"
                                             IsHitTestVisible="False"/>
                             </StackPanel>
                         </MenuItem.Header>
                     </MenuItem>
+
+                    <!--
+                    <MenuItem StaysOpenOnClick="True" Click="EnabledTopClick" Height="32">
+                        <MenuItem.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Keep Enabled Mods On Top" VerticalAlignment="Center" FontSize="14"/>
+                                <CheckBox Name="EnabledTopCheckBox" 
+                                            IsChecked="{Binding EnabledTop}"
+                                            IsHitTestVisible="False"/>
+                            </StackPanel>
+                        </MenuItem.Header>
+                    </MenuItem>
+                    -->
+
                     <MenuItem StaysOpenOnClick="True" Click="OnSelectDownloadFileClick" Height="32">
                         <MenuItem.Header>
                             <StackPanel Orientation="Horizontal" Spacing="8">
@@ -178,23 +192,34 @@
 
         <!-- Buttons & Search Bar -->
         <Grid DockPanel.Dock="Top" Margin="12">
-            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Left">
-                <Button Content="Install Mods" Click="OnInstallClick"/>
-            </StackPanel>
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="124,8,16,8">
-                <TextBox Name="SearchBox" Width="400" Watermark="Filter mods...">
-                    <TextBox.InnerRightContent>
-                        <Button Content="✕"
-                                Click="OnClearSearchClick"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Padding="8,0"
-                                Cursor="Hand"
-                                IsVisible="{Binding Text.Length, ElementName=SearchBox}"/>
-                    </TextBox.InnerRightContent>
-                </TextBox>
-            </StackPanel>
-            <Button Content="Download Mods" HorizontalAlignment="Right"/>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+    
+            <Button Grid.Column="0" 
+                    Content="Install Mods and Launch Game" 
+                    x:Name="InstallButton" 
+                    Click="OnInstallClick"/>
+    
+            <TextBox Grid.Column="1" 
+                     Name="SearchBox" 
+                     Margin="12,0" 
+                     Watermark="Filter mods...">
+                <TextBox.InnerRightContent>
+                    <Button Content="✕"
+                            Click="OnClearSearchClick"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Padding="8,0"
+                            Cursor="Hand"
+                            IsVisible="{Binding Text.Length, ElementName=SearchBox}"/>
+                </TextBox.InnerRightContent>
+            </TextBox>
+    
+            <Button Grid.Column="2" 
+                    Content="Download Mods"/>
         </Grid>
 
         <!-- Text Log -->
@@ -231,7 +256,7 @@
                                     Classes="SortButton"
                                     HorizontalAlignment="Center"
                                     Margin="0,0,-15,0"
-                                    Click="SortByEnabled"/>
+                                    Click="SortByEnabledClick"/>
                         </DataGridTemplateColumn.Header>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate x:DataType="local:Mod">
