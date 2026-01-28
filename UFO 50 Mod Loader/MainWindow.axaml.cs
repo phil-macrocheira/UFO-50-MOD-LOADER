@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using UFO_50_Mod_Loader.Models;
 
 namespace UFO_50_Mod_Loader;
 
@@ -67,6 +68,11 @@ public partial class MainWindow : Window
     }
     private async void OnWindowLoaded(object? sender, EventArgs e)
     {
+        // Set Install Button Text on open
+        if (OverwriteModeCheckBox.IsChecked == true) {
+            InstallButton.Content = "Install Mods";
+        }
+
         // Check game installation (repeats until valid path supplied)
         if (!await _gameService.GetGamePath()) {
             Close();
@@ -101,6 +107,9 @@ public partial class MainWindow : Window
             _modDatagridService.Initialize();
 
             LoadMods();
+
+            if (SettingsService.Settings.FirstTimeRun == true)
+                FirstTimeRun();
         }
     }
     private void OnLaunchGameClick(object? sender, RoutedEventArgs e)
@@ -157,7 +166,12 @@ public partial class MainWindow : Window
         }
         finally {
             InstallButton.IsEnabled = true;
-            InstallButton.Content = "Install Mods and Launch Game";
+
+            if (OverwriteModeCheckBox.IsChecked == false)
+                InstallButton.Content = "Install Mods and Launch Game";
+            else
+                InstallButton.Content = "Install Mods";
+
             if (!SettingsService.Settings.OverwriteMode && InstalledSuccessfully == true) {
                 LaunchGame();
             }
@@ -171,11 +185,19 @@ public partial class MainWindow : Window
             Logger.Log($"Uninstalled UFO 50 Mods.");
         }
     }
-    private void OnSaveModListClick(object? sender, RoutedEventArgs e)
+    private async void OnSaveModListClick(object? sender, RoutedEventArgs e)
     {
+        await ModListWindow.SaveModListAsync(this);
     }
     private void OnLoadModListClick(object? sender, RoutedEventArgs e)
     {
+        var dialog = new ModListWindow();
+        dialog.ModListLoaded += () => {
+            LoadMods();
+            CheckConflicts();
+            SortByEnabled();
+        };
+        dialog.ShowDialog(this);
     }
     private void OnUncheckAllClick(object? sender, RoutedEventArgs e)
     {
@@ -301,6 +323,17 @@ public partial class MainWindow : Window
         foreach (var item in sorted) {
             FilteredMods.Add(item);
         }
+    }
+    private void FirstTimeRun()
+    {
+        var UFO50ModdingSettingsMod = FilteredMods.FirstOrDefault(m => m.Name == "UFO 50 Modding Settings");
+        if (UFO50ModdingSettingsMod != null) {
+            UFO50ModdingSettingsMod.IsEnabled = true;
+            SaveEnabledMods();
+        }
+
+        SettingsService.Settings.FirstTimeRun = false;
+        SettingsService.Save();
     }
     private void LoadMods()
     {

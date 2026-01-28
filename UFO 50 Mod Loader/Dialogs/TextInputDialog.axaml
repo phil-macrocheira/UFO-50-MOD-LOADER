@@ -1,0 +1,27 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="UFO_50_Mod_Loader.TextInputDialog"
+        Title="Input"
+        Width="350" Height="150"
+        MinWidth="300" MinHeight="130"
+        Background="#1E1E1E"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <Window.Styles>
+        <Style Selector="Button">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Styles>
+    
+    <Grid Margin="20" RowDefinitions="Auto,Auto,*,Auto">
+        <TextBlock x:Name="PromptText" Grid.Row="0" Foreground="White" Margin="0,0,0,10"/>
+        <TextBox x:Name="InputTextBox" Grid.Row="1" Watermark="Enter name..."/>
+        
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+            <Button Content="Cancel" Click="OnCancelClick" Width="80"/>
+            <Button x:Name="OkButton" Content="OK" Click="OnOkClick" Width="80" IsDefault="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

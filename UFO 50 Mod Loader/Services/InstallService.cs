@@ -1,4 +1,5 @@
 ﻿using GMLoader;
+using UFO_50_Mod_Loader.Models;
 
 namespace UFO_50_Mod_Loader.Services
 {
@@ -100,7 +101,6 @@ namespace UFO_50_Mod_Loader.Services
                 });
 
                 GMLoaderResult result = GMLoaderProgram.Run(Constants.GMLoaderIniPath);
-
                 if (result.Success) {
                     var GameDataWinPath = Path.Combine(gamePath, "data.win");
                     File.Copy(Constants.GMLoaderDataWinPath, GameDataWinPath, overwrite: true);
@@ -108,6 +108,8 @@ namespace UFO_50_Mod_Loader.Services
                     return true;
                 }
                 else {
+Logger.Log($"Mod installation failed: {result.ErrorMessage}");
+if (result.Exception != null) Logger.Log($"Stack trace: {result.Exception.StackTrace}");
                     Logger.Log($"Mod installation failed.");
                     return false;
                 }

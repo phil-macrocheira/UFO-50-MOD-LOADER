@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UFO_50_Mod_Loader"
+        xmlns:Models="clr-namespace:UFO_50_Mod_Loader.Models"
         mc:Ignorable="d"
         x:Class="UFO_50_Mod_Loader.MainWindow"
         x:DataType="local:MainWindow"
@@ -259,7 +260,7 @@
                                     Click="SortByEnabledClick"/>
                         </DataGridTemplateColumn.Header>
                         <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="local:Mod">
+                            <DataTemplate x:DataType="Models:Mod">
                                 <CheckBox IsChecked="{Binding IsEnabled}"
                                           HorizontalAlignment="Center"
                                           Margin="10,0,0,0"/>
@@ -270,7 +271,7 @@
                     <!-- Icon -->
                     <DataGridTemplateColumn Width="50" CanUserSort="False">
                         <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="local:Mod">
+                            <DataTemplate x:DataType="Models:Mod">
                                 <Image Source="{Binding Icon}"
                                        Width="50" Height="50"/>
                             </DataTemplate>
@@ -298,7 +299,7 @@
                             </Grid>
                         </DataGridTemplateColumn.Header>
                         <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="local:Mod">
+                            <DataTemplate x:DataType="Models:Mod">
                                 <TextBlock Text="{Binding Name}"
                                            VerticalAlignment="Center"
                                            Margin="4,0"/>
@@ -327,7 +328,7 @@
                             </Grid>
                         </DataGridTemplateColumn.Header>
                         <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="local:Mod">
+                            <DataTemplate x:DataType="Models:Mod">
                                 <TextBlock Text="{Binding Author}"
                                            VerticalAlignment="Center"
                                            Margin="4,0"/>
@@ -338,7 +339,7 @@
                     <!-- Description -->
                     <DataGridTemplateColumn Header="Description" Width="*" CanUserSort="False">
                         <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="local:Mod">
+                            <DataTemplate x:DataType="Models:Mod">
                                 <TextBlock Text="{Binding Description}"
                                            TextWrapping="Wrap"
                                            VerticalAlignment="Center"

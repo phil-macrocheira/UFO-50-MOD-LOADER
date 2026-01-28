@@ -1,5 +1,6 @@
 ﻿using SharpCompress.Archives;
 using SharpCompress.Common;
+using UFO_50_Mod_Loader.Models;
 
 namespace UFO_50_Mod_Loader.Services;
 

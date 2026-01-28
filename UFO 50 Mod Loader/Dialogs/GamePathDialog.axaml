@@ -1,0 +1,16 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="UFO_50_Mod_Loader.GamePathDialog"
+        Title="UFO 50 Install Path"
+        Width="500" Height="100"
+        MinWidth="400" MinHeight="100"
+        MaxHeight="120"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="#1E1E1E">
+    
+    <StackPanel Margin="16" Spacing="12">
+        <TextBox Name="PathTextBox" Watermark="Enter UFO 50 installation path..."/>
+        <Button Name="SaveButton" Content="Save" HorizontalAlignment="Right" Width="52" Click="OnSaveClick"/>
+    </StackPanel>
+</Window>

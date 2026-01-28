@@ -1,0 +1,11 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="UFO_50_Mod_Loader.ModDownloaderWindow"
+        Title="Mod Downloader">
+        Width="700" Height="300"
+        MinWidth="700" MinHeight="300"
+        Background="#1E1E1E">
+</Window>
