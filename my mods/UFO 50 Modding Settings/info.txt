@@ -1,0 +1,2 @@
+Phil
+Adds a Modding Settings menu that lists all installed mods and has settings for saving and achievements

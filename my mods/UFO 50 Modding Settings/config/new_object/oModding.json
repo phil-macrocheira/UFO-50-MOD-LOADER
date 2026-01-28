@@ -1,0 +1,11 @@
+{
+  "Sprite": null,
+  "Parent": null,
+  "TextureMaskID": null,
+  "CollisionShape": "Circle",
+  "IsVisible": false,
+  "IsSolid": false,
+  "IsPersistent": false,
+  "UsesPhysics": false,
+  "IsSensor": false
+}

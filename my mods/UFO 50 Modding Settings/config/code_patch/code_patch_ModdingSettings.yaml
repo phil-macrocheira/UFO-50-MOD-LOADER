@@ -1,0 +1,114 @@
+gml_GlobalScript_scrAch:
+  - type: findreplacetrim
+    find: |-
+      if (global.cheatedNoSave && _ach != global.ACH_TERMINAL)
+          return false;
+    code: |-
+      if (global.cheatID > 0 && global.achievements_mode != 2)
+        return false;
+      if (global.achievements_mode == 0)
+        return false;
+gml_Object_oLibrary_Create_0:
+  - type: findappend
+    find: |-
+        global.currGame = 0;
+    code: |-
+        instance_create(0, 0, oModding);
+gml_Object_oPauseMenu_Create_0:
+  - type: findappend
+    find: |-
+        STATE_GAMEINFO = 13;
+    code: |-
+        STATE_MODDING = 15;
+        mod_page_list = ds_list_create();
+gml_Object_oPauseMenu_Draw_0:
+  - type: findprepend
+    find: |-
+        if (state == STATE_KEYCONFIG)
+    code: |-
+        if (state == STATE_MODDING) {
+          for (var i = 0; i < page_len; i++)
+            draw_text(_xview + 85, _yview + 95 + (10 * i), ds_list_find_value(mod_page_list, i));
+        }
+  - type: findreplacetrim
+    find: |-
+      else if (itemType[i] == TYPE_DUAL || itemType[i] == TYPE_DUAL_INT)
+      {
+          draw_text(LEFT_TEXT_X, _yPos, itemName[i]);
+          var _index = itemIndex[i];
+          var _values = itemValues[i];
+          draw_set_halign(fa_right);
+          draw_text(RIGHT_TEXT_X, _yPos, string(_values[_index]));
+          draw_set_halign(fa_left);
+          _yPos += 12;
+      }
+    code: |-
+      else if (itemType[i] == TYPE_DUAL || itemType[i] == TYPE_DUAL_INT)
+      {
+          draw_text(LEFT_TEXT_X, _yPos, itemName[i]);
+          var _index = itemIndex[i];
+          var _values = itemValues[i];
+          draw_set_halign(fa_right);
+
+          if (i <= 1  && menuHeader == "MODDING SETTINGS") {
+            var text = "Off";
+            if (_values[_index] == 1)
+              text = "On";
+            else if (_values[_index] == 2)
+              text = "On With Cheats";
+            draw_text(RIGHT_TEXT_X, _yPos, text)
+          }
+          else
+            draw_text(RIGHT_TEXT_X, _yPos, string(_values[_index]));
+          draw_set_halign(fa_left);
+          _yPos += 12;
+      }
+gml_Object_oPauseMenu_Other_22:
+  - type: findreplacetrim
+    find: |-
+        scrMenuSpacer(MENU_BIG_SPACER);
+        scrMenuSpacer(MENU_BIG_SPACER);
+    code: |-
+        OP_MODDING = scrMenuItem(TYPE_SINGLE, "MODDING SETTINGS");
+        scrMenuSpacer(MENU_BIG_SPACER);
+  - type: findreplace
+    find: |-
+        scrSwitchSub(SUB_NAV);
+    code: |-
+        if (statePrev == STATE_MODDING)
+          menuSel = OP_MODDING;
+        scrSwitchSub(SUB_NAV);
+  - type: findreplace
+    find: |-
+        case OP_BACK:
+    code: |-
+        case OP_MODDING:
+          scrSwitchState(STATE_MODDING);
+          scrSfxLibrary(soundSubEnter[currentSoundSet]);
+          break;
+        case OP_BACK:
+gml_Object_oPauseMenu_Other_18:
+  - type: findreplace
+    find: |-
+      if (global.cheatID > 0 && _getGameID != 51)
+    code: |-
+      if (global.saving_mode == 2) {
+        global.cheatedNoSave = false;
+        global.cheatedNoLoad = false;
+      }
+      else if (global.cheatID > 0 && _getGameID != 51)
+gml_Object_oLibrary_Other_15:
+  - type: findappendtrim
+    find: |-
+      else if (substate == SUB_GAME_CHOSEN)
+      {
+    code: |-
+      if (global.saving_mode == 0) {
+        global.cheatedNoSave = true;
+        global.cheatedNoSave = true;
+        scrSaveNotification(-1);
+      }
+      else {
+        global.cheatedNoSave = false;
+        global.cheatedNoSave = false;
+      }
