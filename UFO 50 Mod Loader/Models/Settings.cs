@@ -5,7 +5,8 @@
         public string Version { get; set; } = Constants.Version;
         public string? GamePath { get; set; }
         public double MainWindowWidth { get; set; } = 700;
-        public double MainWindowHeight { get; set; } = 630;
+        public double MainWindowHeight { get; set; } = 585;
+        public double TextBoxHeight { get; set; } = 145;
         public bool FirstTimeRun { get; set; } = true;
         public bool OverwriteMode { get; set; } = false;
         // public bool EnabledTop { get; set; } = false;

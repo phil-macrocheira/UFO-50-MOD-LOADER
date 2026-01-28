@@ -19,7 +19,7 @@ namespace UFO_50_Mod_Loader.Models
         public static string ModdedCopyExePath => Path.Combine(ModdedCopyPath, "ufo50.exe");
         public static string VanillaDataWinPath => Path.Combine(VanillaCopyPath, "data.win");
         public static string VanillaExtPath => Path.Combine(VanillaCopyPath, "ext");
-        public static string SettingsPath => Path.Combine(ModLoaderRoot, "settings.json");
+        public static string SettingsPath => Path.Combine(ModLoaderPath, "settings.json");
         public static string HashDataPath => Path.Combine(ModLoaderPath, "Data", "ufo50_hashes.json");
         public static string GMLoaderPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GMLoader");
         public static string GMLoaderIniPath => Path.Combine(GMLoaderPath, "GMLoader.ini");

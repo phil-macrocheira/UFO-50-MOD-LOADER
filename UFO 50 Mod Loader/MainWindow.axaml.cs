@@ -4,6 +4,7 @@ using Avalonia.Threading;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using UFO_50_Mod_Loader.Models;
+using YamlDotNet.Serialization;
 
 namespace UFO_50_Mod_Loader;
 
@@ -52,6 +53,7 @@ public partial class MainWindow : Window
         // Apply saved window size
         Width = SettingsService.Settings.MainWindowWidth;
         Height = SettingsService.Settings.MainWindowHeight;
+        ContentGrid.RowDefinitions[2].Height = new GridLength(SettingsService.Settings.TextBoxHeight);
 
         // Initialize checkbox states from settings
         OverwriteModeCheckBox.IsChecked = SettingsService.Settings.OverwriteMode;
@@ -159,16 +161,22 @@ public partial class MainWindow : Window
     {
         bool InstalledSuccessfully = false;
         InstallButton.IsEnabled = false;
-        InstallButton.Content = "Installing Mods...";
-        Logger.Log("Installing mods...");
+        if (SettingsService.Settings.OverwriteMode) {
+            InstallButton.Content = "Installing Mods...";
+            Logger.Log("Installing mods...");
+        }
+        else {
+            InstallButton.Content = "Loading Mods...";
+            Logger.Log("Loading mods...");
+        }
         try {
-            InstalledSuccessfully = await Task.Run(() => InstallService.InstallMods());
+            InstalledSuccessfully = await Task.Run(() => InstallService.InstallModsAsync());
         }
         finally {
             InstallButton.IsEnabled = true;
 
             if (OverwriteModeCheckBox.IsChecked == false)
-                InstallButton.Content = "Install Mods and Launch Game";
+                InstallButton.Content = "Load Mods and Launch Game";
             else
                 InstallButton.Content = "Install Mods";
 
@@ -228,7 +236,7 @@ public partial class MainWindow : Window
     {
         OverwriteModeCheckBox.IsChecked = !OverwriteModeCheckBox.IsChecked;
         if (OverwriteModeCheckBox.IsChecked == false) {
-            InstallButton.Content = "Install Mods and Launch Game";
+            InstallButton.Content = "Load Mods and Launch Game";
         }
         else {
             InstallButton.Content = "Install Mods";
@@ -418,6 +426,7 @@ public partial class MainWindow : Window
         // Save window size
         SettingsService.Settings.MainWindowWidth = Width;
         SettingsService.Settings.MainWindowHeight = Height;
+        SettingsService.Settings.TextBoxHeight = ContentGrid.RowDefinitions[2].Height.Value;
         SettingsService.Save();
 
         Logger.SaveLogToFile();

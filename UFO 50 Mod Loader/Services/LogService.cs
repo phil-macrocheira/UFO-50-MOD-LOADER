@@ -6,7 +6,7 @@ public static class LogService
 {
     public static event Action<string>? OnLog;
     public static string MainLog { get; private set; } = "";
-    private static bool _showingConflicts = false;
+    public static bool _showingConflicts = false;
 
     public static void Log(string message)
     {

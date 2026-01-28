@@ -121,6 +121,13 @@
         <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot">
             <Setter Property="Background" Value="#3C3C3C"/>
         </Style>
+        <!-- GridSplitter style -->
+        <Style Selector="GridSplitter">
+            <Setter Property="Background" Value="#5A5A5A"/>
+        </Style>
+        <Style Selector="GridSplitter:pointerover">
+            <Setter Property="Background" Value="#7A7A7A"/>
+        </Style>
     </Window.Styles>
 
     <DockPanel LastChildFill="True">
@@ -200,7 +207,7 @@
             </Grid.ColumnDefinitions>
     
             <Button Grid.Column="0" 
-                    Content="Install Mods and Launch Game" 
+                    Content="Load Mods and Launch Game" 
                     x:Name="InstallButton" 
                     Click="OnInstallClick"/>
     
@@ -223,132 +230,150 @@
                     Content="Download Mods"/>
         </Grid>
 
-        <!-- Text Log -->
-        <Border DockPanel.Dock="Bottom" Height="145" BorderBrush="#5A5A5A" BorderThickness="1" Margin="12,8,12,12">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <TextBox Name="TextLogBox"
-                         IsReadOnly="True"
-                         AcceptsReturn="True"
-                         TextWrapping="Wrap"
-                         BorderThickness="0"
-                         Background="#252525"/>
-            </ScrollViewer>
-        </Border>
+        <!-- Main content area with resizable text log -->
+        <Grid x:Name="ContentGrid" Margin="12,0,12,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" MinHeight="85"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="145" MinHeight="55"/>
+            </Grid.RowDefinitions>
 
-        <!-- Mod Table -->
-        <Border Margin="12,0,12,0" BorderBrush="#5A5A5A" BorderThickness="1">
-            <DataGrid Name="ModDataGrid"
-                      AutoGenerateColumns="False"
-                      CanUserReorderColumns="False"
-                      CanUserResizeColumns="False"
-                      CanUserSortColumns="False"
-                      GridLinesVisibility="All"
-                      HorizontalGridLinesBrush="#3C3C3C"
-                      VerticalGridLinesBrush="#3C3C3C"
-                      HeadersVisibility="Column"
-                      SelectionMode="Single"
-                      IsReadOnly="False"
-                      BorderThickness="0">
-                <DataGrid.Columns>
-                    <!-- Checkboxes -->
-                    <DataGridTemplateColumn Width="40">
-                        <DataGridTemplateColumn.Header>
-                            <Button Content="↓"
-                                    Classes="SortButton"
-                                    HorizontalAlignment="Center"
-                                    Margin="0,0,-15,0"
-                                    Click="SortByEnabledClick"/>
-                        </DataGridTemplateColumn.Header>
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="Models:Mod">
-                                <CheckBox IsChecked="{Binding IsEnabled}"
-                                          HorizontalAlignment="Center"
-                                          Margin="10,0,0,0"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-
-                    <!-- Icon -->
-                    <DataGridTemplateColumn Width="50" CanUserSort="False">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="Models:Mod">
-                                <Image Source="{Binding Icon}"
-                                       Width="50" Height="50"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-
-                    <!-- Mod Name -->
-                    <DataGridTemplateColumn Width="Auto" CanUserSort="False">
-                        <DataGridTemplateColumn.Header>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" 
-                                           Text="Mod" 
-                                           VerticalAlignment="Center"
-                                           Margin="-8,0,0,0"
-                                           IsHitTestVisible="False"/>
-                                <Button Grid.Column="1"
-                                        Content="↓" 
+            <!-- Mod Table -->
+            <Border Grid.Row="0" BorderBrush="#5A5A5A" BorderThickness="1">
+                <DataGrid Name="ModDataGrid"
+                          AutoGenerateColumns="False"
+                          CanUserReorderColumns="False"
+                          CanUserResizeColumns="False"
+                          CanUserSortColumns="False"
+                          GridLinesVisibility="All"
+                          HorizontalGridLinesBrush="#3C3C3C"
+                          VerticalGridLinesBrush="#3C3C3C"
+                          HeadersVisibility="Column"
+                          SelectionMode="Single"
+                          IsReadOnly="False"
+                          BorderThickness="0">
+                    <DataGrid.Columns>
+                        <!-- Checkboxes -->
+                        <DataGridTemplateColumn Width="40">
+                            <DataGridTemplateColumn.Header>
+                                <Button Content="↓"
                                         Classes="SortButton"
-                                        Margin="0,0,-20,0"
-                                        Click="SortByMod"/>
-                            </Grid>
-                        </DataGridTemplateColumn.Header>
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="Models:Mod">
-                                <TextBlock Text="{Binding Name}"
-                                           VerticalAlignment="Center"
-                                           Margin="4,0"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+                                        HorizontalAlignment="Center"
+                                        Margin="0,0,-15,0"
+                                        Click="SortByEnabledClick"/>
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="Models:Mod">
+                                    <CheckBox IsChecked="{Binding IsEnabled}"
+                                              HorizontalAlignment="Center"
+                                              Margin="10,0,0,0"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
-                    <!-- Modder -->
-                    <DataGridTemplateColumn Width="150" CanUserSort="False">
-                        <DataGridTemplateColumn.Header>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" 
-                                           Text="Modder" 
-                                           VerticalAlignment="Center"
-                                           Margin="-8,0,0,0"
-                                           IsHitTestVisible="False"/>
-                                <Button Grid.Column="1"
-                                        Content="↓" 
-                                        Classes="SortButton"
-                                        Margin="0,0,-20,0"
-                                        Click="SortByModder"/>
-                            </Grid>
-                        </DataGridTemplateColumn.Header>
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="Models:Mod">
-                                <TextBlock Text="{Binding Author}"
-                                           VerticalAlignment="Center"
-                                           Margin="4,0"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+                        <!-- Icon -->
+                        <DataGridTemplateColumn Width="50" CanUserSort="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="Models:Mod">
+                                    <Image Source="{Binding Icon}"
+                                           Width="50" Height="50"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
-                    <!-- Description -->
-                    <DataGridTemplateColumn Header="Description" Width="*" CanUserSort="False">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="Models:Mod">
-                                <TextBlock Text="{Binding Description}"
-                                           TextWrapping="Wrap"
-                                           VerticalAlignment="Center"
-                                           Margin="5,2,20,2"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-            </DataGrid>
-        </Border>
+                        <!-- Mod Name -->
+                        <DataGridTemplateColumn Width="Auto" CanUserSort="False">
+                            <DataGridTemplateColumn.Header>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" 
+                                               Text="Mod" 
+                                               VerticalAlignment="Center"
+                                               Margin="-8,0,0,0"
+                                               IsHitTestVisible="False"/>
+                                    <Button Grid.Column="1"
+                                            Content="↓" 
+                                            Classes="SortButton"
+                                            Margin="0,0,-20,0"
+                                            Click="SortByMod"/>
+                                </Grid>
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="Models:Mod">
+                                    <TextBlock Text="{Binding Name}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Modder -->
+                        <DataGridTemplateColumn Width="150" CanUserSort="False">
+                            <DataGridTemplateColumn.Header>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" 
+                                               Text="Modder" 
+                                               VerticalAlignment="Center"
+                                               Margin="-8,0,0,0"
+                                               IsHitTestVisible="False"/>
+                                    <Button Grid.Column="1"
+                                            Content="↓" 
+                                            Classes="SortButton"
+                                            Margin="0,0,-20,0"
+                                            Click="SortByModder"/>
+                                </Grid>
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="Models:Mod">
+                                    <TextBlock Text="{Binding Author}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Description -->
+                        <DataGridTemplateColumn Header="Description" Width="*" CanUserSort="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="Models:Mod">
+                                    <TextBlock Text="{Binding Description}"
+                                               TextWrapping="Wrap"
+                                               VerticalAlignment="Center"
+                                               Margin="5,2,20,2"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <!-- GridSplitter for resizing -->
+            <GridSplitter Grid.Row="1" 
+                          Height="6" 
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Center"
+                          ResizeDirection="Rows"
+                          Cursor="SizeNorthSouth"
+                          Margin="0,4"/>
+
+            <!-- Text Log -->
+            <Border Grid.Row="2" BorderBrush="#5A5A5A" BorderThickness="1">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <TextBox Name="TextLogBox"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             BorderThickness="0"
+                             Background="#252525"/>
+                </ScrollViewer>
+            </Border>
+        </Grid>
     </DockPanel>
 </Window>
