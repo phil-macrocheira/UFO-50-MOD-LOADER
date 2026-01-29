@@ -10,8 +10,6 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
     <SelfContained>true</SelfContained>
   </PropertyGroup>
   
@@ -24,6 +22,10 @@
   <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
     <OutputType>Exe</OutputType>
     <ApplicationIcon>cosmic_cruiser.png</ApplicationIcon>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
   </PropertyGroup>
   
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
@@ -52,6 +54,10 @@
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\GMLoader\GMLoader.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Update="Dialogs\GamePathDialog.axaml.cs">
@@ -66,10 +72,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="GMLoader">
-        <HintPath>bin\Debug\net9.0\win-x64\GMLoader\GMLoader.dll</HintPath>
-        <Private>true</Private>
-    </Reference>
+    <None Update="Data\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

@@ -47,7 +47,7 @@ public partial class MainWindow : Window
             Dispatcher.UIThread.Post(() => {
                 TextLogBox.Text = $"{Log}";
                 TextLogBox.CaretIndex = TextLogBox.Text?.Length ?? 0;
-            });
+            }, DispatcherPriority.Render);
         };
 
         // Apply saved window size
