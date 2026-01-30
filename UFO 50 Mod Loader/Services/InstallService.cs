@@ -22,6 +22,7 @@ namespace UFO_50_Mod_Loader.Services
                     Directory.Delete(Constants.ModdedCopyPath, recursive: true);
                 await Task.Run(() => CopyService.CopyDirectory(Constants.VanillaCopyPath, Constants.ModdedCopyPath));
                 gamePath = Constants.ModdedCopyPath;
+                File.WriteAllText(Constants.ModdedCopySteamAppID, "1147860"); // Create steam_appid.txt
             }
 
             await GenerateModsFolderAsync(gamePath);

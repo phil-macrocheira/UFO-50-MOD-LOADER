@@ -17,6 +17,7 @@ namespace UFO_50_Mod_Loader.Models
         public static string VanillaCopyPath => Path.Combine(ModLoaderPath, "UFO 50 Vanilla Copy");
         public static string ModdedCopyPath => Path.Combine(ModLoaderPath, "UFO 50 Modded Copy");
         public static string ModdedCopyExePath => Path.Combine(ModdedCopyPath, "ufo50.exe");
+        public static string ModdedCopySteamAppID => Path.Combine(ModdedCopyPath, "steam_appid.txt");
         public static string VanillaDataWinPath => Path.Combine(VanillaCopyPath, "data.win");
         public static string VanillaExtPath => Path.Combine(VanillaCopyPath, "ext");
         public static string SettingsPath => Path.Combine(ModLoaderPath, "settings.json");
