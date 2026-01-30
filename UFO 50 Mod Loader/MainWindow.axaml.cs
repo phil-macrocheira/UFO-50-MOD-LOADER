@@ -35,7 +35,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         // Set version
-        Title = $"UFO 50 Mod Loader v{Constants.Version}";
+        Title = $"UFO 50 Mod Loader v{Constants.Version} BETA";
 
         // Subscribe to log services
         LogService.OnLog += Log => {
