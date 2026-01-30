@@ -206,12 +206,13 @@ public class InstalledGameService
     private string GetLatestVersion()
     {
         if (hashData == null || hashData.Count == 0) {
-            return "0.0.0";
+            return "";
         }
         return hashData.Values.First().Keys.Max(v => new Version(v)).ToString();
     }
-    public async Task<bool> GetGameVersionAsync(string gamePath, bool uninstallMode=false)
+    public async Task<string> GetGameVersionAsync(string gamePath, bool uninstallMode=false)
     {
+        string version = "Unknown";
         var fileHashes = await HashAllFilesAsync(gamePath);
         var fileVersions = new Dictionary<string, string>();
 
@@ -279,17 +280,21 @@ public class InstalledGameService
 
         if (allGroupVersions.Any(v => v == "Modded")) {
             Logger.Log("SETUP ERROR: Cannot copy UFO 50 files. Installed UFO 50 version is already modded. Verify UFO 50 in Steam and select 'Verify Vanilla Copy' in the Mod Loader.");
+            version = "Modded";
             CanCopy = false;
         }
         else if (allGroupVersions.Any(v => v == "Mismatched Vanilla")) {
-            Logger.Log("SETUP ERROR: Cannot copy UFO 50 files. Installed UFO 50 version is somehow a mix of different versions. Verify UFO 50 in Steam and select 'Verify Vanilla Copy' in the Mod Loader.");
+            Logger.Log("SETUP ERROR: Cannot copy UFO 50 files. Installed UFO 50 version is either missing files or is a mix of different versions. Verify UFO 50 in Steam and select 'Verify Vanilla Copy' in the Mod Loader.");
+            version = "Mismatched Vanilla";
             CanCopy = false;
         }
         else if (allGroupVersions.Distinct().Count() == 1) {
             gameVersion = allGroupVersions.First();
+            version = gameVersion;
         }
         else {
-            Logger.Log("SETUP ERROR: Cannot copy UFO 50 files. Installed UFO 50 version is somehow a mix of different versions. Verify UFO 50 in Steam and select 'Verify Vanilla Copy' in the Mod Loader.");
+            Logger.Log("SETUP ERROR: Cannot copy UFO 50 files. Installed UFO 50 version is either missing files or is a mix of different versions. Verify UFO 50 in Steam and select 'Verify Vanilla Copy' in the Mod Loader.");
+            version = "Mismatched Vanilla";
             CanCopy = false;
         }
 
@@ -300,7 +305,17 @@ public class InstalledGameService
                 Logger.Log("WARNING: Installing outdated UFO 50 version. Verify UFO 50 in Steam to update to latest version.");
         }
 
-        return CanCopy;
+        return version;
+    }
+    public HashSet<string> GetFileList(string version)
+    {
+        if (hashData == null)
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        return hashData
+            .Where(kvp => kvp.Value.ContainsKey(version))
+            .Select(kvp => kvp.Key)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
     public bool CheckExe()
     {

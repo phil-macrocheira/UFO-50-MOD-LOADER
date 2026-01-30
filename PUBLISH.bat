@@ -1,5 +1,8 @@
 @echo off
 
+:: Delete publish folder
+rmdir /s /q "publish"
+
 :: Publish windows
 dotnet publish "UFO 50 Mod Loader\UFO 50 Mod Loader.csproj" -c Release -r win-x64 -o "publish\win-x64"
 

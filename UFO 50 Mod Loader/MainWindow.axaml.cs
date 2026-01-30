@@ -96,13 +96,7 @@ public partial class MainWindow : Window
         else {
             // Copy game if exe is recognized and game not copied before
             if (_gameService.CheckExe() && !SettingsService.Settings.CopiedGameFiles) {
-                bool CanCopy = await _gameService.GetGameVersionAsync(SettingsService.Settings.GamePath);
-                if (CanCopy) {
-                    CopyService.CopyDirectory(SettingsService.Settings.GamePath, Constants.VanillaCopyPath, ".dll", ".ini");
-                    SettingsService.Settings.CopiedGameFiles = true;
-                    SettingsService.Save();
-                    Logger.Log($"Copied UFO 50 files to 'UFO 50 Vanilla Copy' folder.");
-                }
+                CopyUFO50Vanilla();
             }
 
             // Initialize datagrid service
@@ -122,16 +116,42 @@ public partial class MainWindow : Window
     private async void OnVerifyCopyClick(object? sender, RoutedEventArgs e)
     {
         if (_gameService.CheckExe()) {
-            bool CanCopy = await _gameService.GetGameVersionAsync(SettingsService.Settings.GamePath);
-            if (CanCopy) {
-                if (Directory.Exists(Constants.VanillaCopyPath))
-                    Directory.Delete(Constants.VanillaCopyPath, recursive: true); // DELETE CURRENT VANILLA COPY
-                CopyService.CopyDirectory(SettingsService.Settings.GamePath, Constants.VanillaCopyPath, ".dll", ".ini");
-                SettingsService.Settings.CopiedGameFiles = true;
-                SettingsService.Save();
-                Logger.Log($"Copied UFO 50 files to 'UFO 50 Vanilla Copy' folder.");
+            CopyUFO50Vanilla();
+        }
+    }
+    private async Task CopyUFO50Vanilla()
+    {
+        string version = await _gameService.GetGameVersionAsync(SettingsService.Settings.GamePath);
+        HashSet<string> versionFileSet = _gameService.GetFileList(version);
+        versionFileSet.Add("Steamworks_x64.dll");
+        versionFileSet.Add("steam_api64.dll");
+        versionFileSet.Add("options.ini");
+
+        if (CanCopy(version)) {
+            if (Directory.Exists(Constants.VanillaCopyPath))
+                Directory.Delete(Constants.VanillaCopyPath, recursive: true);
+            await CopyService.CopyDirectoryAsync(SettingsService.Settings.GamePath, Constants.VanillaCopyPath, versionFileSet);
+            DeleteEmptyDirectories(Constants.VanillaCopyPath);
+            SettingsService.Settings.CopiedGameFiles = true;
+            SettingsService.Save();
+            Logger.Log($"Copied UFO 50 files to 'UFO 50 Vanilla Copy' folder.");
+        }
+    }
+    private void DeleteEmptyDirectories(string path)
+    {
+        foreach (var dir in Directory.GetDirectories(path)) {
+            DeleteEmptyDirectories(dir);
+
+            if (!Directory.EnumerateFileSystemEntries(dir).Any()) {
+                Directory.Delete(dir);
             }
         }
+    }
+    private bool CanCopy(string version)
+    {
+        if (version == "Modded" || version == "Mismatched Vanilla")
+            return false;
+        return true;
     }
     private async void OnInstallClick(object? sender, RoutedEventArgs e)
     {
@@ -163,17 +183,14 @@ public partial class MainWindow : Window
             }
         }
     }
-    private Task DeleteDirectoryAsync(string folder)
-    {
-        return Task.Run(() => Directory.Delete(folder, true));
-    }
     private async void OnDownloadModsClick(object? sender, RoutedEventArgs e)
     {
     }
     private async void OnUninstallClick(object? sender, RoutedEventArgs e)
     {
-        bool CanCopy = await _gameService.GetGameVersionAsync(Constants.VanillaCopyPath, true);
-        if (CanCopy) {
+        string version = await _gameService.GetGameVersionAsync(Constants.VanillaCopyPath, true);
+
+        if (CanCopy(version)) {
             CopyService.CopyDirectory(Constants.VanillaCopyPath, SettingsService.Settings.GamePath);
             Logger.Log($"Uninstalled UFO 50 Mods.");
         }
