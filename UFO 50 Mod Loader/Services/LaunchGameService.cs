@@ -30,6 +30,7 @@ namespace UFO_50_Mod_Loader.Services
                 try {
                     Process.Start(new ProcessStartInfo {
                         FileName = Models.Constants.ModdedCopyExePath,
+                        WorkingDirectory = Path.GetDirectoryName(Models.Constants.ModdedCopyExePath),
                         UseShellExecute = true
                     });
                 }

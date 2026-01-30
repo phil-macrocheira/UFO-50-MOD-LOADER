@@ -154,6 +154,8 @@ public partial class CodeData
     public string? yml_code { get; set; }
     [YamlMember("case_sensitive")]
     public bool? yml_casesensitive { get; set; }
+    [YamlMember("optional")]
+    public bool? yml_optional { get; set; }
 }
 
 [YamlObject]
@@ -240,6 +242,7 @@ public class GMLoaderProgram
     public static string newObjectPath { get; set; } = string.Empty;
     public static string existingObjectPath { get; set; } = string.Empty;
     public static string roomPath { get; set; } = string.Empty;
+    public static bool compileGML { get; set; } = true;
     public static int defaultSpriteX { get; set; }
     public static int defaultSpriteY { get; set; }
     public static float defaultSpriteFrameSpeed { get; set; }
@@ -529,6 +532,9 @@ public class GMLoaderProgram
         string? find = patch.yml_find;
         string code = patch.yml_code ?? "";
         bool caseSensitive = patch.yml_casesensitive ?? true;
+        bool optional = patch.yml_optional ?? false;
+
+        importGroup.ThrowOnNoOpFindReplace = !optional;
 
         switch (type.ToLowerInvariant())
         {
