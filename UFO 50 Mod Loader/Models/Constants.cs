@@ -21,11 +21,10 @@ namespace UFO_50_Mod_Loader.Models
         public static string VanillaExtPath => Path.Combine(VanillaCopyPath, "ext");
         public static string SettingsPath => Path.Combine(ModLoaderPath, "settings.json");
         public static string HashDataPath => Path.Combine(ModLoaderPath, "Data", "ufo50_hashes.json");
-        public static string GMLoaderPath => ModLoaderPath;
-        public static string GMLoaderIniPath => Path.Combine(GMLoaderPath, "GMLoader.ini");
-        public static string GMLoaderDataWinPath => Path.Combine(GMLoaderPath, "data.win");
-        public static string GMLoaderModsBasePath => Path.Combine(GMLoaderPath, "mods_base");
-        public static string GMLoaderModsPath => Path.Combine(GMLoaderPath, "mods");
+        public static string GMLoaderIniPath => Path.Combine(ModLoaderPath, "GMLoader.ini");
+        public static string GMLoaderDataWinPath => Path.Combine(ModLoaderPath, "data.win");
+        public static string GMLoaderModsBasePath => Path.Combine(ModLoaderPath, "mods_base");
+        public static string GMLoaderModsPath => Path.Combine(ModLoaderPath, "mods");
         public static string ModdingSettingsPath => Path.Combine(MyModsPath, "UFO 50 Modding Settings");
         public static string ModdingSettingsNameListPath = Path.Combine(ModdingSettingsPath, "code", "gml_Object_oModding_Other_10.gml");
         static Constants()

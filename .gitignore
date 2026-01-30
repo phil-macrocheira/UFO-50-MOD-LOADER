@@ -362,5 +362,9 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-#Jetbrains IDEA Folder
+# Jetbrains IDEA Folder
 .idea
+
+# GMLoader Files
+GMLoader/bin
+GMLoader/obj

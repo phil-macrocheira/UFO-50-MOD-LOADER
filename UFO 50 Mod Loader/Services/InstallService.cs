@@ -111,8 +111,11 @@ namespace UFO_50_Mod_Loader.Services
                     GMLoaderResult result = GMLoaderProgram.Run(Constants.GMLoaderIniPath);
 
                     if (result.Success) {
+                        // Copy and delete modded data.win
                         var GameDataWinPath = Path.Combine(gamePath, "data.win");
                         File.Copy(Constants.GMLoaderDataWinPath, GameDataWinPath, overwrite: true);
+                        File.Delete(Constants.GMLoaderDataWinPath);
+
                         if (SettingsService.Settings.OverwriteMode)
                             Logger.Log("Mods installed successfully!");
                         else

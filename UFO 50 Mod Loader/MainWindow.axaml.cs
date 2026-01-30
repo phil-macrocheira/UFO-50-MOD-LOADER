@@ -4,7 +4,6 @@ using Avalonia.Threading;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using UFO_50_Mod_Loader.Models;
-using YamlDotNet.Serialization;
 
 namespace UFO_50_Mod_Loader;
 
@@ -19,6 +18,7 @@ public partial class MainWindow : Window
         get => SettingsService.Settings.OverwriteMode;
         set => SettingsService.Settings.OverwriteMode = value;
     }
+    public bool ShowOverwriteModeMenuItem => !Constants.IsLinux;
     /*
     public bool EnabledTop
     {
@@ -26,11 +26,6 @@ public partial class MainWindow : Window
         set => SettingsService.Settings.EnabledTop = value;
     }
     */
-    public bool SelectDownloadFile
-    {
-        get => SettingsService.Settings.SelectDownloadFile;
-        set => SettingsService.Settings.SelectDownloadFile = value;
-    }
     public MainWindow()
     {
         // Load settings first, before InitializeComponent
@@ -57,7 +52,6 @@ public partial class MainWindow : Window
 
         // Initialize checkbox states from settings
         OverwriteModeCheckBox.IsChecked = SettingsService.Settings.OverwriteMode;
-        SelectDownloadFileCheckBox.IsChecked = SettingsService.Settings.SelectDownloadFile;
 
         // Initialize Services
         _gameService = new InstalledGameService(this);
@@ -68,8 +62,22 @@ public partial class MainWindow : Window
 
         Loaded += OnWindowLoaded;
     }
+    private void ToggleUI(bool state)
+    {
+        InstallButton.IsEnabled = state;
+        DownloadModsButton.IsEnabled = state;
+        ModDataGrid.IsEnabled = state;
+        SearchBox.IsEnabled = state;
+        MenuBar.IsEnabled = state;
+    }
     private async void OnWindowLoaded(object? sender, EventArgs e)
     {
+        // Set Overwrite Mode if on linux
+        if (Constants.IsLinux) {
+            OverwriteModeCheckBox.IsChecked = true;
+            SettingsService.Settings.OverwriteMode = true;
+        }
+
         // Set Install Button Text on open
         if (OverwriteModeCheckBox.IsChecked == true) {
             InstallButton.Content = "Install Mods";
@@ -114,34 +122,9 @@ public partial class MainWindow : Window
                 FirstTimeRun();
         }
     }
-    private void OnLaunchGameClick(object? sender, RoutedEventArgs e)
+    private async void OnLaunchGameClick(object? sender, RoutedEventArgs e)
     {
-        LaunchGame();
-    }
-    private void LaunchGame()
-    {
-        if (SettingsService.Settings.OverwriteMode) {
-            try {
-                Process.Start(new ProcessStartInfo {
-                    FileName = "steam://run/1147860",
-                    UseShellExecute = true
-                });
-            }
-            catch (Exception ex) {
-                Logger.Log($"Failed to launch UFO 50 via Steam: {ex.Message}");
-            }
-        }
-        else {
-            try {
-                Process.Start(new ProcessStartInfo {
-                    FileName = Constants.ModdedCopyExePath,
-                    UseShellExecute = true
-                });
-            }
-            catch (Exception ex) {
-                Logger.Log($"Failed to launch UFO 50 Modded Copy: {ex.Message}");
-            }
-        }
+        await LaunchGameService.LaunchGameAsync();
     }
     private async void OnVerifyCopyClick(object? sender, RoutedEventArgs e)
     {
@@ -159,8 +142,10 @@ public partial class MainWindow : Window
     }
     private async void OnInstallClick(object? sender, RoutedEventArgs e)
     {
+        ToggleUI(false);
+
         bool InstalledSuccessfully = false;
-        InstallButton.IsEnabled = false;
+
         if (SettingsService.Settings.OverwriteMode) {
             InstallButton.Content = "Installing Mods...";
             Logger.Log("Installing mods...");
@@ -173,17 +158,24 @@ public partial class MainWindow : Window
             InstalledSuccessfully = await Task.Run(() => InstallService.InstallModsAsync());
         }
         finally {
-            InstallButton.IsEnabled = true;
-
             if (OverwriteModeCheckBox.IsChecked == false)
                 InstallButton.Content = "Load Mods and Launch Game";
             else
                 InstallButton.Content = "Install Mods";
 
+            ToggleUI(true);
+
             if (!SettingsService.Settings.OverwriteMode && InstalledSuccessfully == true) {
-                LaunchGame();
+                await LaunchGameService.LaunchGameAsync();
             }
         }
+    }
+    private Task DeleteDirectoryAsync(string folder)
+    {
+        return Task.Run(() => Directory.Delete(folder, true));
+    }
+    private async void OnDownloadModsClick(object? sender, RoutedEventArgs e)
+    {
     }
     private async void OnUninstallClick(object? sender, RoutedEventArgs e)
     {
@@ -235,6 +227,8 @@ public partial class MainWindow : Window
     private void OnOverwriteModeClick(object? sender, RoutedEventArgs e)
     {
         OverwriteModeCheckBox.IsChecked = !OverwriteModeCheckBox.IsChecked;
+        SettingsService.Settings.OverwriteMode = OverwriteModeCheckBox.IsChecked ?? false;
+
         if (OverwriteModeCheckBox.IsChecked == false) {
             InstallButton.Content = "Load Mods and Launch Game";
         }
@@ -242,11 +236,6 @@ public partial class MainWindow : Window
             InstallButton.Content = "Install Mods";
         }
         SaveCheckboxSetting("Overwrite Installed Files", OverwriteModeCheckBox.IsChecked);
-    }
-    private void OnSelectDownloadFileClick(object? sender, RoutedEventArgs e)
-    {
-        SelectDownloadFileCheckBox.IsChecked = !SelectDownloadFileCheckBox.IsChecked;
-        SaveCheckboxSetting("Select File To Download", SelectDownloadFileCheckBox.IsChecked);
     }
     private void SaveCheckboxSetting(string setting, bool? enabled)
     {

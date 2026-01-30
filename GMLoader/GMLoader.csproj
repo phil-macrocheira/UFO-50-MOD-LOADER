@@ -67,9 +67,4 @@
     </Content>
   </ItemGroup>
 
-  <Target Name="PublishAll">
-    <Exec Command="dotnet publish -c Release -r win-x64 -o $(SolutionDir)publish/win-x64" />
-    <Exec Command="dotnet publish -c Release -r linux-x64 -o $(SolutionDir)publish/linux-x64" />
-  </Target>
-
 </Project>

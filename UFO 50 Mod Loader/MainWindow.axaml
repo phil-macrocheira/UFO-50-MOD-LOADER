@@ -133,7 +133,7 @@
     <DockPanel LastChildFill="True">
         <!-- Menu Bar -->
         <Grid DockPanel.Dock="Top" Height="30" Background="#2D2D2D">
-            <Menu HorizontalAlignment="Left">
+            <Menu x:Name="MenuBar" HorizontalAlignment="Left">
                 <!-- UFO 50 -->
                 <MenuItem Header="_UFO 50">
                     <MenuItem Header="Launch Game" Click="OnLaunchGameClick"/>
@@ -152,7 +152,8 @@
                 <!-- Settings -->
                 <MenuItem Header="_Settings">
                     <MenuItem Header="UFO 50 Install Path" Click="OnGamePathMenuClick" Height="32"/>
-                    <MenuItem StaysOpenOnClick="True" Click="OnOverwriteModeClick" Height="32">
+
+                    <MenuItem Name="OverwriteModeMenuItem" StaysOpenOnClick="True" Click="OnOverwriteModeClick" Height="32" IsVisible="{Binding ShowOverwriteModeMenuItem}">
                         <MenuItem.Header>
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <TextBlock Text="Overwrite Installed Files" VerticalAlignment="Center" FontSize="14"/>
@@ -174,7 +175,6 @@
                             </StackPanel>
                         </MenuItem.Header>
                     </MenuItem>
-                    -->
 
                     <MenuItem StaysOpenOnClick="True" Click="OnSelectDownloadFileClick" Height="32">
                         <MenuItem.Header>
@@ -186,6 +186,7 @@
                             </StackPanel>
                         </MenuItem.Header>
                     </MenuItem>
+                    -->
                 </MenuItem>
 
                 <!-- Links -->
@@ -227,7 +228,9 @@
             </TextBox>
     
             <Button Grid.Column="2" 
-                    Content="Download Mods"/>
+                    Content="Download Mods"
+                    x:Name="DownloadModsButton"
+                    Click="OnDownloadModsClick" />
         </Grid>
 
         <!-- Main content area with resizable text log -->
