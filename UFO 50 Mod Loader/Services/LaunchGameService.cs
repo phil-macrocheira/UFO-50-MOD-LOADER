@@ -4,7 +4,7 @@ namespace UFO_50_Mod_Loader.Services
 {
     public class LaunchGameService
     {
-        public static async Task LaunchGameAsync()
+        public static Task LaunchGameAsync()
         {
             if (SettingsService.Settings.OverwriteMode) {
                 try {
@@ -18,6 +18,15 @@ namespace UFO_50_Mod_Loader.Services
                 }
             }
             else {
+                if (Models.Constants.IsLinux) {
+                    var chmod = Process.Start(new ProcessStartInfo {
+                        FileName = "chmod",
+                        ArgumentList = { "+x", Models.Constants.ModdedCopyExePath },
+                        UseShellExecute = false
+                    });
+                    chmod?.WaitForExit();
+                }
+
                 try {
                     Process.Start(new ProcessStartInfo {
                         FileName = Models.Constants.ModdedCopyExePath,
@@ -28,6 +37,8 @@ namespace UFO_50_Mod_Loader.Services
                     Logger.Log($"Failed to launch UFO 50 Modded Copy: {ex.Message}");
                 }
             }
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -18,7 +18,6 @@ public partial class MainWindow : Window
         get => SettingsService.Settings.OverwriteMode;
         set => SettingsService.Settings.OverwriteMode = value;
     }
-    public bool ShowOverwriteModeMenuItem => !Constants.IsLinux;
     /*
     public bool EnabledTop
     {
@@ -72,12 +71,6 @@ public partial class MainWindow : Window
     }
     private async void OnWindowLoaded(object? sender, EventArgs e)
     {
-        // Set Overwrite Mode if on linux
-        if (Constants.IsLinux) {
-            OverwriteModeCheckBox.IsChecked = true;
-            SettingsService.Settings.OverwriteMode = true;
-        }
-
         // Set Install Button Text on open
         if (OverwriteModeCheckBox.IsChecked == true) {
             InstallButton.Content = "Install Mods";
