@@ -1,18 +1,21 @@
-﻿using GMLoader;
+﻿using Avalonia.Controls;
+using Avalonia.Threading;
+using GMLoader;
+using UFO_50_Mod_Loader.Helpers;
 using UFO_50_Mod_Loader.Models;
 
 namespace UFO_50_Mod_Loader.Services
 {
     public class InstallService
     {
-        public static async Task<bool> InstallModsAsync()
+        public static async Task<GMLoaderResult?> InstallModsAsync(Window parent)
         {
             Logger._showingConflicts = false; // Return to main log if installation started with conflict warnings
             string gamePath = SettingsService.Settings.GamePath;
 
             if (!SettingsService.Settings.CopiedGameFiles) {
                 Logger.Log($"Cannot Install Mods: Vanilla game files have not been copied yet");
-                return false;
+                return null;
             }
 
             await AddModNamesAsync();
@@ -91,7 +94,7 @@ namespace UFO_50_Mod_Loader.Services
             }
         }
 
-        private static async Task<bool> RunGMLoaderAsync(string gamePath)
+        private static async Task<GMLoaderResult?> RunGMLoaderAsync(string gamePath)
         {
             try {
                 return await Task.Run(() => {
@@ -121,17 +124,17 @@ namespace UFO_50_Mod_Loader.Services
                             Logger.Log("Mods installed successfully!");
                         else
                             Logger.Log("Mods loaded successfully!");
-                        return true;
                     }
                     else {
                         Logger.Log($"Mod installation failed.");
-                        return false;
                     }
+
+                    return result;
                 });
             }
             catch (Exception ex) {
                 Logger.Log($"[ERROR] {ex.Message}");
-                return false;
+                return null;
             }
         }
     }

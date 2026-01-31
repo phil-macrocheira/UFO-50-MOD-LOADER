@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using GMLoader;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using UFO_50_Mod_Loader.Helpers;
@@ -160,7 +161,7 @@ public partial class MainWindow : Window
     {
         ToggleUI(false);
 
-        bool InstalledSuccessfully = false;
+        bool installedSuccessfully = false;
 
         if (SettingsService.Settings.OverwriteMode) {
             InstallButton.Content = "Installing Mods...";
@@ -171,7 +172,12 @@ public partial class MainWindow : Window
             Logger.Log("Loading mods...");
         }
         try {
-            InstalledSuccessfully = await Task.Run(() => InstallService.InstallModsAsync());
+            GMLoaderResult? result = await Task.Run(() => InstallService.InstallModsAsync(this));
+            installedSuccessfully = result?.Success ?? false;
+
+            if (result is not null && !result.Success) {
+                await MessageBoxHelper.Show(this, "Mod installation error", "Mod installation failed" + (result.ErrorMessage != null ? $": {result.ErrorMessage}" : "."));
+            }
         }
         finally {
             if (OverwriteModeCheckBox.IsChecked == false)
@@ -181,7 +187,7 @@ public partial class MainWindow : Window
 
             ToggleUI(true);
 
-            if (!SettingsService.Settings.OverwriteMode && InstalledSuccessfully == true) {
+            if (!SettingsService.Settings.OverwriteMode && installedSuccessfully == true) {
                 await LaunchGameService.LaunchGameAsync();
             }
         }
