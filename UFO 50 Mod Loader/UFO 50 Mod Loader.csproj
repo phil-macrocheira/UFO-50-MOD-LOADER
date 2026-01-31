@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>2.0.0-BETA.2</Version>
+    <Version>2.0.0-BETA.3</Version>
     <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <AssemblyName>UFO 50 Mod Loader</AssemblyName>
