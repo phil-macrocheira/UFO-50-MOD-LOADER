@@ -29,21 +29,15 @@ foreach (var bgName in backgroundList)
     }
 }
 
-if (hasSpriteError || hasBGError)
+if (hasSpriteError)
 {
-    if (hasSpriteError)
-        Log.Error($"Warning there's {i} sprite files failed to be imported.");
-
-    if (hasBGError)
-        Log.Error($"Warning there's {v} background sprite files failed to be imported.");
-
-    Log.Error("Press any key to continue...");
-
-    Console.ReadKey();
+    throw new ScriptException($"{i} sprite files failed to import.");
+}
+else if (hasBGError)
+{
+    throw new ScriptException($"{v} background sprite files failed to imported.");
 }
 else
 {
     Log.Information("All good.");
 }
-
-
