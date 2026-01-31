@@ -27,7 +27,8 @@ namespace UFO_50_Mod_Loader.Models
         public static string GMLoaderModsBasePath => Path.Combine(ModLoaderPath, "mods_base");
         public static string GMLoaderModsPath => Path.Combine(ModLoaderPath, "mods");
         public static string ModdingSettingsPath => Path.Combine(MyModsPath, "UFO 50 Modding Settings");
-        public static string ModdingSettingsNameListPath = Path.Combine(ModdingSettingsPath, "code", "gml_Object_oModding_Other_10.gml");
+        public static string ModdingSettingsNameListPath => Path.Combine(ModdingSettingsPath, "code", "gml_Object_oModding_Other_10.gml");
+        public static string RepoUrl => "https://github.com/phil-macrocheira/UFO-50-MOD-LOADER";
         static Constants()
         {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UFO_50_Mod_Loader.wrench.ico");
