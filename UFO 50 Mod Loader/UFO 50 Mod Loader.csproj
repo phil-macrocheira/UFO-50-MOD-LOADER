@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>2.0</Version>
-    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <Version>2.0.0-BETA.2</Version>
+    <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <AssemblyName>UFO 50 Mod Loader</AssemblyName>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
@@ -52,6 +52,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="SharpCompress" Version="0.44.4" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
+    <PackageReference Include="Velopack" Version="0.0.1298" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
   

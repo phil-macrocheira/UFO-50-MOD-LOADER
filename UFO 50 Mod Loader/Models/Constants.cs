@@ -28,6 +28,7 @@ namespace UFO_50_Mod_Loader.Models
         public static string GMLoaderModsPath => Path.Combine(ModLoaderPath, "mods");
         public static string GameBananaID = "23000";
         public static string SteamAppID = "1147860";
+        public static string RepoUrl => "https://github.com/phil-macrocheira/UFO-50-MOD-LOADER";
         static Constants()
         {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UFO_50_Mod_Loader.wrench.ico");

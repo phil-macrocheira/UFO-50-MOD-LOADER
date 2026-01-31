@@ -9,9 +9,8 @@ public static class MessageBoxHelper
     {
         var dialog = new Window {
             Title = title,
-            Width = 320,
-            Height = 120,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            SizeToContent = SizeToContent.WidthAndHeight,
             CanResize = false,
             Background = new SolidColorBrush(Color.Parse("#1E1E1E"))
         };
@@ -25,6 +24,7 @@ public static class MessageBoxHelper
         panel.Children.Add(new TextBlock {
             Text = message,
             TextWrapping = TextWrapping.Wrap,
+            MaxWidth = 600,
             Foreground = Brushes.White
         });
 

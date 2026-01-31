@@ -368,3 +368,6 @@ FodyWeavers.xsd
 # GMLoader Files
 GMLoader/bin
 GMLoader/obj
+
+# vpk access token for uploading releases
+GITHUB_TOKEN

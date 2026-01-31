@@ -1,9 +1,13 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using GMLoader;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using UFO_50_Mod_Loader.Helpers;
 using UFO_50_Mod_Loader.Models;
+using Velopack;
+using Velopack.Sources;
 
 namespace UFO_50_Mod_Loader;
 
@@ -37,7 +41,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         // Set version
-        Title = $"UFO 50 Mod Loader v{Constants.Version} BETA";
+        Title = $"UFO 50 Mod Loader v{Constants.Version}";
 
         // Subscribe to log services
         LogService.OnLog += Log => {
@@ -160,7 +164,7 @@ public partial class MainWindow : Window
     {
         ToggleUI(false);
 
-        bool InstalledSuccessfully = false;
+        bool installedSuccessfully = false;
 
         if (SettingsService.Settings.OverwriteMode) {
             InstallButton.Content = "Installing Mods...";
@@ -171,7 +175,12 @@ public partial class MainWindow : Window
             Logger.Log("Loading mods...");
         }
         try {
-            InstalledSuccessfully = await Task.Run(() => InstallService.InstallModsAsync());
+            GMLoaderResult? result = await Task.Run(() => InstallService.InstallModsAsync(this));
+            installedSuccessfully = result?.Success ?? false;
+
+            if (result is not null && !result.Success) {
+                await MessageBoxHelper.Show(this, "Mod installation error", "Mod installation failed" + (result.ErrorMessage != null ? $": {result.ErrorMessage}" : "."));
+            }
         }
         finally {
             if (OverwriteModeCheckBox.IsChecked == false)
@@ -181,7 +190,7 @@ public partial class MainWindow : Window
 
             ToggleUI(true);
 
-            if (!SettingsService.Settings.OverwriteMode && InstalledSuccessfully == true) {
+            if (!SettingsService.Settings.OverwriteMode && installedSuccessfully == true) {
                 await LaunchGameService.LaunchGameAsync();
             }
         }
@@ -234,6 +243,25 @@ public partial class MainWindow : Window
     }
     private void OnCheckUpdateClick(object? sender, RoutedEventArgs e)
     {
+        Dispatcher.UIThread.Post(async () =>
+        {
+            var source = new GithubSource(Constants.RepoUrl, null, true);
+
+            var updateManager = new UpdateManager(source, new UpdateOptions() { AllowVersionDowngrade = true });
+            var updateInfo = await updateManager.CheckForUpdatesAsync();
+
+            if (updateInfo is null)
+            {
+                await MessageBoxHelper.Show(this, "Check for update OK", "Up to date.");
+            }
+            else
+            {
+                await updateManager.DownloadUpdatesAsync(updateInfo);
+                await MessageBoxHelper.Show(this, "Check for update succeed", $"Updated to version {updateInfo.TargetFullRelease.Version}. Restarting to apply updates.");
+
+                updateManager.ApplyUpdatesAndRestart(updateInfo);
+            }
+        });
     }
     private void OnGamePathMenuClick(object? sender, RoutedEventArgs e)
     {
