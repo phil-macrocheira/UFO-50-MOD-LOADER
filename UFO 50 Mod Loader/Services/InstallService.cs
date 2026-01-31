@@ -109,7 +109,7 @@ namespace UFO_50_Mod_Loader.Services
                         }
                     });
 
-                    GMLoaderResult result = GMLoaderProgram.Run(Constants.GMLoaderIniPath);
+                    GMLoaderResult result = GMLoaderProgram.Run(Constants.GMLoaderIniPath, Constants.IsLinux);
 
                     if (result.Success) {
                         // Copy and delete modded data.win

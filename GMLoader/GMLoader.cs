@@ -313,7 +313,7 @@ public class GMLoaderProgram
     /// </summary>
     /// <param name="configFilePath">Path to GMLoader.ini</param>
     /// <returns>Result indicating success or failure with error details</returns>
-    public static GMLoaderResult Run(string configFilePath)
+    public static GMLoaderResult Run(string configFilePath, bool IsLinux)
     {
         try
         {
@@ -325,6 +325,11 @@ public class GMLoaderProgram
             IConfig config = new ConfigurationBuilder<IConfig>()
                .UseIniFile(configFilePath)
                .Build();
+
+            if (IsLinux)
+            {
+                NormalizePaths(config); // Fixes paths for linux
+            }
 
             return RunWithConfig(config);
         }
@@ -844,6 +849,21 @@ public class GMLoaderProgram
             Log.Information("Running post-CSX Scripts...");
             foreach (string file in postCSXFiles)
                 RunCSharpFile(file).GetAwaiter().GetResult();
+        }
+    }
+    private static void NormalizePaths(IConfig config)
+    {
+        var stringProperties = config.GetType()
+                                     .GetProperties()
+                                     .Where(p => p.PropertyType == typeof(string) && p.CanRead && p.CanWrite);
+
+        foreach (var prop in stringProperties)
+        {
+            string value = (string)prop.GetValue(config);
+            if (!string.IsNullOrEmpty(value))
+            {
+                prop.SetValue(config, value.Replace('\\', '/'));
+            }
         }
     }
     #endregion
