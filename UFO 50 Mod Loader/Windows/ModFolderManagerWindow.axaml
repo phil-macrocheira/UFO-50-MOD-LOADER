@@ -1,0 +1,47 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:UFO_50_Mod_Loader"
+        x:Class="UFO_50_Mod_Loader.ModFolderManagerWindow"
+        Title="Mod Folders"
+        Width="380" Height="350"
+        MinWidth="380" MinHeight="300"
+        Background="#1E1E1E"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+        <Style Selector="Button">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Styles>
+    
+    <Grid Margin="15" RowDefinitions="Auto,*,Auto">
+        <!-- Folder List -->
+        <Border Grid.Row="1" Background="#2D2D2D" CornerRadius="4" Padding="5">
+            <ListBox x:Name="FolderListBox" Background="Transparent" 
+                     SelectionMode="Single" DoubleTapped="OnFolderDoubleTapped">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="local:ModFolderItem">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="{Binding Name}" 
+                                       VerticalAlignment="Center" Foreground="White"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ModCount, StringFormat='({0} mods)'}" 
+                                       VerticalAlignment="Center" Foreground="Gray" Margin="10,0"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+        
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" 
+                    Spacing="10" Margin="0,15,0,0">
+            <Button Content="Add" Click="OnAddClick" Width="80"/>
+            <Button x:Name="RenameButton" Content="Rename" Click="OnRenameClick" 
+                    Width="80" IsEnabled="False"/>
+            <Button x:Name="DeleteButton" Content="Delete" Click="OnDeleteClick" 
+                    Width="80" IsEnabled="False"/>
+            <Button Content="Close" Click="OnCloseClick" Width="80"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -3,7 +3,6 @@ using Avalonia.Layout;
 using Avalonia.Media;
 
 namespace UFO_50_Mod_Loader.Helpers;
-
 public static class MessageBoxHelper
 {
     public static async Task Show(Window parent, string title, string message)

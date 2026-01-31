@@ -7,7 +7,7 @@ namespace UFO_50_Mod_Loader.Services
     {
         public static async Task<bool> InstallModsAsync()
         {
-            Logger._showingConflicts = false; // Return to main log if installation started with conflict warnings
+            Logger._showingConflicts = false;
             string gamePath = SettingsService.Settings.GamePath;
 
             if (!SettingsService.Settings.CopiedGameFiles) {
@@ -22,48 +22,76 @@ namespace UFO_50_Mod_Loader.Services
                     Directory.Delete(Constants.ModdedCopyPath, recursive: true);
                 await Task.Run(() => CopyService.CopyDirectory(Constants.VanillaCopyPath, Constants.ModdedCopyPath));
                 gamePath = Constants.ModdedCopyPath;
-                File.WriteAllText(Constants.ModdedCopySteamAppID, "1147860"); // Create steam_appid.txt
+                File.WriteAllText(Constants.ModdedCopySteamAppID, Constants.SteamAppID);
             }
 
             await GenerateModsFolderAsync(gamePath);
 
             return await RunGMLoaderAsync(gamePath);
         }
+        public static string? FindModPath(string modName)
+        {
+            foreach (var folder in ModFolderService.ModFolders) {
+                string fullPath = Path.Combine(Constants.ModLoaderRoot, folder, modName);
+                if (Directory.Exists(fullPath))
+                    return fullPath;
+            }
+            return null;
+        }
+        private static List<string> GetEnabledModPaths()
+        {
+            return MainWindow.FilteredMods
+                .Where(m => m.IsEnabled)
+                .Select(m => FindModPath(m.Name))
+                .Where(path => path != null)
+                .Cast<string>()
+                .ToList();
+        }
 
         private static async Task AddModNamesAsync()
         {
-            if (!Path.Exists(Constants.ModdingSettingsPath))
+            string? moddingSettingsPath = FindModPath("UFO 50 Modding Settings");
+
+            if (moddingSettingsPath == null)
                 return;
 
-            await File.WriteAllTextAsync(Constants.ModdingSettingsNameListPath, "global.mod_list = ds_list_create();\n");
+            string nameListPath = Path.Combine(moddingSettingsPath, "code", "gml_Object_oModding_Other_10.gml");
 
-            foreach (string modPath in SettingsService.Settings.EnabledMods) {
+            // Ensure the code directory exists
+            string codeDir = Path.GetDirectoryName(nameListPath)!;
+            if (!Directory.Exists(codeDir)) {
+                Directory.CreateDirectory(codeDir);
+            }
+
+            await File.WriteAllTextAsync(nameListPath, "global.mod_list = ds_list_create();\n");
+
+            var enabledModPaths = GetEnabledModPaths();
+            foreach (string modPath in enabledModPaths) {
                 string modName = Path.GetFileName(modPath);
                 if (modName == "UFO 50 Modding Settings")
                     continue;
-                await File.AppendAllTextAsync(Constants.ModdingSettingsNameListPath, $"ds_list_add(global.mod_list, \"{modName}\");\n");
+                await File.AppendAllTextAsync(nameListPath, $"ds_list_add(global.mod_list, \"{modName}\");\n");
             }
         }
 
         private static async Task GenerateModsFolderAsync(string gamePath)
         {
-            string GameExtPath = Path.Combine(gamePath, "ext");
-
             await Task.Run(() => File.Copy(Constants.VanillaDataWinPath, Constants.GMLoaderDataWinPath, overwrite: true));
 
             if (Directory.Exists(Constants.GMLoaderModsPath))
                 Directory.Delete(Constants.GMLoaderModsPath, recursive: true);
             await Task.Run(() => CopyService.CopyDirectory(Constants.GMLoaderModsBasePath, Constants.GMLoaderModsPath));
 
-            var enabledModsPaths = MainWindow.FilteredMods
-                .Where(m => m.IsEnabled)
-                .Select(m => Path.Combine(Constants.MyModsPath, m.Name))
-                .ToList();
-            var enabledModsPaths2 = enabledModsPaths
+            var enabledModsPaths = GetEnabledModPaths()
                 .OrderBy(m => Path.GetFileName(m) != "UFO 50 Modding Settings")
                 .ThenBy(m => m);
 
-            foreach (string mod in enabledModsPaths2) {
+            foreach (string mod in enabledModsPaths) {
+                if (!Directory.Exists(mod)) {
+                    Logger.Log($"[WARNING] Mod folder not found, skipping: {mod}");
+                    continue;
+                }
+
                 foreach (string subFolder in Directory.GetDirectories(mod)) {
                     string folderName = Path.GetFileName(subFolder);
                     string destSubFolder = Path.Combine(Constants.GMLoaderModsPath, folderName);
@@ -112,7 +140,6 @@ namespace UFO_50_Mod_Loader.Services
                     GMLoaderResult result = GMLoaderProgram.Run(Constants.GMLoaderIniPath, Constants.IsLinux);
 
                     if (result.Success) {
-                        // Copy and delete modded data.win
                         var GameDataWinPath = Path.Combine(gamePath, "data.win");
                         File.Copy(Constants.GMLoaderDataWinPath, GameDataWinPath, overwrite: true);
                         File.Delete(Constants.GMLoaderDataWinPath);

@@ -1,11 +1,175 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UFO_50_Mod_Loader"
         mc:Ignorable="d"
         x:Class="UFO_50_Mod_Loader.ModDownloaderWindow"
-        Title="Mod Downloader">
-        Width="700" Height="300"
-        MinWidth="700" MinHeight="300"
-        Background="#1E1E1E">
+        x:CompileBindings="False"
+        Title="GameBanana Mod Downloader"
+        Width="1150" Height="685"
+        MinWidth="1050" MinHeight="440"
+        Background="#1E1E1E"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+        <Style Selector="DataGridRow">
+            <Setter Property="Background" Value="#2D2D2D"/>
+        </Style>
+        <Style Selector="DataGridRow:nth-child(even)">
+            <Setter Property="Background" Value="#252525"/>
+        </Style>
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Background" Value="#3C3C3C"/>
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+        </Style>
+        <Style Selector="DataGridCell:current /template/ Grid#FocusVisual">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="DataGridCell:focus /template/ Grid#FocusVisual">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="DataGridCell /template/ Rectangle">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="DataGridCell">
+            <Setter Property="Focusable" Value="False"/>
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#3C3C3C"/>
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+            <Setter Property="BorderBrush" Value="#5A5A5A"/>
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="Background" Value="#4A4A4A"/>
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+            <Setter Property="BorderBrush" Value="#5A5A5A"/>
+        </Style>
+        <Style Selector="Button:pointerover">
+            <Setter Property="Background" Value="#5A5A5A"/>
+        </Style>
+        <Style Selector="DataGridRow.hasUpdate">
+            <Setter Property="Background" Value="#FE7000"/>
+        </Style>
+        <Style Selector="DataGridRow.hasUpdate:selected">
+            <Setter Property="Background" Value="#FE7000"/>
+        </Style>
+    </Window.Styles>
+    
+    <Grid ColumnDefinitions="*,350">
+        <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" Margin="15">
+            <TextBox x:Name="SearchBox" Grid.Row="0" Margin="0,0,0,10" Watermark="Filter mods...">
+                <TextBox.InnerRightContent>
+                    <Button Content="✕"
+                            Click="OnClearSearchClick"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Padding="8,0"
+                            Cursor="Hand"
+                            IsVisible="{Binding Text.Length, ElementName=SearchBox}"/>
+                </TextBox.InnerRightContent>
+            </TextBox>
+            
+            <DataGrid x:Name="ModDataGrid" Grid.Row="1"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="False"
+                      CanUserResizeColumns="False"
+                      CanUserSortColumns="True"
+                      SelectionMode="Single"
+                      GridLinesVisibility="Horizontal"
+                      Background="#2D2D2D"
+                      RowBackground="#2D2D2D"
+                      LoadingRow="OnDataGridLoadingRow">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Width="30" CanUserSort="False" CanUserResize="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                          Margin="0,0,-8,0"
+                                          HorizontalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Mod" Width="*" Binding="{Binding Name}" IsReadOnly="True" CanUserResize="False"/>
+                    <DataGridTextColumn Header="Modder" Width="120" Binding="{Binding Creator}" IsReadOnly="True" CanUserResize="False"/>
+                    <DataGridTemplateColumn Width="100" CanUserResize="False" CanUserSort="False">
+                        <DataGridTemplateColumn.Header>
+                            <Button Click="OnSortByInstalledClick"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center"
+                                    Cursor="Hand"
+                                    Margin="-40,-6"
+                                    Padding="40,6">
+                                <Button.Styles>
+                                    <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                    </Style>
+                                    <Style Selector="Button:pressed /template/ ContentPresenter">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                    </Style>
+                                </Button.Styles>
+                                <TextBlock Text="Installed&#x0a;Version" TextAlignment="Center"/>
+                            </Button>
+                        </DataGridTemplateColumn.Header>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding InstalledVersion}" VerticalAlignment="Center" Margin="4,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Version" Width="100" Binding="{Binding Version}" IsReadOnly="True" CanUserResize="False"/>
+                    <DataGridTextColumn Header="Updated" Width="100" Binding="{Binding DateUpdatedFormatted}" IsReadOnly="True" CanUserResize="False"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            
+            <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" Margin="0,10,0,0">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                    <Button x:Name="SelectAllButton" Content="Select All" Click="OnSelectAllClick"/>
+                    <Button x:Name="SelectNoneButton" Content="Select None" Click="OnSelectNoneClick"/>
+                    <Button x:Name="SelectUpdatesButton" Content="Select Updates" Click="OnSelectUpdatesClick"/>
+                </StackPanel>
+                <TextBlock x:Name="StatusText" Grid.Column="1" VerticalAlignment="Center" 
+                           TextWrapping="Wrap" Margin="10,0"
+                           HorizontalAlignment="Center" Foreground="Gray"/>
+                <Button x:Name="DownloadButton" Grid.Column="2" Content="Download Selected" 
+                        Click="OnDownloadClick" Padding="12,6"/>
+            </Grid>
+        </Grid>
+        
+        <Border Grid.Column="1" Background="#252525" Padding="15">
+            <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+                <Border Grid.Row="0" Height="200" Background="#1E1E1E" CornerRadius="4">
+                    <Image x:Name="PreviewImage" Stretch="Uniform"/>
+                </Border>
+                
+                <TextBlock x:Name="ModTitleText" Grid.Row="1" Text="Select a mod" 
+                           FontSize="16" FontWeight="SemiBold" Foreground="White"
+                           TextWrapping="Wrap" Margin="0,15,0,5"/>
+                
+                <TextBlock x:Name="ModderText" Grid.Row="2" Text="" 
+                           Foreground="Gray" FontStyle="Italic" Margin="0,0,0,10"/>
+                
+                <Border Grid.Row="3" Background="#1E1E1E" CornerRadius="4" Padding="10">
+                    <ScrollViewer>
+                        <TextBlock x:Name="DescriptionText" Text="Select a mod to view details."
+                                   Foreground="#CCCCCC" TextWrapping="Wrap"/>
+                    </ScrollViewer>
+                </Border>
+                
+                <StackPanel Grid.Row="4" Margin="0,10,0,0">
+                    <TextBlock x:Name="MetadataText" Foreground="Gray" FontSize="11"/>
+                    <Button x:Name="ViewPageButton" Content="View on GameBanana" 
+                            Margin="0,10,0,0" HorizontalAlignment="Left"
+                            Click="OnViewPageClick" IsEnabled="False" Padding="8,4"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
 </Window>

@@ -1,7 +1,6 @@
 ﻿public static class CRC32
 {
     private static readonly uint[] Table = GenerateTable();
-
     public static uint Compute(Stream stream)
     {
         uint crc = 0xFFFFFFFF;

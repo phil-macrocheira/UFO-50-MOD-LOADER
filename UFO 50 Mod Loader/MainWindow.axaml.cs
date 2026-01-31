@@ -30,6 +30,9 @@ public partial class MainWindow : Window
         // Load settings first, before InitializeComponent
         SettingsService.Load();
 
+        // Initialize mod folders
+        ModFolderService.Initialize();
+
         DataContext = this;
         InitializeComponent();
 
@@ -185,6 +188,13 @@ public partial class MainWindow : Window
     }
     private async void OnDownloadModsClick(object? sender, RoutedEventArgs e)
     {
+        _modDatagridService.PauseWatchers();
+
+        var dialog = new ModDownloaderWindow();
+        await dialog.ShowDialog(this);
+
+        _modDatagridService.ResumeWatchers();
+        LoadMods();
     }
     private async void OnUninstallClick(object? sender, RoutedEventArgs e)
     {
@@ -194,6 +204,11 @@ public partial class MainWindow : Window
             CopyService.CopyDirectory(Constants.VanillaCopyPath, SettingsService.Settings.GamePath);
             Logger.Log($"Uninstalled UFO 50 Mods.");
         }
+    }
+    private async void OnManageModFoldersClick(object? sender, RoutedEventArgs e)
+    {
+        var dialog = new ModFolderManagerWindow();
+        dialog.ShowDialog(this);
     }
     private async void OnSaveModListClick(object? sender, RoutedEventArgs e)
     {
@@ -319,11 +334,21 @@ public partial class MainWindow : Window
             FilteredMods.Add(item);
         }
     }
-
     private void SortByModder(object? sender, RoutedEventArgs e)
     {
         var sorted = FilteredMods
             .OrderBy(item => item.Author)
+            .ToList();
+
+        FilteredMods.Clear();
+        foreach (var item in sorted) {
+            FilteredMods.Add(item);
+        }
+    }
+    private void SortByFolder(object? sender, RoutedEventArgs e)
+    {
+        var sorted = FilteredMods
+            .OrderBy(item => item.ModFolder)
             .ToList();
 
         FilteredMods.Clear();
@@ -380,7 +405,13 @@ public partial class MainWindow : Window
     }
     private void CheckConflicts()
     {
-        var enabledModPaths = FilteredMods.Where(m => m.IsEnabled).Select(m => Path.Combine(Constants.MyModsPath, m.Name)).ToList();
+        var enabledModPaths = FilteredMods
+            .Where(m => m.IsEnabled)
+            .Select(m => InstallService.FindModPath(m.Name))
+            .Where(path => path != null)
+            .Cast<string>()
+            .ToList();
+
         var result = ModConflictService.CheckConflicts(enabledModPaths);
 
         if (result.HasBlockingConflicts || result.HasPatchWarnings) {
@@ -426,6 +457,7 @@ public partial class MainWindow : Window
         SettingsService.Settings.MainWindowWidth = Width;
         SettingsService.Settings.MainWindowHeight = Height;
         SettingsService.Settings.TextBoxHeight = ContentGrid.RowDefinitions[2].Height.Value;
+
         SettingsService.Save();
 
         Logger.SaveLogToFile();

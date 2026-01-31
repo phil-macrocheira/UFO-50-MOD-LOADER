@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using UFO_50_Mod_Loader.Models;
 
 namespace UFO_50_Mod_Loader.Services
 {
@@ -18,10 +19,10 @@ namespace UFO_50_Mod_Loader.Services
                 }
             }
             else {
-                if (Models.Constants.IsLinux) {
+                if (Constants.IsLinux) {
                     var chmod = Process.Start(new ProcessStartInfo {
                         FileName = "chmod",
-                        ArgumentList = { "+x", Models.Constants.ModdedCopyExePath },
+                        ArgumentList = { "+x", Constants.ModdedCopyExePath },
                         UseShellExecute = false
                     });
                     chmod?.WaitForExit();
@@ -29,8 +30,8 @@ namespace UFO_50_Mod_Loader.Services
 
                 try {
                     Process.Start(new ProcessStartInfo {
-                        FileName = Models.Constants.ModdedCopyExePath,
-                        WorkingDirectory = Path.GetDirectoryName(Models.Constants.ModdedCopyExePath),
+                        FileName = Constants.ModdedCopyExePath,
+                        WorkingDirectory = Path.GetDirectoryName(Constants.ModdedCopyExePath),
                         UseShellExecute = true
                     });
                 }

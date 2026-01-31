@@ -145,6 +145,7 @@
                 <MenuItem Header="_Mod Loader">
                     <MenuItem Header="Save Current Mod List" Click="OnSaveModListClick"/>
                     <MenuItem Header="Load Mod List" Click="OnLoadModListClick"/>
+                    <MenuItem Header="Manage Mod Folders" Click="OnManageModFoldersClick"/>
                     <MenuItem Header="Uncheck All" Click="OnUncheckAllClick"/>
                     <MenuItem Header="Check For Update" Click="OnCheckUpdateClick"/>
                 </MenuItem>
@@ -171,17 +172,6 @@
                                 <TextBlock Text="Keep Enabled Mods On Top" VerticalAlignment="Center" FontSize="14"/>
                                 <CheckBox Name="EnabledTopCheckBox" 
                                             IsChecked="{Binding EnabledTop}"
-                                            IsHitTestVisible="False"/>
-                            </StackPanel>
-                        </MenuItem.Header>
-                    </MenuItem>
-
-                    <MenuItem StaysOpenOnClick="True" Click="OnSelectDownloadFileClick" Height="32">
-                        <MenuItem.Header>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="Select File To Download" VerticalAlignment="Center" FontSize="14"/>
-                                <CheckBox Name="SelectDownloadFileCheckBox" 
-                                            IsChecked="{Binding SelectDownloadFile}"
                                             IsHitTestVisible="False"/>
                             </StackPanel>
                         </MenuItem.Header>
@@ -314,7 +304,7 @@
                         </DataGridTemplateColumn>
 
                         <!-- Modder -->
-                        <DataGridTemplateColumn Width="150" CanUserSort="False">
+                        <DataGridTemplateColumn Width="Auto" CanUserSort="False">
                             <DataGridTemplateColumn.Header>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -325,6 +315,7 @@
                                                Text="Modder" 
                                                VerticalAlignment="Center"
                                                Margin="-8,0,0,0"
+                                               Padding="0,0,10,0"
                                                IsHitTestVisible="False"/>
                                     <Button Grid.Column="1"
                                             Content="↓" 
@@ -336,6 +327,36 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="Models:Mod">
                                     <TextBlock Text="{Binding Author}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Folder -->
+                        <DataGridTemplateColumn Width="Auto" CanUserSort="False">
+                            <DataGridTemplateColumn.Header>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               Text="Folder"
+                                               VerticalAlignment="Center"
+                                               Margin="-8,0,0,0"
+                                               Padding="0,0,10,0"
+                                               IsHitTestVisible="False"/>
+                                    <Button Grid.Column="1"
+                                            Content="↓"
+                                            Classes="SortButton"
+                                            Margin="0,0,-20,0"
+                                            Click="SortByFolder"/>
+                                </Grid>
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="Models:Mod">
+                                    <TextBlock Text="{Binding ModFolder}"
                                                VerticalAlignment="Center"
                                                Margin="4,0"/>
                                 </DataTemplate>

@@ -9,35 +9,36 @@ public class Mod : INotifyPropertyChanged
     private string _name = "";
     private string _author = "";
     private string _description = "";
-
+    private string _modFolder = "";
     public bool IsEnabled
     {
         get => _isEnabled;
         set { _isEnabled = value; OnPropertyChanged(nameof(IsEnabled)); }
     }
-
     public Bitmap? Icon
     {
         get => _icon;
         set { _icon = value; OnPropertyChanged(nameof(Icon)); }
     }
-
     public string Name
     {
         get => _name;
         set { _name = value; OnPropertyChanged(nameof(Name)); }
     }
-
     public string Author
     {
         get => _author;
         set { _author = value; OnPropertyChanged(nameof(Author)); }
     }
-
     public string Description
     {
         get => _description;
         set { _description = value; OnPropertyChanged(nameof(Description)); }
+    }
+    public string ModFolder
+    {
+        get => _modFolder;
+        set { _modFolder = value; OnPropertyChanged(nameof(ModFolder)); }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

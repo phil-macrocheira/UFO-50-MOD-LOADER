@@ -13,7 +13,7 @@ namespace UFO_50_Mod_Loader.Models
         public static bool IsOSX => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
         public static string ModLoaderPath => AppDomain.CurrentDomain.BaseDirectory;
         public static string ModLoaderRoot => Path.GetFullPath(Path.Combine(ModLoaderPath, ".."));
-        public static string MyModsPath => Path.Combine(ModLoaderRoot, "my mods");
+        public static string DownloadedModsPath => Path.Combine(ModLoaderRoot, "downloaded mods");
         public static string VanillaCopyPath => Path.Combine(ModLoaderPath, "UFO 50 Vanilla Copy");
         public static string ModdedCopyPath => Path.Combine(ModLoaderPath, "UFO 50 Modded Copy");
         public static string ModdedCopyExePath => Path.Combine(ModdedCopyPath, "ufo50.exe");
@@ -26,8 +26,8 @@ namespace UFO_50_Mod_Loader.Models
         public static string GMLoaderDataWinPath => Path.Combine(ModLoaderPath, "data.win");
         public static string GMLoaderModsBasePath => Path.Combine(ModLoaderPath, "mods_base");
         public static string GMLoaderModsPath => Path.Combine(ModLoaderPath, "mods");
-        public static string ModdingSettingsPath => Path.Combine(MyModsPath, "UFO 50 Modding Settings");
-        public static string ModdingSettingsNameListPath = Path.Combine(ModdingSettingsPath, "code", "gml_Object_oModding_Other_10.gml");
+        public static string GameBananaID = "23000";
+        public static string SteamAppID = "1147860";
         static Constants()
         {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UFO_50_Mod_Loader.wrench.ico");

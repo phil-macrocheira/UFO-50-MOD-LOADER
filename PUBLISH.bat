@@ -23,6 +23,10 @@ rmdir "%~dp0publish\linux-x64" 2>nul
 robocopy "my mods" "publish\win-x64\my mods" /E /NJH /NJS /NDL /NC /NS /NP >nul
 robocopy "my mods" "publish\linux-x64\my mods" /E /NJH /NJS /NDL /NC /NS /NP >nul
 
+:: Copy downloaded mods
+robocopy "downloaded mods" "publish\win-x64\downloaded mods" /E /NJH /NJS /NDL /NC /NS /NP >nul
+robocopy "downloaded mods" "publish\linux-x64\downloaded mods" /E /NJH /NJS /NDL /NC /NS /NP >nul
+
 :: Copy shortcut scripts
 copy "Shortcut Scripts\SHORTCUT MAKER.bat" "publish\win-x64\SHORTCUT MAKER.bat"
 copy "Shortcut Scripts\SHORTCUT MAKER.sh" "publish\linux-x64\SHORTCUT MAKER.sh"

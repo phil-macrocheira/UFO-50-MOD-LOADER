@@ -12,7 +12,6 @@ public class FileWatcherService : IDisposable
     {
         _watchPath = watchPath;
     }
-
     public string WatchPath
     {
         get => _watchPath;
@@ -24,7 +23,6 @@ public class FileWatcherService : IDisposable
             }
         }
     }
-
     public void Start()
     {
         if (!Directory.Exists(_watchPath))
@@ -52,13 +50,21 @@ public class FileWatcherService : IDisposable
             _watcher = null;
         }
     }
-
+    public void Pause()
+    {
+        if (_watcher != null)
+            _watcher.EnableRaisingEvents = false;
+    }
+    public void Resume()
+    {
+        if (_watcher != null)
+            _watcher.EnableRaisingEvents = true;
+    }
     public void Restart()
     {
         Stop();
         Start();
     }
-
     private void OnCreated(object sender, FileSystemEventArgs e)
     {
         string ext = Path.GetExtension(e.FullPath).ToLowerInvariant();
@@ -70,7 +76,6 @@ public class FileWatcherService : IDisposable
             FolderChanged?.Invoke();
         }
     }
-
     private void OnChanged(object sender, FileSystemEventArgs e)
     {
         FolderChanged?.Invoke();
@@ -80,7 +85,6 @@ public class FileWatcherService : IDisposable
     {
         FolderChanged?.Invoke();
     }
-
     public void Dispose()
     {
         if (!_disposed) {

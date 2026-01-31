@@ -1,6 +1,5 @@
 ﻿using SharpCompress.Archives;
 using SharpCompress.Common;
-using UFO_50_Mod_Loader.Models;
 
 namespace UFO_50_Mod_Loader.Services;
 
@@ -22,6 +21,25 @@ public static class ExtractService
             Logger.Log($"Cannot unzip {Path.GetFileName(archivePath)} - {ex.Message}");
         }
     }
+    public static async Task<string?> ExtractAsync(string archivePath)
+    {
+        await WaitForFileReady(archivePath);
+
+        try {
+            string destFolder = Extract(archivePath);
+            File.Delete(archivePath);
+            Logger.Log($"Extracted {Path.GetFileName(archivePath)}");
+            return destFolder;
+        }
+        catch (InvalidDataException ex) {
+            Logger.Log($"Cannot unzip {Path.GetFileName(archivePath)} - {ex.Message}");
+            return null;
+        }
+        catch (IOException ex) {
+            Logger.Log($"Cannot unzip {Path.GetFileName(archivePath)} - {ex.Message}");
+            return null;
+        }
+    }
 
     private static string Extract(string archivePath)
     {
@@ -41,7 +59,7 @@ public static class ExtractService
             stripRoot = false;
         }
 
-        string destFolder = Path.Combine(Constants.MyModsPath, folderName);
+        string destFolder = Path.Combine(Path.GetDirectoryName(archivePath)!, folderName);
 
         if (Directory.Exists(destFolder))
             Directory.Delete(destFolder, recursive: true);
