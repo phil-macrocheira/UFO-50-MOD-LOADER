@@ -44,7 +44,10 @@ public static class ModConflictService
             foreach (var file in files) {
                 var parentDir = Path.GetFileName(Path.GetDirectoryName(file));
 
-                if (file.EndsWith("files.txt", StringComparison.OrdinalIgnoreCase)) {
+                if (file.EndsWith("conflicting_mods.txt", StringComparison.OrdinalIgnoreCase)) {
+                    CheckModConflicts(file, modName, enabledModPaths.Select(path => Path.GetFileName(path)).ToHashSet(), result);
+                } 
+                else if (file.EndsWith("files.txt", StringComparison.OrdinalIgnoreCase)) {
                     ProcessFileList(file, modPath, relativePaths);
                     modsWithFileList.Add(modName);
                 }
@@ -116,6 +119,18 @@ public static class ModConflictService
         catch (YamlDotNet.Core.YamlException ex) {
             string filename = Path.GetFileName(file);
             Logger.Log($"WARNING: Invalid YAML in {modName}/{filename} - {ex.Message}");
+        }
+    }
+
+    private static void CheckModConflicts(string modListPath, string mod1, HashSet<string> enabledMods, ConflictResult result)
+    {
+        var lines = File.ReadAllLines(modListPath);
+        foreach (var mod2 in lines) {
+            if (string.IsNullOrWhiteSpace(mod2)) continue;
+            if (enabledMods.Contains(mod2)) {
+                result.Conflicts.Add($"{mod1} is known to be incompatible with {mod2}");
+                result.HasBlockingConflicts = true;
+            }
         }
     }
 

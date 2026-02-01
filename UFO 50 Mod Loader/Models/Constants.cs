@@ -19,7 +19,7 @@ namespace UFO_50_Mod_Loader.Models
         public static readonly string ModdedCopySteamAppID = Path.Combine(ModdedCopyPath, "steam_appid.txt");
         public static readonly string VanillaDataWinPath = Path.Combine(VanillaCopyPath, "data.win");
         public static readonly string VanillaExtPath = Path.Combine(VanillaCopyPath, "ext");
-        public static readonly string SettingsPath = Path.Combine(ModLoaderPath, "settings.json");
+        public static readonly string SettingsPath = Path.Combine(ModLoaderRoot, "settings.json");
         public static readonly string HashDataPath = Path.Combine(ModLoaderPath, "Data", "ufo50_hashes.json");
         public static readonly string GMLoaderIniPath = Path.Combine(ModLoaderPath, "GMLoader.ini");
         public static readonly string GMLoaderDataWinPath = Path.Combine(ModLoaderPath, "data.win");
