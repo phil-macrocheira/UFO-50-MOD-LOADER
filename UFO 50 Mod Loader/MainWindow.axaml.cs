@@ -6,8 +6,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using UFO_50_Mod_Loader.Helpers;
 using UFO_50_Mod_Loader.Models;
-using Velopack;
-using Velopack.Sources;
 
 namespace UFO_50_Mod_Loader;
 
@@ -243,25 +241,7 @@ public partial class MainWindow : Window
     }
     private void OnCheckUpdateClick(object? sender, RoutedEventArgs e)
     {
-        Dispatcher.UIThread.Post(async () =>
-        {
-            var source = new GithubSource(Constants.RepoUrl, null, true);
-
-            var updateManager = new UpdateManager(source, new UpdateOptions() { AllowVersionDowngrade = true });
-            var updateInfo = await updateManager.CheckForUpdatesAsync();
-
-            if (updateInfo is null)
-            {
-                await MessageBoxHelper.Show(this, "Check for update OK", "Up to date.");
-            }
-            else
-            {
-                await updateManager.DownloadUpdatesAsync(updateInfo);
-                await MessageBoxHelper.Show(this, "Check for update succeed", $"Updated to version {updateInfo.TargetFullRelease.Version}. Restarting to apply updates.");
-
-                updateManager.ApplyUpdatesAndRestart(updateInfo);
-            }
-        });
+        SelfUpdaterService.CheckForUpdates(this);
     }
     private void OnGamePathMenuClick(object? sender, RoutedEventArgs e)
     {

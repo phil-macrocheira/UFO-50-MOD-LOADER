@@ -147,7 +147,7 @@
                     <MenuItem Header="Load Mod List" Click="OnLoadModListClick"/>
                     <MenuItem Header="Manage Mod Folders" Click="OnManageModFoldersClick"/>
                     <MenuItem Header="Uncheck All" Click="OnUncheckAllClick"/>
-                    <MenuItem Header="Check For Update" Click="OnCheckUpdateClick"/>
+                    <MenuItem Header="Check For Updates" Click="OnCheckUpdateClick"/>
                 </MenuItem>
 
                 <!-- Settings -->

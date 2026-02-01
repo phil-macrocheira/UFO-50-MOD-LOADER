@@ -1,11 +1,12 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Utilities;
 
 namespace UFO_50_Mod_Loader.Helpers;
 public static class MessageBoxHelper
 {
-    public static async Task Show(Window parent, string title, string message)
+    public static async Task<bool> Show(Window parent, string title, string message, string yesText = "OK", string? noText = null)
     {
         var dialog = new Window {
             Title = title,
@@ -28,19 +29,44 @@ public static class MessageBoxHelper
             Foreground = Brushes.White
         });
 
-        var button = new Button {
-            Content = "OK",
+        var buttonPanel = new StackPanel()
+        {
+            Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Width = 60,
-            Height = 30,
-            Padding = new Avalonia.Thickness(19, 4, 0, 0)
+            Spacing = 16
         };
-        button.Click += (s, e) => dialog.Close();
+        panel.Children.Add(buttonPanel);
 
-        panel.Children.Add(button);
+        Button AddButton(string text)
+        {
+            var button = new Button
+            {
+                Content = text,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                Height = 30,
+                Padding = new Avalonia.Thickness(19, 4, 19, 0)
+            };
+
+            button.Click += (s, e) => dialog.Close();
+            buttonPanel.Children.Add(button);
+
+            return button;
+        }
+
+        var result = false;
+
+        AddButton(yesText).Click += (s, e) => result = true;
+        if (noText != null)
+        {
+            AddButton(noText);
+        }
+
         dialog.Content = panel;
 
         await dialog.ShowDialog(parent);
+
+        return result;
     }
 }

@@ -1,11 +1,19 @@
 ﻿using Avalonia;
 using Avalonia.Media.Imaging;
-using UFO_50_Mod_Loader.Models;
+using System.Reflection;
 using UFO_50_Mod_Loader.Helpers;
+using UFO_50_Mod_Loader.Models;
 
 namespace UFO_50_Mod_Loader.Services;
 public class ModDatagridService : IDisposable
 {
+    public static readonly Bitmap DefaultIcon = GetDefaultIcon();
+    private static Bitmap GetDefaultIcon()
+    {
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UFO_50_Mod_Loader.wrench.ico");
+        return new Bitmap(stream);
+    }
+
     private readonly List<FileWatcherService> _fileWatchers = new();
     private bool _disposed;
     public event Action? ModsChanged;
@@ -56,7 +64,7 @@ public class ModDatagridService : IDisposable
                 return null;
 
             // Load icon
-            Bitmap icon = Constants.DefaultIcon;
+            Bitmap icon = DefaultIcon;
             string? iconPath = Directory.GetFiles(modFolder, "*.png").FirstOrDefault();
             if (!string.IsNullOrEmpty(iconPath)) {
                 try {
@@ -64,7 +72,7 @@ public class ModDatagridService : IDisposable
                     icon = original.CreateScaledBitmap(new PixelSize(50, 50), BitmapInterpolationMode.None);
                 }
                 catch {
-                    icon = Constants.DefaultIcon;
+                    icon = DefaultIcon;
                     Logger.Log($"Failed to open icon at {iconPath}");
                 }
             }

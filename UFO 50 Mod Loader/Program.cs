@@ -1,26 +1,9 @@
 ﻿using Avalonia;
-using System.Diagnostics;
-using System.Reflection;
+using UFO_50_Mod_Loader.Models;
 using Velopack;
-using Velopack.Locators;
-using Velopack.Logging;
 
 namespace UFO_50_Mod_Loader
 {
-    internal class ConsoleVelopackLogger : IVelopackLogger
-    {
-        public void Log(VelopackLogLevel logLevel, string? message, Exception? exception)
-        {
-            var logMessage = $"[{DateTime.Now.ToShortTimeString()}] [{logLevel}] {message}";
-            if (exception is not null)
-            {
-                logMessage += Environment.NewLine + exception;
-            }
-
-            Debug.WriteLine(logMessage);
-        }
-    }
-
     internal class Program
     {
         // Initialization code. Don't use any Avalonia, third-party APIs or any
@@ -29,18 +12,20 @@ namespace UFO_50_Mod_Loader
         [STAThread]
         public static void Main(string[] args)
         {
-            VelopackApp.Build()
-                .OnFirstRun((version) => {
-                    string sourceFolder = "my mods";
-                    string destinationFolder = "../my mods";
-
-                    if (!Directory.Exists(destinationFolder))
-                    {
-                        CopyService.CopyDirectory(sourceFolder, destinationFolder);
-                    }
-                })
 #if DEBUG
-                .SetLocator(new TestVelopackLocator(appId: "UFO-50-Mod-Loader", version: Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "", packagesDir: "../packages", logger: new ConsoleVelopackLogger()))
+            // For some reason Velopack asks for a packages path for debug, but it doesn't actually work so we need to clear it
+            if (Directory.Exists(Constants.PackagesPath))
+            {
+                Directory.Delete(Constants.PackagesPath, true);
+            }
+            Directory.CreateDirectory(Constants.PackagesPath);
+#endif
+
+            VelopackApp.Build()
+                .OnFirstRun((version) => SelfUpdaterService.OnFirstRun())
+                .OnRestarted((version) => SelfUpdaterService.OnRestarted())
+#if DEBUG
+                .SetLocator(SelfUpdaterService.GetDebugLocator())
 #endif
                 .Run();
             
