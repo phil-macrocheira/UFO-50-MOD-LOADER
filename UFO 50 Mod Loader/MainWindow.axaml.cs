@@ -20,6 +20,11 @@ public partial class MainWindow : Window
         get => SettingsService.Settings.OverwriteMode;
         set => SettingsService.Settings.OverwriteMode = value;
     }
+    public bool CheckForUpdatesAutomatically
+    {
+        get => SettingsService.Settings.CheckForUpdatesAutomatically;
+        set => SettingsService.Settings.CheckForUpdatesAutomatically = value;
+    }
     /*
     public bool EnabledTop
     {
@@ -29,9 +34,6 @@ public partial class MainWindow : Window
     */
     public MainWindow()
     {
-        // Load settings first, before InitializeComponent
-        SettingsService.Load();
-
         // Initialize mod folders
         ModFolderService.Initialize();
 
@@ -112,6 +114,11 @@ public partial class MainWindow : Window
 
             if (SettingsService.Settings.FirstTimeRun == true)
                 FirstTimeRun();
+        }
+
+        if (SettingsService.Settings.CheckForUpdatesAutomatically)
+        {
+            SelfUpdaterService.CheckForUpdates(this, automatic: true);
         }
     }
     private async void OnLaunchGameClick(object? sender, RoutedEventArgs e)
@@ -269,6 +276,12 @@ public partial class MainWindow : Window
             InstallButton.Content = "Install Mods";
         }
         SaveCheckboxSetting("Overwrite Installed Files", OverwriteModeCheckBox.IsChecked);
+    }
+    private void OnCheckForUpdatesAutomaticallyClick(object? sender, RoutedEventArgs e)
+    {
+        CheckForUpdatesAutomaticallyCheckBox.IsChecked = !CheckForUpdatesAutomaticallyCheckBox.IsChecked;
+        SettingsService.Settings.CheckForUpdatesAutomatically = CheckForUpdatesAutomaticallyCheckBox.IsChecked ?? true;
+        SaveCheckboxSetting("Check For Updates Automatically", CheckForUpdatesAutomaticallyCheckBox.IsChecked);
     }
     private void SaveCheckboxSetting(string setting, bool? enabled)
     {

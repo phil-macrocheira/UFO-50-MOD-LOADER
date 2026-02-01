@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Threading;
 using System.Diagnostics;
+using System.Threading;
 using UFO_50_Mod_Loader.Helpers;
 using UFO_50_Mod_Loader.Models;
 using Velopack;
@@ -13,6 +14,7 @@ namespace UFO_50_Mod_Loader.Services
     internal class SelfUpdaterService
     {
         public static bool JustUpdatedOrInstalled { get; private set; }
+        private static volatile bool checkingForUpdates;
 
         public static void OnUpdateOrInstall()
         {
@@ -29,34 +31,57 @@ namespace UFO_50_Mod_Loader.Services
             );
         }
 
-        public static void CheckForUpdates(Window parent)
+        public static void CheckForUpdates(Window parent, bool automatic = false)
         {
+            if (checkingForUpdates)
+            {
+                return;
+            }
+
+            checkingForUpdates = true;
+
             Dispatcher.UIThread.Post(async () =>
             {
+                try
+                {
 #if DEBUG
-                var source = new SimpleFileSource(new DirectoryInfo("../../../../../Releases"));
+                    var source = new SimpleFileSource(new DirectoryInfo("../../../../../Releases"));
 #else
-                var source = new GithubSource(Constants.RepoUrl, null, true);
+                    var source = new GithubSource(Constants.RepoUrl, null, true);
 #endif
 
-                var updateManager = new UpdateManager(source, new UpdateOptions() { AllowVersionDowngrade = true });
-                var updateInfo = await updateManager.CheckForUpdatesAsync();
+                    var updateManager = new UpdateManager(source, new UpdateOptions() { AllowVersionDowngrade = true });
+                    var updateInfo = await updateManager.CheckForUpdatesAsync();
 
-                if (updateInfo is null)
-                {
-                    await MessageBoxHelper.Show(parent, "No updates found", "Up to date.");
-                }
-                else
-                {
-                    await updateManager.DownloadUpdatesAsync(updateInfo);
-                    var restartNow = await MessageBoxHelper.Show(parent, "Update found", $"A new version is available. Restart now to update to version {updateInfo.TargetFullRelease.Version}?", "Restart Now", "Restart Later");
-
-                    if (restartNow)
+                    if (updateInfo is null)
                     {
-                        updateManager.ApplyUpdatesAndRestart(updateInfo);
+                        if (!automatic)
+                        {
+                            await MessageBoxHelper.Show(parent, "No updates found", "Up to date.");
+                        }
+                    }
+                    else
+                    {
+                        Logger.Log($"Downloading update for version {updateInfo.TargetFullRelease.Version}");
+
+                        await updateManager.DownloadUpdatesAsync(updateInfo);
+
+                        var automaticUpdates = SettingsService.Settings.CheckForUpdatesAutomatically;
+                        var applyUpdates = await MessageBoxHelper.Show(parent, "Update found",
+                            $"A new version is available. {(automaticUpdates ? "Restart now to update" : "Update")} to version {updateInfo.TargetFullRelease.Version}?",
+                            automaticUpdates ? "Restart Now" : "Yes", automaticUpdates ? "Restart Later" : "No");
+
+                        if (applyUpdates)
+                        {
+                            updateManager.ApplyUpdatesAndRestart(updateInfo);
+                        }
                     }
                 }
-            });
+                finally
+                {
+                    checkingForUpdates = false;
+                }
+            }, DispatcherPriority.Send);
         }
 
         internal class DebugVelopackLogger : IVelopackLogger
