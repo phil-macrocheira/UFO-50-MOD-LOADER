@@ -219,10 +219,14 @@ public partial class MainWindow : Window
             Logger.Log($"Uninstalled UFO 50 Mods.");
         }
     }
+    private void OnOpenFolderClick(object? sender, RoutedEventArgs e)
+    {
+        ModFolderService.OpenFolderInExplorer(Constants.ModLoaderRoot);
+    }
     private async void OnManageModFoldersClick(object? sender, RoutedEventArgs e)
     {
         var dialog = new ModFolderManagerWindow();
-        dialog.ShowDialog(this);
+        await dialog.ShowDialog(this);
     }
     private async void OnSaveModListClick(object? sender, RoutedEventArgs e)
     {

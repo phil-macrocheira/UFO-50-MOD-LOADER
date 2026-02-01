@@ -46,23 +46,7 @@ public partial class ModFolderManagerWindow : Window
     private void OnFolderDoubleTapped(object? sender, TappedEventArgs e)
     {
         if (FolderListBox.SelectedItem is ModFolderItem item) {
-            OpenFolderInExplorer(item.Name);
-        }
-    }
-
-    private void OpenFolderInExplorer(string folder)
-    {
-        string fullPath = ModFolderService.GetFullPath(folder);
-        if (Directory.Exists(fullPath)) {
-            try {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo {
-                    FileName = fullPath,
-                    UseShellExecute = true
-                });
-            }
-            catch (Exception ex) {
-                Logger.Log($"ERROR: Failed to open folder: {ex.Message}");
-            }
+            ModFolderService.OpenFolderInExplorer(ModFolderService.GetFullPath(item.Name));
         }
     }
 

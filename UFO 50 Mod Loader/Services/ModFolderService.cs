@@ -195,5 +195,19 @@ namespace UFO_50_Mod_Loader.Services
                 }
             }
         }
+        public static void OpenFolderInExplorer(string fullPath)
+        {
+            if (Directory.Exists(fullPath)) {
+                try {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo {
+                        FileName = fullPath,
+                        UseShellExecute = true
+                    });
+                }
+                catch (Exception ex) {
+                    Logger.Log($"ERROR: Failed to open folder: {ex.Message}");
+                }
+            }
+        }
     }
 }

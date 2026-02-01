@@ -143,6 +143,7 @@
 
                 <!-- Mod Loader -->
                 <MenuItem Header="_Mod Loader">
+                    <MenuItem Header="Open Mod Loader Folder" Click="OnOpenFolderClick"/>
                     <MenuItem Header="Save Current Mod List" Click="OnSaveModListClick"/>
                     <MenuItem Header="Load Mod List" Click="OnLoadModListClick"/>
                     <MenuItem Header="Manage Mod Folders" Click="OnManageModFoldersClick"/>
