@@ -22,8 +22,8 @@ namespace UFO_50_Mod_Loader
 #endif
 
             VelopackApp.Build()
-                .OnFirstRun((version) => SelfUpdaterService.OnFirstRun())
-                .OnRestarted((version) => SelfUpdaterService.OnRestarted())
+                .OnFirstRun((version) => SelfUpdaterService.OnUpdateOrInstall())
+                .OnRestarted((version) => SelfUpdaterService.OnUpdateOrInstall())
 #if DEBUG
                 .SetLocator(SelfUpdaterService.GetDebugLocator())
 #endif

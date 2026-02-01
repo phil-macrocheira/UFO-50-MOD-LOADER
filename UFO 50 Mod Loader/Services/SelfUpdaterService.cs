@@ -12,25 +12,11 @@ namespace UFO_50_Mod_Loader.Services
 {
     internal class SelfUpdaterService
     {
-        public static void OnFirstRun()
+        public static bool JustUpdatedOrInstalled { get; private set; }
+
+        public static void OnUpdateOrInstall()
         {
-            OnRestarted();
-        }
-
-        public static void OnRestarted()
-        {
-            string sourceFolder = Path.Combine(Constants.ModLoaderPath, "preinstalled mods");
-            string destinationFolder = Path.Combine(Constants.ModLoaderRoot, "my mods");
-
-            foreach (var directory in Directory.GetDirectories(sourceFolder))
-            {
-                Logger.Log(directory);
-            }
-
-            //if (!Directory.Exists(destinationFolder))
-            //{
-            //    CopyService.CopyDirectory(sourceFolder, destinationFolder);
-            //}
+            JustUpdatedOrInstalled = true;
         }
 
         public static IVelopackLocator GetDebugLocator()

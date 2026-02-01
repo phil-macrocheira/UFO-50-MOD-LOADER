@@ -4,6 +4,10 @@ namespace UFO_50_Mod_Loader.Services
 {
     public static class ModFolderService
     {
+        public static readonly string MyMods = "my mods";
+        public static readonly string DownloadedMods = "downloaded mods";
+        public static readonly string PreinstalledMods = "preinstalled mods";
+
         private static readonly List<string> _modFolders = new();
         public static IReadOnlyList<string> ModFolders => _modFolders.AsReadOnly();
 
@@ -17,8 +21,8 @@ namespace UFO_50_Mod_Loader.Services
                 _modFolders.AddRange(savedFolders);
             }
             else {
-                _modFolders.Add("downloaded mods");
-                _modFolders.Add("my mods");
+                _modFolders.Add(MyMods);
+                _modFolders.Add(DownloadedMods);
                 Save();
             }
 
@@ -123,8 +127,44 @@ namespace UFO_50_Mod_Loader.Services
         }
         private static void EnsureDirectoriesExist()
         {
+            var sourcePath = Path.Combine(Constants.ModLoaderPath, PreinstalledMods);
+            var destinationPath = GetFullPath(MyMods);
+
+            bool hadNoDestinationFolder = !Directory.Exists(destinationPath);
+
             foreach (var folder in _modFolders) {
                 EnsureDirectoryExists(folder);
+            }
+
+            if ((SelfUpdaterService.JustUpdatedOrInstalled || hadNoDestinationFolder) && Directory.Exists(sourcePath) && Directory.Exists(destinationPath))
+            {
+                try
+                {
+                    foreach (var dir in Directory.GetDirectories(sourcePath))
+                    {
+                        string dirName = Path.GetFileName(dir);
+                        string destDir = Path.Combine(destinationPath, dirName);
+
+                        Logger.Log($"Installing {PreinstalledMods}: {dirName}");
+
+                        try
+                        {
+                            if (Directory.Exists(destDir))
+                            {
+                                Directory.Delete(destDir, true);
+                            }
+                            CopyService.CopyDirectory(dir, destDir);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Log($"ERROR: Failed to install {dir} to {destDir}: {ex.Message}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log($"ERROR: Failed to install {PreinstalledMods}: {ex.Message}");
+                }
             }
         }
         private static string SanitizeFolderName(string folderName)
