@@ -9,7 +9,7 @@ public class Mod : INotifyPropertyChanged
     private string _name = "";
     private string _author = "";
     private string _description = "";
-    private string _modFolder = "";
+    private string _modVersion = "";
     public bool IsEnabled
     {
         get => _isEnabled;
@@ -35,10 +35,10 @@ public class Mod : INotifyPropertyChanged
         get => _description;
         set { _description = value; OnPropertyChanged(nameof(Description)); }
     }
-    public string ModFolder
+    public string ModVersion
     {
-        get => _modFolder;
-        set { _modFolder = value; OnPropertyChanged(nameof(ModFolder)); }
+        get => _modVersion;
+        set { _modVersion = value; OnPropertyChanged(nameof(ModVersion)); }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

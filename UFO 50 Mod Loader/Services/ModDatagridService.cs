@@ -1,6 +1,8 @@
 ﻿using Avalonia;
 using Avalonia.Media.Imaging;
+using System.Collections.Generic;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using UFO_50_Mod_Loader.Helpers;
 using UFO_50_Mod_Loader.Models;
 
@@ -84,26 +86,38 @@ public class ModDatagridService : IDisposable
                 }
             }
 
+            // Load version from gamebanana.json if it exists
+            string modVersion = "";
+            string jsonPath = Path.Combine(modFolder, GameBananaMetadata.FileName);
+            if (File.Exists(jsonPath)) {
+                try {
+                    var json = File.ReadAllText(jsonPath);
+                    var metadata = System.Text.Json.JsonSerializer.Deserialize<GameBananaMetadata>(json);
+                    if (metadata != null && !string.IsNullOrEmpty(metadata.Version)) {
+                        modVersion = metadata.Version;
+                    }
+                }
+                catch {
+                    // Skip invalid JSON files
+                }
+            }
+
+            // Set version for UFO 50 Modding Settings to match mod loader version
+            if (folderName == "UFO 50 Modding Settings")
+                modVersion = Constants.Version;
+
             return new Mod {
                 IsEnabled = false,
                 Name = folderName,
                 Author = modder,
                 Description = description,
                 Icon = icon,
-                ModFolder = parentModFolder
+                ModVersion = modVersion
             };
         }
         catch {
             return null;
         }
-    }
-    private void OnModFoldersChanged()
-    {
-        // Recreate watchers when mod folders change
-        DisposeWatchers();
-        CreateFileWatchers();
-        StartAllWatchers();
-        ModsChanged?.Invoke();
     }
     private void CreateFileWatchers()
     {

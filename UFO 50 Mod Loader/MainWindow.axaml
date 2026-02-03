@@ -344,7 +344,7 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <!-- Folder - SCRAPPED COLUMN
+                        <!-- Version -->
                         <DataGridTemplateColumn Width="Auto" CanUserSort="False">
                             <DataGridTemplateColumn.Header>
                                 <Grid>
@@ -353,27 +353,21 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0"
-                                               Text="Folder"
+                                               Text="Version"
                                                VerticalAlignment="Center"
                                                Margin="-8,0,0,0"
                                                Padding="0,0,10,0"
                                                IsHitTestVisible="False"/>
-                                    <Button Grid.Column="1"
-                                            Content="↓"
-                                            Classes="SortButton gray"
-                                            Margin="0,0,-20,0"
-                                            Click="SortByFolder"/>
                                 </Grid>
                             </DataGridTemplateColumn.Header>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="Models:Mod">
-                                    <TextBlock Text="{Binding ModFolder}"
+                                    <TextBlock Text="{Binding ModVersion}"
                                                VerticalAlignment="Center"
                                                Margin="4,0"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        -->
 
                         <!-- Description -->
                         <DataGridTemplateColumn Header="Description" Width="*" CanUserSort="False">

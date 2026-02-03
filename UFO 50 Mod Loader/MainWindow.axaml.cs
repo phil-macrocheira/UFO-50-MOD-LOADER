@@ -431,6 +431,7 @@ public partial class MainWindow : Window
         //    SortByEnabled();
 
         CheckConflicts();
+        UpdateVersionColumnVisibility();
     }
     private void Mod_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
@@ -465,6 +466,12 @@ public partial class MainWindow : Window
         else {
             InstallButton.IsEnabled = true;
         }
+    }
+    private void UpdateVersionColumnVisibility()
+    {
+        // Hide the Version column if no mods have version data
+        bool anyModHasVersion = FilteredMods.Any(m => !string.IsNullOrEmpty(m.ModVersion) && m.Name != "UFO 50 Modding Settings");
+        ModDataGrid.Columns[4].IsVisible = anyModHasVersion;
     }
     private void SaveEnabledMods()
     {

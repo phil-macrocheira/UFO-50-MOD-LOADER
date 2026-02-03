@@ -94,7 +94,7 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTextColumn Header="Mod" Width="*" Binding="{Binding Name}" IsReadOnly="True" CanUserResize="False"/>
-                    <DataGridTextColumn Header="Modder" Width="120" Binding="{Binding Creator}" IsReadOnly="True" CanUserResize="False"/>
+                    <DataGridTextColumn Header="Modder" Width="130" Binding="{Binding Creator}" IsReadOnly="True" CanUserResize="False"/>
                     <DataGridTemplateColumn Width="100" CanUserResize="False" CanUserSort="False">
                         <DataGridTemplateColumn.Header>
                             <Button Click="OnSortByInstalledClick"
