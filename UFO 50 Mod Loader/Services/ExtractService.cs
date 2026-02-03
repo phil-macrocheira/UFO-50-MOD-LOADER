@@ -1,5 +1,7 @@
 ﻿using SharpCompress.Archives;
 using SharpCompress.Common;
+using UFO_50_Mod_Loader.Models;
+using UFO_50_Mod_Loader.Helpers;
 
 namespace UFO_50_Mod_Loader.Services;
 
@@ -40,71 +42,58 @@ public static class ExtractService
             return null;
         }
     }
-
     private static string Extract(string archivePath)
     {
         using var archive = ArchiveFactory.Open(archivePath);
-        var entries = archive.Entries.Where(e => !e.IsDirectory).ToList();
-        string archiveName = Path.GetFileNameWithoutExtension(archivePath);
-        string? commonRoot = GetCommonRootFolder(entries);
-        string folderName;
-        bool stripRoot;
 
-        if (commonRoot != null) {
-            folderName = commonRoot;
-            stripRoot = true;
-        }
-        else {
-            folderName = archiveName;
-            stripRoot = false;
-        }
+        string destFolder = Path.Combine(
+            Path.GetDirectoryName(archivePath)!,
+            Path.GetFileNameWithoutExtension(archivePath)
+        );
 
-        string destFolder = Path.Combine(Path.GetDirectoryName(archivePath)!, folderName);
-
-        if (Directory.Exists(destFolder))
-            Directory.Delete(destFolder, recursive: true);
-
-        foreach (var entry in entries) {
-            string entryPath = entry.Key!;
-
-            if (stripRoot) {
-                int separatorIndex = entryPath.IndexOfAny(['/', '\\']);
-                entryPath = separatorIndex >= 0 ? entryPath[(separatorIndex + 1)..] : entryPath;
-            }
-
-            if (string.IsNullOrEmpty(entryPath))
+        foreach (var entry in archive.Entries) {
+            if (entry.IsDirectory)
                 continue;
 
-            string destPath = Path.Combine(destFolder, entryPath);
-            Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
-            entry.WriteToFile(destPath, new ExtractionOptions { Overwrite = true });
+            var filePath = Path.Combine(destFolder, entry.Key!);
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+            entry.WriteToFile(filePath, new ExtractionOptions { Overwrite = true });
         }
-        return destFolder;
-    }
 
-    private static string? GetCommonRootFolder(List<IArchiveEntry> entries)
+        string modFolder = CopyOutModFolder(destFolder);
+        return modFolder;
+    }
+    private static string CopyOutModFolder(string extractedFolderPath)
     {
-        if (entries.Count == 0)
-            return null;
+        string modFolderPath = FindModFolder(extractedFolderPath);
 
-        string? commonRoot = null;
-
-        foreach (var entry in entries) {
-            string path = entry.Key!;
-            int separatorIndex = path.IndexOfAny(['/', '\\']);
-            if (separatorIndex < 0)
-                return null;
-
-            string root = path[..separatorIndex];
-
-            if (commonRoot == null)
-                commonRoot = root;
-            else if (!commonRoot.Equals(root, StringComparison.OrdinalIgnoreCase))
-                return null;
+        if (modFolderPath == extractedFolderPath) {
+            return extractedFolderPath;
         }
-        return commonRoot;
-    }
 
+        string modFolderName = Path.GetFileName(modFolderPath.TrimEnd(Path.DirectorySeparatorChar));
+        string destPath = Path.Combine(Constants.MyModsPath, modFolderName);
+
+        if (Directory.Exists(destPath))
+            Directory.Delete(destPath, recursive: true);
+
+        CopyService.CopyDirectory(modFolderPath, destPath);
+        Directory.Delete(extractedFolderPath, recursive: true);
+
+        return destPath;
+    }
+    private static string FindModFolder(string root)
+    {
+        if (CheckIfMod.Check(root))
+            return root;
+
+        foreach (var dir in Directory.GetDirectories(root)) {
+            var result = FindModFolder(dir);
+            if (CheckIfMod.Check(result))
+                return result;
+        }
+        return root;
+    }
     private static async Task WaitForFileReady(string path, int maxAttempts = 10)
     {
         for (int i = 0; i < maxAttempts; i++) {

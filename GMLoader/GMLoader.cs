@@ -84,10 +84,10 @@ public class GMLoaderResult
 
 public interface IConfig
 {
-    public string ImportPreCSX { get; }
-    public string ImportBuiltinCSX { get; }
-    public string ImportPostCSX { get; }
-    public string ImportAfterCSX { get; }
+    public string ImportPreCSX { get; set;  }
+    public string ImportBuiltinCSX { get; set; }
+    public string ImportPostCSX { get; set; }
+    public string ImportAfterCSX { get; set; }
     public string GameData { get; }
     public string ModsDirectory { get; }
     public string TexturesDirectory { get; }

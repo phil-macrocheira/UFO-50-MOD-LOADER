@@ -157,6 +157,9 @@ public partial class ModDownloaderWindow : Window
 
     private void OnSelectUpdatesClick(object? sender, RoutedEventArgs e)
     {
+        SearchBox.Text = "";
+        ApplyFilter();
+
         foreach (var mod in _filteredMods) {
             mod.IsSelected = mod.HasUpdate;
         }
@@ -195,6 +198,9 @@ public partial class ModDownloaderWindow : Window
 
     private async void OnDownloadClick(object? sender, RoutedEventArgs e)
     {
+        SearchBox.Text = "";
+        ApplyFilter();
+
         var selectedMods = _filteredMods.Where(m => m.IsSelected).ToList();
         if (selectedMods.Count == 0) {
             Logger.Log("No mods selected for download.");
@@ -221,7 +227,7 @@ public partial class ModDownloaderWindow : Window
                         continue;
                     }
 
-                    ModFile fileToDownload = files[0];
+                    ModFile fileToDownload = files[0]; // Get top-most zip on gamebanana
 
                     var modInfo = new ModInfo {
                         ID = mod.ID,
@@ -240,7 +246,7 @@ public partial class ModDownloaderWindow : Window
 
                     await _downloaderService.DownloadAndExtractModAsync(
                         fileToDownload,
-                        Models.Constants.DownloadedModsPath,
+                        Models.Constants.MyModsPath,
                         modInfo
                     );
 
@@ -268,7 +274,7 @@ public partial class ModDownloaderWindow : Window
         }
         finally {
             DownloadButton.IsEnabled = true;
-            DownloadButton.Content = "Download Selected";
+            DownloadButton.Content = "Download";
         }
     }
 }

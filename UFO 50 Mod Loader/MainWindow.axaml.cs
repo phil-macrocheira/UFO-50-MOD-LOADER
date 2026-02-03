@@ -14,6 +14,7 @@ public partial class MainWindow : Window
     private readonly ModDatagridService _modDatagridService;
     private readonly InstalledGameService _gameService;
     public static ObservableCollection<Mod> FilteredMods { get; } = new();
+    private bool _isInstalling = false;
 
     public bool OverwriteMode
     {
@@ -34,9 +35,6 @@ public partial class MainWindow : Window
     */
     public MainWindow()
     {
-        // Initialize mod folders
-        ModFolderService.Initialize();
-
         DataContext = this;
         InitializeComponent();
 
@@ -167,7 +165,16 @@ public partial class MainWindow : Window
     }
     private async void OnInstallClick(object? sender, RoutedEventArgs e)
     {
+        if (_isInstalling) return;
+        _isInstalling = true;
+
         ToggleUI(false);
+
+        SearchBox.TextChanged -= SearchBox_TextChanged;
+        SearchBox.Text = "";
+        SearchBox.TextChanged += SearchBox_TextChanged;
+
+        LoadMods();
 
         bool installedSuccessfully = false;
 
@@ -179,6 +186,7 @@ public partial class MainWindow : Window
             InstallButton.Content = "Loading Mods...";
             Logger.Log("Loading mods...");
         }
+
         try {
             GMLoaderResult? result = await Task.Run(() => InstallService.InstallModsAsync(this));
             installedSuccessfully = result?.Success ?? false;
@@ -194,6 +202,9 @@ public partial class MainWindow : Window
                 InstallButton.Content = "Install Mods";
 
             ToggleUI(true);
+            _isInstalling = false;
+
+            SortByEnabled();
 
             if (!SettingsService.Settings.OverwriteMode && installedSuccessfully == true) {
                 await LaunchGameService.LaunchGameAsync();
@@ -221,29 +232,42 @@ public partial class MainWindow : Window
     }
     private void OnOpenFolderClick(object? sender, RoutedEventArgs e)
     {
-        ModFolderService.OpenFolderInExplorer(Constants.ModLoaderRoot);
-    }
-    private async void OnManageModFoldersClick(object? sender, RoutedEventArgs e)
-    {
-        var dialog = new ModFolderManagerWindow();
-        await dialog.ShowDialog(this);
+        if (Directory.Exists(Constants.ModLoaderRoot)) {
+            try {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo {
+                    FileName = Constants.ModLoaderRoot,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex) {
+                Logger.Log($"ERROR: Failed to open folder: {ex.Message}");
+            }
+        }
     }
     private async void OnSaveModListClick(object? sender, RoutedEventArgs e)
     {
+        SearchBox.Text = "";
+        LoadMods();
+
         await ModListWindow.SaveModListAsync(this);
+
+        SortByEnabled();
     }
     private void OnLoadModListClick(object? sender, RoutedEventArgs e)
     {
+        SearchBox.Text = "";
+
         var dialog = new ModListWindow();
         dialog.ModListLoaded += () => {
             LoadMods();
-            CheckConflicts();
             SortByEnabled();
         };
         dialog.ShowDialog(this);
     }
     private void OnUncheckAllClick(object? sender, RoutedEventArgs e)
     {
+        SearchBox.Text = "";
+
         foreach (var mod in FilteredMods) {
             if (mod.Name == "UFO 50 Modding Settings")
                 continue;
@@ -370,17 +394,6 @@ public partial class MainWindow : Window
             FilteredMods.Add(item);
         }
     }
-    private void SortByFolder(object? sender, RoutedEventArgs e)
-    {
-        var sorted = FilteredMods
-            .OrderBy(item => item.ModFolder)
-            .ToList();
-
-        FilteredMods.Clear();
-        foreach (var item in sorted) {
-            FilteredMods.Add(item);
-        }
-    }
     private void FirstTimeRun()
     {
         var UFO50ModdingSettingsMod = FilteredMods.FirstOrDefault(m => m.Name == "UFO 50 Modding Settings");
@@ -396,7 +409,7 @@ public partial class MainWindow : Window
     {
         var searchText = SearchBox?.Text ?? "";
         var mods = _modDatagridService.LoadMods();
-        var enabledMods = new HashSet<string>(SettingsService.Settings.EnabledMods);
+        var enabledMods = new HashSet<string>(SettingsService.Settings.SelectedMods);
 
         foreach (var mod in FilteredMods) {
             mod.PropertyChanged -= Mod_PropertyChanged;
@@ -432,7 +445,7 @@ public partial class MainWindow : Window
     {
         var enabledModPaths = FilteredMods
             .Where(m => m.IsEnabled)
-            .Select(m => InstallService.FindModPath(m.Name))
+            .Select(m => Path.Combine(Constants.MyModsPath, m.Name))
             .Where(path => path != null)
             .Cast<string>()
             .ToList();
@@ -462,14 +475,14 @@ public partial class MainWindow : Window
             .ToHashSet();
 
         // Keep mods that are enabled but not currently visible (filtered out by search)
-        var allEnabled = SettingsService.Settings.EnabledMods
+        var allEnabled = SettingsService.Settings.SelectedMods
             .Where(name => !FilteredMods.Any(m => m.Name == name)) // Not in current view
             .ToHashSet();
 
         // Add currently visible enabled mods
         allEnabled.UnionWith(enabledInUI);
 
-        SettingsService.Settings.EnabledMods = allEnabled.ToList();
+        SettingsService.Settings.SelectedMods = allEnabled.ToList();
         SettingsService.Save();
     }
     private void SearchBox_TextChanged(object? sender, TextChangedEventArgs e)

@@ -11,8 +11,8 @@
         public bool OverwriteMode { get; set; } = false;
         // public bool EnabledTop { get; set; } = false;
         public bool CopiedGameFiles { get; set; } = false;
-        public List<string> ModFolders { get; set; } = new() {"downloaded mods", "my mods"};
-        public List<string> EnabledMods { get; set; } = new();
+        // public List<string> ModFolders { get; set; } = new() {"downloaded mods", "my mods"};
+        public List<String> SelectedMods { get; set; } = new();
         public Dictionary<string, List<string>> ModLists { get; set; } = new();
         public bool CheckForUpdatesAutomatically { get; set; } = true;
     }

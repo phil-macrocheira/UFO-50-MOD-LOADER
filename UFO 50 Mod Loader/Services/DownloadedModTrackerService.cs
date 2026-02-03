@@ -17,33 +17,26 @@ public static class DownloadedModTrackerService
     {
         _installedMods.Clear();
 
-        foreach (var modFolder in ModFolderService.ModFolders) {
-            var fullPath = ModFolderService.GetFullPath(modFolder);
+        foreach (var modDir in Directory.GetDirectories(Constants.MyModsPath)) {
+            var jsonPath = Path.Combine(modDir, GameBananaMetadata.FileName);
 
-            if (!Directory.Exists(fullPath))
+            if (!File.Exists(jsonPath))
                 continue;
 
-            foreach (var modDir in Directory.GetDirectories(fullPath)) {
-                var jsonPath = Path.Combine(modDir, GameBananaMetadata.FileName);
+            try {
+                var json = await File.ReadAllTextAsync(jsonPath);
+                var metadata = JsonSerializer.Deserialize<GameBananaMetadata>(json);
 
-                if (!File.Exists(jsonPath))
-                    continue;
-
-                try {
-                    var json = await File.ReadAllTextAsync(jsonPath);
-                    var metadata = JsonSerializer.Deserialize<GameBananaMetadata>(json);
-
-                    if (metadata != null && !string.IsNullOrEmpty(metadata.ID)) {
-                        _installedMods[metadata.ID] = new InstalledModInfo {
-                            ID = metadata.ID,
-                            Version = metadata.Version,
-                            ModFolderPath = modDir
-                        };
-                    }
+                if (metadata != null && !string.IsNullOrEmpty(metadata.ID)) {
+                    _installedMods[metadata.ID] = new InstalledModInfo {
+                        ID = metadata.ID,
+                        Version = metadata.Version,
+                        ModFolderPath = modDir
+                    };
                 }
-                catch {
-                    // Skip invalid JSON files
-                }
+            }
+            catch {
+                // Skip invalid JSON files
             }
         }
     }

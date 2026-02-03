@@ -19,7 +19,6 @@ public class ModDatagridService : IDisposable
     public event Action? ModsChanged;
     public ModDatagridService()
     {
-        ModFolderService.ModFoldersChanged += OnModFoldersChanged;
         CreateFileWatchers();
     }
     public void Initialize()
@@ -31,24 +30,17 @@ public class ModDatagridService : IDisposable
         var mods = new List<Mod>();
         var seenMods = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var modFolder in ModFolderService.ModFolders) {
-            var fullPath = ModFolderService.GetFullPath(modFolder);
-
-            if (!Directory.Exists(fullPath))
-                continue;
-
-            try {
-                var modDirectories = Directory.GetDirectories(fullPath);
-                foreach (var modDir in modDirectories) {
-                    var mod = LoadModFromFolder(modDir);
-                    if (mod != null && seenMods.Add(mod.Name)) {
-                        mods.Add(mod);
-                    }
+        try {
+            var modDirectories = Directory.GetDirectories(Constants.MyModsPath);
+            foreach (var modDir in modDirectories) {
+                var mod = LoadModFromFolder(modDir);
+                if (mod != null && seenMods.Add(mod.Name)) {
+                    mods.Add(mod);
                 }
             }
-            catch (Exception ex) {
-                Logger.Log($"Error loading mods from {fullPath}: {ex.Message}");
-            }
+        }
+        catch (Exception ex) {
+            Logger.Log($"Error loading mods: {ex.Message}");
         }
 
         return mods.OrderBy(m => m.Name).ToList();
@@ -115,20 +107,13 @@ public class ModDatagridService : IDisposable
     }
     private void CreateFileWatchers()
     {
-        foreach (var modFolder in ModFolderService.ModFolders) {
-            var fullPath = ModFolderService.GetFullPath(modFolder);
-
-            if (!Directory.Exists(fullPath))
-                continue;
-
-            try {
-                var watcher = new FileWatcherService(fullPath);
-                watcher.FolderChanged += OnFolderChanged;
-                _fileWatchers.Add(watcher);
-            }
-            catch (Exception ex) {
-                Logger.Log($"Failed to create watcher for {fullPath}: {ex.Message}");
-            }
+        try {
+            var watcher = new FileWatcherService(Constants.MyModsPath);
+            watcher.FolderChanged += OnFolderChanged;
+            _fileWatchers.Add(watcher);
+        }
+        catch (Exception ex) {
+            Logger.Log($"Failed to create file watcher: {ex.Message}");
         }
     }
     private void StartAllWatchers()
@@ -163,7 +148,6 @@ public class ModDatagridService : IDisposable
     {
         if (_disposed) return;
 
-        ModFolderService.ModFoldersChanged -= OnModFoldersChanged;
         DisposeWatchers();
         _disposed = true;
     }

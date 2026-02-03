@@ -77,7 +77,7 @@ public partial class ModListWindow : Window
             }
 
             // Update settings
-            SettingsService.Settings.EnabledMods = modsToEnable.ToList();
+            SettingsService.Settings.SelectedMods = modsToEnable.ToList();
             SettingsService.Save();
 
             // Log results
@@ -139,7 +139,7 @@ public partial class ModListWindow : Window
         var modListName = await dialog.ShowDialog<string?>(owner);
 
         if (!string.IsNullOrWhiteSpace(modListName)) {
-            var enabledMods = SettingsService.Settings.EnabledMods.ToList();
+            var enabledMods = SettingsService.Settings.SelectedMods.ToList();
 
             if (modLists.ContainsKey(modListName)) {
                 modLists[modListName] = enabledMods;

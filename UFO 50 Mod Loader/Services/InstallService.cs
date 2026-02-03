@@ -1,7 +1,5 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Threading;
 using GMLoader;
-using UFO_50_Mod_Loader.Helpers;
 using UFO_50_Mod_Loader.Models;
 
 namespace UFO_50_Mod_Loader.Services
@@ -18,7 +16,7 @@ namespace UFO_50_Mod_Loader.Services
                 return null;
             }
 
-            await AddModNamesAsync();
+            await ModdingSettingsAddModNamesAsync();
 
             if (!SettingsService.Settings.OverwriteMode) {
                 if (Directory.Exists(Constants.ModdedCopyPath))
@@ -32,28 +30,19 @@ namespace UFO_50_Mod_Loader.Services
 
             return await RunGMLoaderAsync(gamePath);
         }
-        public static string? FindModPath(string modName)
-        {
-            foreach (var folder in ModFolderService.ModFolders) {
-                string fullPath = Path.Combine(Constants.ModLoaderRoot, folder, modName);
-                if (Directory.Exists(fullPath))
-                    return fullPath;
-            }
-            return null;
-        }
         private static List<string> GetEnabledModPaths()
         {
             return MainWindow.FilteredMods
                 .Where(m => m.IsEnabled)
-                .Select(m => FindModPath(m.Name))
+                .Select(m => Path.Combine(Constants.MyModsPath, m.Name))
                 .Where(path => path != null)
                 .Cast<string>()
                 .ToList();
         }
 
-        private static async Task AddModNamesAsync()
+        private static async Task ModdingSettingsAddModNamesAsync()
         {
-            string? moddingSettingsPath = FindModPath("UFO 50 Modding Settings");
+            string? moddingSettingsPath = Path.Combine(Constants.MyModsPath, "UFO 50 Modding Settings");
 
             if (moddingSettingsPath == null)
                 return;

@@ -62,8 +62,6 @@ namespace UFO_50_Mod_Loader.Services
                     }
                     else
                     {
-                        Logger.Log($"Downloading update for version {updateInfo.TargetFullRelease.Version}");
-
                         await updateManager.DownloadUpdatesAsync(updateInfo);
 
                         var automaticUpdates = SettingsService.Settings.CheckForUpdatesAutomatically;
@@ -73,6 +71,7 @@ namespace UFO_50_Mod_Loader.Services
 
                         if (applyUpdates)
                         {
+                            Logger.Log($"Downloading update for version {updateInfo.TargetFullRelease.Version}");
                             updateManager.ApplyUpdatesAndRestart(updateInfo);
                         }
                     }

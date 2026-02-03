@@ -12,7 +12,7 @@ namespace UFO_50_Mod_Loader.Models
         public static readonly bool IsOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
         public static readonly string ModLoaderPath = AppDomain.CurrentDomain.BaseDirectory;
         public static readonly string ModLoaderRoot = Path.GetFullPath(Path.Combine(ModLoaderPath, ".."));
-        public static readonly string DownloadedModsPath = Path.Combine(ModLoaderRoot, "downloaded mods");
+        public static readonly string MyModsPath = Path.Combine(ModLoaderRoot, "my mods");
         public static readonly string VanillaCopyPath = Path.Combine(ModLoaderPath, "UFO 50 Vanilla Copy");
         public static readonly string ModdedCopyPath = Path.Combine(ModLoaderRoot, "UFO 50 Modded Copy");
         public static readonly string ModdedCopyExePath = Path.Combine(ModdedCopyPath, "ufo50.exe");

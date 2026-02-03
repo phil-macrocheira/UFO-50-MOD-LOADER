@@ -21,7 +21,6 @@
   
   <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
     <OutputType>Exe</OutputType>
-    <ApplicationIcon>cosmic_cruiser.png</ApplicationIcon>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
