@@ -425,7 +425,7 @@ public partial class MainWindow : Window
     {
         var searchText = SearchBox?.Text ?? "";
         var mods = _modDatagridService.LoadMods();
-        var enabledMods = new HashSet<string>(SettingsService.Settings.SelectedMods);
+        var enabledMods = new HashSet<string>(SettingsService.Settings.EnabledMods);
 
         foreach (var mod in FilteredMods) {
             mod.PropertyChanged -= Mod_PropertyChanged;
@@ -498,14 +498,14 @@ public partial class MainWindow : Window
             .ToHashSet();
 
         // Keep mods that are enabled but not currently visible (filtered out by search)
-        var allEnabled = SettingsService.Settings.SelectedMods
+        var allEnabled = SettingsService.Settings.EnabledMods
             .Where(name => !FilteredMods.Any(m => m.Name == name)) // Not in current view
             .ToHashSet();
 
         // Add currently visible enabled mods
         allEnabled.UnionWith(enabledInUI);
 
-        SettingsService.Settings.SelectedMods = allEnabled.ToList();
+        SettingsService.Settings.EnabledMods = allEnabled.ToList();
         SettingsService.Save();
     }
     private void SearchBox_TextChanged(object? sender, TextChangedEventArgs e)
