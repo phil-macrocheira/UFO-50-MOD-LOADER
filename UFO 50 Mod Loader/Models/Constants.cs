@@ -11,6 +11,7 @@ namespace UFO_50_Mod_Loader.Models
         public static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         public static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
         public static readonly bool IsOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+        public static readonly bool IsSteamOS = IsLinux && File.Exists("/etc/steamos-release");
         public static readonly string ModLoaderPath = AppDomain.CurrentDomain.BaseDirectory;
         public static readonly string ModLoaderRoot = IsWindows ? Path.GetFullPath(Path.Combine(ModLoaderPath, "..")) : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppID);
         public static readonly string ModLoaderWorkspacePath = Path.Combine(ModLoaderRoot, "workspace");

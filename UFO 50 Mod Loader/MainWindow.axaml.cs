@@ -15,6 +15,7 @@ public partial class MainWindow : Window
     private readonly InstalledGameService _gameService;
     public static ObservableCollection<Mod> FilteredMods { get; } = new();
     private bool _isInstalling = false;
+    public bool IsSteamOS => Constants.IsSteamOS;
 
     public bool OverwriteMode
     {
@@ -75,6 +76,13 @@ public partial class MainWindow : Window
     }
     private async void OnWindowLoaded(object? sender, EventArgs e)
     {
+        // Disable overwrite mode if SteamOS
+        if (Constants.IsSteamOS) {
+            OverwriteModeCheckBox.IsChecked = true;
+            InstallButton.Content = "Install Mods";
+            SettingsService.Settings.OverwriteMode = true;
+        }
+
         // Set Install Button Text on open
         if (OverwriteModeCheckBox.IsChecked == true) {
             InstallButton.Content = "Install Mods";
