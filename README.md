@@ -27,3 +27,5 @@ You can save lists of different combinations of mods for later so that you can q
 UFO 50 Mod Loader checks if mods conflict and prevents installing them together.
 ### Automatic Self-Updating
 UFO 50 Mod Loader is able to update itself when a new version of the program releases.
+## Wiki Guide
+For more information, see the [Wiki Guide to Modding UFO 50](https://ufo50.miraheze.org/wiki/Guide_to_Modding_UFO_50).
