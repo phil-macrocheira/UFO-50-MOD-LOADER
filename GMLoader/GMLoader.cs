@@ -313,7 +313,7 @@ public class GMLoaderProgram
     /// </summary>
     /// <param name="configFilePath">Path to GMLoader.ini</param>
     /// <returns>Result indicating success or failure with error details</returns>
-    public static GMLoaderResult Run(string configFilePath, bool IsLinux)
+    public static GMLoaderResult Run(string configFilePath, string workingDirectory)
     {
         try
         {
@@ -326,12 +326,7 @@ public class GMLoaderProgram
                .UseIniFile(configFilePath)
                .Build();
 
-            if (IsLinux)
-            {
-                NormalizePaths(config); // Fixes paths for linux
-            }
-
-            return RunWithConfig(config);
+            return RunWithConfig(config, workingDirectory);
         }
         catch (Exception e)
         {
@@ -343,34 +338,34 @@ public class GMLoaderProgram
     /// <summary>
     /// Run GMLoader with an already-loaded config
     /// </summary>
-    public static GMLoaderResult RunWithConfig(IConfig config)
+    public static GMLoaderResult RunWithConfig(IConfig config, string workingDirectory)
     {
         try
         {
             #region Config
-            importPreCSXPath = config.ImportPreCSX;
-            importBuiltInCSXPath = config.ImportBuiltinCSX;
-            importPostCSXPath = config.ImportPostCSX;
-            importAfterCSXPath = config.ImportAfterCSX;
-            gameDataPath = config.GameData;
-            modsPath = config.ModsDirectory;
-            texturesPath = config.TexturesDirectory;
-            backgroundsTexturePath = config.BackgroundTextureDirectory;
-            noStripTexturesPath = config.NoStripTexturesDirectory;
-            texturesConfigPath = config.TexturesConfigDirectory;
-            backgroundsConfigPath = config.BackgroundsConfigDirectory;
-            audioPath = config.AudioDirectory;
-            audioConfigPath = config.AudioConfigDirectory;
-            configPath = config.ConfigDirectory;
-            gmlCodePath = config.GMLCodeDirectory;
-            gmlCodePatchPath = config.GMLCodePatchDirectory;
-            collisionPath = config.CollisionDirectory;
-            prependGMLPath = config.PrependGMLDirectory;
-            appendGMLPath = config.AppendGMLDirectory;
-            appendGMLCollisionPath = config.AppendGMLCollisionDirectory;
-            newObjectPath = config.NewObjectDirectory;
-            existingObjectPath = config.ExistingObjectDirectory;
-            roomPath = config.RoomDirectory;
+            importPreCSXPath = Path.Combine(workingDirectory, config.ImportPreCSX);
+            importBuiltInCSXPath = Path.Combine(workingDirectory, config.ImportBuiltinCSX);
+            importPostCSXPath = Path.Combine(workingDirectory, config.ImportPostCSX);
+            importAfterCSXPath = Path.Combine(workingDirectory, config.ImportAfterCSX);
+            gameDataPath = Path.Combine(workingDirectory, config.GameData);
+            modsPath = Path.Combine(workingDirectory, config.ModsDirectory);
+            texturesPath = Path.Combine(workingDirectory, config.TexturesDirectory);
+            backgroundsTexturePath = Path.Combine(workingDirectory, config.BackgroundTextureDirectory);
+            noStripTexturesPath = Path.Combine(workingDirectory, config.NoStripTexturesDirectory);
+            texturesConfigPath = Path.Combine(workingDirectory, config.TexturesConfigDirectory);
+            backgroundsConfigPath = Path.Combine(workingDirectory, config.BackgroundsConfigDirectory);
+            audioPath = Path.Combine(workingDirectory, config.AudioDirectory);
+            audioConfigPath = Path.Combine(workingDirectory, config.AudioConfigDirectory);
+            configPath = Path.Combine(workingDirectory, config.ConfigDirectory);
+            gmlCodePath = Path.Combine(workingDirectory, config.GMLCodeDirectory);
+            gmlCodePatchPath = Path.Combine(workingDirectory, config.GMLCodePatchDirectory);
+            collisionPath = Path.Combine(workingDirectory, config.CollisionDirectory);
+            prependGMLPath = Path.Combine(workingDirectory, config.PrependGMLDirectory);
+            appendGMLPath = Path.Combine(workingDirectory, config.AppendGMLDirectory);
+            appendGMLCollisionPath = Path.Combine(workingDirectory, config.AppendGMLCollisionDirectory);
+            newObjectPath = Path.Combine(workingDirectory, config.NewObjectDirectory);
+            existingObjectPath = Path.Combine(workingDirectory, config.ExistingObjectDirectory);
+            roomPath = Path.Combine(workingDirectory, config.RoomDirectory);
 
             defaultSpriteX = config.DefaultSpriteX;
             defaultSpriteY = config.DefaultSpriteY;
@@ -849,21 +844,6 @@ public class GMLoaderProgram
             Log.Information("Running post-CSX Scripts...");
             foreach (string file in postCSXFiles)
                 RunCSharpFile(file).GetAwaiter().GetResult();
-        }
-    }
-    private static void NormalizePaths(IConfig config)
-    {
-        var stringProperties = config.GetType()
-                                     .GetProperties()
-                                     .Where(p => p.PropertyType == typeof(string) && p.CanRead && p.CanWrite);
-
-        foreach (var prop in stringProperties)
-        {
-            string value = (string)prop.GetValue(config);
-            if (!string.IsNullOrEmpty(value))
-            {
-                prop.SetValue(config, value.Replace('\\', '/'));
-            }
         }
     }
     #endregion

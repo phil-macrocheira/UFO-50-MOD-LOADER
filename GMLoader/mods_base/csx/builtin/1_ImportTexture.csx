@@ -75,7 +75,7 @@ if (dirFiles.Length == 0)
 else if (!dirFiles.Any(x => x.EndsWith(".png", StringComparison.OrdinalIgnoreCase) || x.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)))
     return;
 
-string packDir = Path.GetFullPath(Path.Combine("mods", "logs", "TexturePackagerLogs"));
+string packDir = Path.GetFullPath(Path.Combine(modsPath, "logs", "TexturePackagerLogs"));
 Directory.CreateDirectory(packDir);
 
 bool noMasksForBasicRectangles = Data.IsVersionAtLeast(2022, 9); // TODO: figure out the exact version, but this is pretty close
@@ -1031,7 +1031,7 @@ void CheckDuplicates()
     
     if (dirFiles.Length == 0)
     {
-        Log.Debug($"No sprite strip textures to import at {Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, importFolder))}");
+        Log.Debug($"No sprite strip textures to import at {importFolder}");
 		hasSpriteStripFiles = false;
     }
 

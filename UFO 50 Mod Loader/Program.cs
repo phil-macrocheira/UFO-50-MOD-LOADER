@@ -12,13 +12,20 @@ namespace UFO_50_Mod_Loader
         [STAThread]
         public static void Main(string[] args)
         {
+            // Workspace directory is required for loading the settings
+            try {
+                Directory.CreateDirectory(Constants.ModLoaderWorkspacePath);
+            }
+            catch (Exception ex) {
+                Logger.Log($"[ERROR] Failed to create workspace folder: {ex.Message}");
+            }
+
             // Load settings first!
             SettingsService.Load();
 
 #if DEBUG
             // For some reason Velopack asks for a packages path for debug, but it doesn't actually work so we need to clear it
-            if (Directory.Exists(Constants.PackagesPath))
-            {
+            if (Directory.Exists(Constants.PackagesPath)) {
                 Directory.Delete(Constants.PackagesPath, true);
             }
             Directory.CreateDirectory(Constants.PackagesPath);

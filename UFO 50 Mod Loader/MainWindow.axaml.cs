@@ -63,7 +63,6 @@ public partial class MainWindow : Window
 
         ModDataGrid.ItemsSource = FilteredMods;
         SearchBox.TextChanged += SearchBox_TextChanged;
-
         Loaded += OnWindowLoaded;
     }
     private void ToggleUI(bool state)
@@ -100,9 +99,50 @@ public partial class MainWindow : Window
             await CopyUFO50Vanilla(version);
         }
 
+        var sourcePath = Path.Combine(Constants.ModLoaderPath, Constants.PreinstalledMods);
+        var destinationPath = Constants.MyModsPath;
+        bool hadNoDestinationFolder = !Directory.Exists(destinationPath);
+
         // Initialize datagrid service
         _modDatagridService.ModsChanged += OnModsChanged;
         _modDatagridService.Initialize();
+
+        if (SelfUpdaterService.JustUpdatedOrInstalled || hadNoDestinationFolder)
+        {
+            var sourceExists = Directory.Exists(sourcePath);
+            var destExists = Directory.Exists(destinationPath);
+
+            if (sourceExists && destExists)
+            {
+                try
+                {
+                    foreach (var dir in Directory.GetDirectories(sourcePath))
+                    {
+                        string dirName = Path.GetFileName(dir);
+                        string destDir = Path.Combine(destinationPath, dirName);
+
+                        Logger.Log($"Installing {Constants.PreinstalledMods}: {dirName}");
+
+                        try
+                        {
+                            if (Directory.Exists(destDir))
+                            {
+                                Directory.Delete(destDir, true);
+                            }
+                            CopyService.CopyDirectory(dir, destDir);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Log($"ERROR: Failed to install {dir} to {destDir}: {ex.Message}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log($"ERROR: Failed to install {Constants.PreinstalledMods}: {ex.Message}");
+                }
+            }
+        }
 
         LoadMods();
 
@@ -312,7 +352,7 @@ public partial class MainWindow : Window
     private void OnGitHubClick(object? sender, RoutedEventArgs e)
     {
         ProcessStartInfo psi = new ProcessStartInfo {
-            FileName = "https://github.com/phil-macrocheira/UFO-50-MOD-LOADER",
+            FileName = Constants.RepoUrl,
             UseShellExecute = true
         };
         Process.Start(psi);

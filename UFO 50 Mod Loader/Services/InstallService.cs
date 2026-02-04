@@ -19,8 +19,15 @@ namespace UFO_50_Mod_Loader.Services
             await ModdingSettingsAddModNamesAsync();
 
             if (!SettingsService.Settings.OverwriteMode) {
-                if (Directory.Exists(Constants.ModdedCopyPath))
-                    Directory.Delete(Constants.ModdedCopyPath, recursive: true);
+                if (Directory.Exists(Constants.ModdedCopyPath)) {
+                    try {
+                        Directory.Delete(Constants.ModdedCopyPath, recursive: true);
+                    }
+                    catch (Exception ex) {
+                        Logger.Log($"[ERROR] Failed to delete {Path.GetFileName(Constants.ModdedCopyPath)}: {ex.Message}");
+                        return null;
+                    }
+                }
                 await Task.Run(() => CopyService.CopyDirectory(Constants.VanillaCopyPath, Constants.ModdedCopyPath));
                 gamePath = Constants.ModdedCopyPath;
                 File.WriteAllText(Constants.ModdedCopySteamAppID, Constants.SteamAppID);
@@ -129,7 +136,7 @@ namespace UFO_50_Mod_Loader.Services
                         }
                     });
 
-                    GMLoaderResult result = GMLoaderProgram.Run(Constants.GMLoaderIniPath, Constants.IsLinux);
+                    GMLoaderResult result = GMLoaderProgram.Run(Constants.GMLoaderIniPath, Constants.ModLoaderWorkspacePath);
 
                     if (result.Success) {
                         var GameDataWinPath = Path.Combine(gamePath, "data.win");

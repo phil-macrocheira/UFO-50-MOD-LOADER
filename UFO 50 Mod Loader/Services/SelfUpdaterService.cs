@@ -24,7 +24,7 @@ namespace UFO_50_Mod_Loader.Services
         public static IVelopackLocator GetDebugLocator()
         {
             return new TestVelopackLocator(
-                appId: "UFO-50-Mod-Loader",
+                appId: Constants.AppID,
                 version: Constants.Version,
                 packagesDir: Constants.PackagesPath,
                 logger: new DebugVelopackLogger()
@@ -51,16 +51,19 @@ namespace UFO_50_Mod_Loader.Services
 #endif
 
                     var updateManager = new UpdateManager(source, new UpdateOptions() { AllowVersionDowngrade = true });
-                    var updateInfo = await updateManager.CheckForUpdatesAsync();
 
-                    if (updateInfo is null)
+                    UpdateInfo? updateInfo;
+                    try
                     {
-                        if (!automatic)
-                        {
-                            await MessageBoxHelper.Show(parent, "No updates found", "Up to date.");
-                        }
+                        updateInfo = await updateManager.CheckForUpdatesAsync();
                     }
-                    else
+                    catch (Velopack.Exceptions.NotInstalledException ex)
+                    {
+                        Logger.Log($"Can't check for updates: {ex.Message}");
+                        return;
+                    }
+
+                    if (updateInfo is not null)
                     {
                         await updateManager.DownloadUpdatesAsync(updateInfo);
 
@@ -74,6 +77,10 @@ namespace UFO_50_Mod_Loader.Services
                             Logger.Log($"Downloading update for version {updateInfo.TargetFullRelease.Version}");
                             updateManager.ApplyUpdatesAndRestart(updateInfo);
                         }
+                    }
+                    else if (!automatic)
+                    {
+                        await MessageBoxHelper.Show(parent, "No updates found", "Up to date.");
                     }
                 }
                 finally
