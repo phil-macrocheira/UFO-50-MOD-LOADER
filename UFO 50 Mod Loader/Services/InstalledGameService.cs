@@ -8,33 +8,12 @@ using UFO_50_Mod_Loader.Models;
 
 namespace UFO_50_Mod_Loader.Services;
 
-public class GameVersionStatus
-{
-    public string Exe { get; set; } = "Unknown";
-    public string DataWin { get; set; } = "Unknown";
-    public string AudioFiles { get; set; } = "Unknown";
-    public string TextureGroupFiles { get; set; } = "Unknown";
-    public string FontFiles { get; set; } = "Unknown";
-    public string LocalizationFiles { get; set; } = "Unknown";
-
-    public override string ToString()
-    {
-        return
-            $"ufo50.exe: {Exe}\n" +
-            $"data.win: {DataWin}\n" +
-            $"Audio Files: {AudioFiles}\n" +
-            $"Texture Group Files: {TextureGroupFiles}\n" +
-            $"Font Files: {FontFiles}\n" +
-            $"Localization Files: {LocalizationFiles}";
-    }
-}
 public class InstalledGameService
 {
-    private string? _gamePath;
     private readonly Window _parentWindow;
-
-    public string? GamePath => _gamePath;
-    public Dictionary<string, Dictionary<string, long>>? hashData;
+    private string? _gamePath;
+    private Dictionary<string, Dictionary<string, uint>>? _hashData;
+    private string? _latestVersion;
 
     public InstalledGameService(Window parentWindow)
     {
@@ -154,183 +133,139 @@ public class InstalledGameService
 
         return null;
     }
-    public bool LoadHashData()
+    public void LoadHashData()
     {
+        if (_hashData != null) {
+            return;
+        }
+
         if (!Path.Exists(Constants.HashDataPath)) {
-            return false;
-        }
-        using var stream = File.OpenRead(Constants.HashDataPath);
-        hashData = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, long>>>(stream);
-
-        if (Constants.IsLinux) {
-            hashData = hashData.ToDictionary(
-                kvp => kvp.Key.Replace('\\', '/'),
-                kvp => kvp.Value
-            );
+            Logger.Log($"[ERROR] ufo50_hashes.json file not found! Cannot verify UFO 50 version!");
+            return;
         }
 
-        return true;
+        try {
+            using var stream = File.OpenRead(Constants.HashDataPath);
+            _hashData = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, uint>>>(stream);
+        }
+        catch (Exception e) {
+            Logger.Log($"[ERROR] Failed to read ufo50_hashes.json file: {e.Message}");
+            return;
+        }
+
+        try {
+            _latestVersion = _hashData.Keys.Max(v => new Version(v)).ToString();
+        }
+        catch (Exception e) {
+            _hashData = null;
+            Logger.Log($"[ERROR] ufo50_hashes.json is missing the required data");
+            return;
+        }
     }
-    private uint HashFile(string file)
+    private uint HashFile(string path)
     {
-        using var stream = File.OpenRead(file);
+        using var stream = File.OpenRead(path);
         uint hash = CRC32.Compute(stream);
         return hash;
     }
-    private async Task<Dictionary<string, uint>> HashAllFilesAsync(string folder)
+    private async Task<Dictionary<string, uint>> HashAllFilesAsync(string gamePath, IEnumerable<string> files)
     {
-        var files = Directory.GetFiles(folder, "*", SearchOption.AllDirectories);
         var hashes = new ConcurrentDictionary<string, uint>();
 
         await Task.Run(() => {
             Parallel.ForEach(files, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, file => {
-                hashes[file] = HashFile(file);
+                var path = Path.Combine(gamePath, file);
+                if (File.Exists(path)) {
+                    hashes[file] = HashFile(path);
+                }
             });
         });
 
         return new Dictionary<string, uint>(hashes);
     }
-    public string GetFileVersion(string file, uint hash)
+    public string? GetLatestVersion()
     {
-        if (hashData == null)
-            return "Unknown";
-
-        if (hashData.TryGetValue(file, out var versions)) {
-            foreach (var v in versions.Reverse()) {
-                if ((ulong)hash == (ulong)v.Value)
-                    return v.Key; // Return most recent version
-            }
-        }
-        return "Modded";
-    }
-    private string GetLatestVersion()
-    {
-        if (hashData == null || hashData.Count == 0) {
-            return "";
-        }
-        return hashData.Values.First().Keys.Max(v => new Version(v)).ToString();
+        LoadHashData();
+        return _latestVersion;
     }
     public async Task<string> GetGameVersionAsync(string gamePath, bool uninstallMode=false)
     {
         string version = "Unknown";
-        var fileHashes = await HashAllFilesAsync(gamePath);
-        var fileVersions = new Dictionary<string, string>();
+        bool canCopy = false;
 
-        foreach (var kvp in fileHashes) {
-            string file = Path.GetRelativePath(gamePath, kvp.Key);
-            uint hash = kvp.Value;
-            string fileVersion = GetFileVersion(file, hash);
-            fileVersions[file] = fileVersion;
+        LoadHashData();
+        if (_hashData == null) {
+            return version;
         }
 
-        var groups = new Dictionary<string, List<string>> {
-            ["Exe"] = new List<string>(),
-            ["DataWin"] = new List<string>(),
-            ["AudioFiles"] = new List<string>(),
-            ["TextureGroupFiles"] = new List<string>(),
-            ["FontFiles"] = new List<string>(),
-            ["LocalizationFiles"] = new List<string>()
-        };
-
-        foreach (var kvp in fileVersions) {
-            string path = kvp.Key;
-
-            if (path.Equals("ufo50.exe", StringComparison.OrdinalIgnoreCase))
-                groups["Exe"].Add(path);
-            else if (path.Equals("data.win", StringComparison.OrdinalIgnoreCase))
-                groups["DataWin"].Add(path);
-            else if (path.StartsWith("ext" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                groups["LocalizationFiles"].Add(path);
-            else if (path.StartsWith("fonts" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                groups["FontFiles"].Add(path);
-            else if (path.StartsWith("Textures" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                groups["TextureGroupFiles"].Add(path);
-            else if (Path.GetFileName(path).StartsWith("audiogroup", StringComparison.OrdinalIgnoreCase))
-                groups["AudioFiles"].Add(path);
+        string exePath = Path.Combine(gamePath, "ufo50.exe");
+        if (!File.Exists(exePath)) {
+            Logger.Log($"[ERROR] ufo50.exe was not found at {gamePath}! Can't check UFO 50 version!");
+            return version;
         }
 
-        string DetermineGroupVersion(IEnumerable<string> files)
-        {
-            var versions = files.Select(f => fileVersions[f]).ToList();
-            if (versions.Contains("Modded")) return "Modded";
-            return versions.Distinct().Count() == 1 ? versions.First() : "Mismatched Vanilla";
+        uint exeHash = HashFile(exePath);
+        foreach (var kvp in _hashData) {
+            if (kvp.Value.TryGetValue("ufo50.exe", out uint hash) && hash == exeHash) {
+                version = kvp.Key;
+                canCopy = true;
+                break;
+            }
         }
 
-        var status = new GameVersionStatus {
-            Exe = DetermineGroupVersion(groups["Exe"]),
-            DataWin = DetermineGroupVersion(groups["DataWin"]),
-            AudioFiles = DetermineGroupVersion(groups["AudioFiles"]),
-            TextureGroupFiles = DetermineGroupVersion(groups["TextureGroupFiles"]),
-            FontFiles = DetermineGroupVersion(groups["FontFiles"]),
-            LocalizationFiles = DetermineGroupVersion(groups["LocalizationFiles"])
-        };
+        if (!canCopy) {
+            var actualExeVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(exePath).FileVersion;
+            if (actualExeVersion != null && actualExeVersion.EndsWith(".0")) {
+                actualExeVersion = actualExeVersion.Substring(0, actualExeVersion.Length - 2);
+            }
+            Logger.Log($"SETUP ERROR: Installed UFO 50 version ({actualExeVersion}) is probably a new version. Mod Loader update required.");
+            return version;
+        }
 
-        var allGroupVersions = new[] {
-            status.Exe,
-            status.DataWin,
-            status.AudioFiles,
-            status.TextureGroupFiles,
-            status.FontFiles,
-            status.LocalizationFiles
-        };
+        var expectedFileHashes = _hashData[version];
+        var fileHashes = await HashAllFilesAsync(gamePath, expectedFileHashes.Keys);
 
-        string gameVersion = "";
-        string latestVersion = GetLatestVersion();
-        bool CanCopy = true;
+        if (fileHashes.Count != expectedFileHashes.Count) {
+            canCopy = false;
+            Logger.Log("SETUP ERROR: Cannot copy UFO 50 files. Installed UFO 50 version is missing files. Verify integrity of UFO 50 in Steam and select 'Verify Vanilla Copy' in the Mod Loader.");
+        }
+        else if (!expectedFileHashes.All(kvp => fileHashes.TryGetValue(kvp.Key, out var value) && value == kvp.Value)) {
+            canCopy = false;
+            Logger.Log("SETUP ERROR: Cannot copy UFO 50 files. Installed UFO 50 version is already modded. Verify integrity of UFO 50 in Steam and select 'Verify Vanilla Copy' in the Mod Loader.");
+        }
 
-        if (allGroupVersions.Any(v => v == "Modded")) {
-            Logger.Log("SETUP ERROR: Cannot copy UFO 50 files. Installed UFO 50 version is already modded. Verify UFO 50 in Steam and select 'Verify Vanilla Copy' in the Mod Loader.");
+        if (!canCopy) {
+#if DEBUG
+            // just for debugging for now, could show this to the user
+            var differentKeys = fileHashes.Keys.Intersect(expectedFileHashes.Keys)
+                .Where(k => fileHashes[k] != expectedFileHashes[k])
+                .ToList();
+            var missingKeys = fileHashes.Keys.Union(expectedFileHashes.Keys)
+                .Except(fileHashes.Keys.Intersect(expectedFileHashes.Keys))
+                .ToList();
+#endif
+
             version = "Modded";
-            CanCopy = false;
-        }
-        else if (allGroupVersions.Any(v => v == "Mismatched Vanilla")) {
-            Logger.Log("SETUP ERROR: Cannot copy UFO 50 files. Installed UFO 50 version is either missing files or is a mix of different versions. Verify UFO 50 in Steam and select 'Verify Vanilla Copy' in the Mod Loader.");
-            version = "Mismatched Vanilla";
-            CanCopy = false;
-        }
-        else if (allGroupVersions.Distinct().Count() == 1) {
-            gameVersion = allGroupVersions.First();
-            version = gameVersion;
-        }
-        else {
-            Logger.Log("SETUP ERROR: Cannot copy UFO 50 files. Installed UFO 50 version is either missing files or is a mix of different versions. Verify UFO 50 in Steam and select 'Verify Vanilla Copy' in the Mod Loader.");
-            version = "Mismatched Vanilla";
-            CanCopy = false;
         }
 
-        if (CanCopy && gameVersion != latestVersion) {
+        if (canCopy && version != _latestVersion) {
             if (!uninstallMode)
                 Logger.Log("WARNING: Copying outdated UFO 50 version. Select 'Verify Vanilla Copy' to update your vanilla copy in the future.");
             else
-                Logger.Log("WARNING: Installing outdated UFO 50 version. Verify UFO 50 in Steam to update to latest version.");
+                Logger.Log("WARNING: Installing outdated UFO 50 version. Verify integrity of UFO 50 in Steam to update to latest version.");
         }
 
         return version;
     }
+    public bool CanCopy(string version)
+    {
+        return _hashData != null && _hashData.ContainsKey(version);
+    }
     public HashSet<string> GetFileList(string version)
     {
-        if (hashData == null)
+        if (_hashData == null)
             return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        return hashData
-            .Where(kvp => kvp.Value.ContainsKey(version))
-            .Select(kvp => kvp.Key)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-    }
-    public bool CheckExe()
-    {
-        string fullPath = Path.Join(SettingsService.Settings.GamePath, "ufo50.exe");
-        var actualExeVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(fullPath);
-
-        uint hash = HashFile(fullPath);
-        string fileVersion = GetFileVersion("ufo50.exe", hash);
-
-        if (fileVersion == "Modded") {
-            Logger.Log($"WARNING: Installed UFO 50 version ({actualExeVersion}) is probably a new version. Mod Loader update recommended.");
-            SettingsService.Settings.CopiedGameFiles = false;
-            SettingsService.Save();
-            return false;
-        }
-        return true;
+        return _hashData[version].Keys.ToHashSet();
     }
 }

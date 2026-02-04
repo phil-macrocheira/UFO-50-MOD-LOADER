@@ -88,34 +88,28 @@ public partial class MainWindow : Window
         }
 
         // Check in case UFO 50 Vanilla Copy folder was deleted manually
-        if (!Directory.Exists(Constants.VanillaCopyPath)) {
-            SettingsService.Settings.CopiedGameFiles = false;
+        if (!_gameService.IsValidGamePath(Constants.VanillaCopyPath)) {
+            SettingsService.Settings.CopiedVanillaVersion = null;
             SettingsService.Save();
         }
 
-        // Load hash data
-        bool LoadHashDataSuccess = _gameService.LoadHashData();
-        if (!LoadHashDataSuccess) {
-            Logger.Log($"[ERROR] ufo50_hashes.json file not found! Cannot verify UFO 50 version!");
-        }
-        else {
-            // Copy game if exe is recognized and game not copied before
-            if (_gameService.CheckExe() && !SettingsService.Settings.CopiedGameFiles) {
-                CopyUFO50Vanilla();
-            }
-
-            // Initialize datagrid service
-            _modDatagridService.ModsChanged += OnModsChanged;
-            _modDatagridService.Initialize();
-
-            LoadMods();
-
-            if (SettingsService.Settings.FirstTimeRun == true)
-                FirstTimeRun();
-        }
-
-        if (SettingsService.Settings.CheckForUpdatesAutomatically)
+        // Copy vanilla files if necessary
+        if (SettingsService.Settings.CopiedVanillaVersion == null || SettingsService.Settings.CopiedVanillaVersion != _gameService.GetLatestVersion())
         {
+            string version = await _gameService.GetGameVersionAsync(SettingsService.Settings.GamePath);
+            await CopyUFO50Vanilla(version);
+        }
+
+        // Initialize datagrid service
+        _modDatagridService.ModsChanged += OnModsChanged;
+        _modDatagridService.Initialize();
+
+        LoadMods();
+
+        if (SettingsService.Settings.FirstTimeRun == true)
+            FirstTimeRun();
+
+        if (SettingsService.Settings.CheckForUpdatesAutomatically) {
             SelfUpdaterService.CheckForUpdates(this, automatic: true);
         }
     }
@@ -125,43 +119,25 @@ public partial class MainWindow : Window
     }
     private async void OnVerifyCopyClick(object? sender, RoutedEventArgs e)
     {
-        if (_gameService.CheckExe()) {
-            CopyUFO50Vanilla();
-        }
-    }
-    private async Task CopyUFO50Vanilla()
-    {
         string version = await _gameService.GetGameVersionAsync(SettingsService.Settings.GamePath);
-        HashSet<string> versionFileSet = _gameService.GetFileList(version);
-        versionFileSet.Add("Steamworks_x64.dll");
-        versionFileSet.Add("steam_api64.dll");
-        versionFileSet.Add("options.ini");
+        await CopyUFO50Vanilla(version);
+    }
+    private async Task CopyUFO50Vanilla(string version)
+    {
+        if (Directory.Exists(Constants.VanillaCopyPath))
+            Directory.Delete(Constants.VanillaCopyPath, recursive: true);
 
-        if (CanCopy(version)) {
-            if (Directory.Exists(Constants.VanillaCopyPath))
-                Directory.Delete(Constants.VanillaCopyPath, recursive: true);
-            await CopyService.CopyDirectoryAsync(SettingsService.Settings.GamePath, Constants.VanillaCopyPath, versionFileSet);
-            DeleteEmptyDirectories(Constants.VanillaCopyPath);
-            SettingsService.Settings.CopiedGameFiles = true;
+        if (_gameService.CanCopy(version)) {
+            HashSet<string> versionFileSet = _gameService.GetFileList(version);
+            await CopyService.CopyFileSetAsync(SettingsService.Settings.GamePath, Constants.VanillaCopyPath, versionFileSet);
+            SettingsService.Settings.CopiedVanillaVersion = version;
             SettingsService.Save();
-            Logger.Log($"Copied UFO 50 files to 'UFO 50 Vanilla Copy' folder.");
+            Logger.Log($"Successfully verified and copied UFO 50 v{version} to 'UFO 50 Vanilla Copy' folder.");
         }
-    }
-    private void DeleteEmptyDirectories(string path)
-    {
-        foreach (var dir in Directory.GetDirectories(path)) {
-            DeleteEmptyDirectories(dir);
-
-            if (!Directory.EnumerateFileSystemEntries(dir).Any()) {
-                Directory.Delete(dir);
-            }
+        else {
+            SettingsService.Settings.CopiedVanillaVersion = null;
+            SettingsService.Save();
         }
-    }
-    private bool CanCopy(string version)
-    {
-        if (version == "Modded" || version == "Mismatched Vanilla")
-            return false;
-        return true;
     }
     private async void OnInstallClick(object? sender, RoutedEventArgs e)
     {
@@ -225,7 +201,7 @@ public partial class MainWindow : Window
     {
         string version = await _gameService.GetGameVersionAsync(Constants.VanillaCopyPath, true);
 
-        if (CanCopy(version)) {
+        if (_gameService.CanCopy(version)) {
             CopyService.CopyDirectory(Constants.VanillaCopyPath, SettingsService.Settings.GamePath);
             Logger.Log($"Uninstalled UFO 50 Mods.");
         }

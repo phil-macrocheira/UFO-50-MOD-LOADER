@@ -9,8 +9,8 @@
         public double TextBoxHeight { get; set; } = 145;
         public bool FirstTimeRun { get; set; } = true;
         public bool OverwriteMode { get; set; } = false;
+        public string? CopiedVanillaVersion { get; set; }
         // public bool EnabledTop { get; set; } = false;
-        public bool CopiedGameFiles { get; set; } = false;
         // public List<string> ModFolders { get; set; } = new() {"downloaded mods", "my mods"};
         public List<String> SelectedMods { get; set; } = new();
         public Dictionary<string, List<string>> ModLists { get; set; } = new();

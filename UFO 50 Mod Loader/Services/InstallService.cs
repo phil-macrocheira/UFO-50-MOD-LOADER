@@ -11,7 +11,7 @@ namespace UFO_50_Mod_Loader.Services
             Logger._showingConflicts = false;
             string gamePath = SettingsService.Settings.GamePath;
 
-            if (!SettingsService.Settings.CopiedGameFiles) {
+            if (SettingsService.Settings.CopiedVanillaVersion == null) {
                 Logger.Log($"Cannot Install Mods: Vanilla game files have not been copied yet");
                 return null;
             }
