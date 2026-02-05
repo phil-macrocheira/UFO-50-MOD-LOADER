@@ -290,6 +290,7 @@ public class GMLoaderProgram
     public static List<string> audioList = new();
     public static string[] audioToImport = Array.Empty<string>();
     public static Dictionary<string, AudioData> audioDictionary = new();
+    public static string[] enabledModPaths = Array.Empty<string>();
     #endregion
 
     /// <summary>
@@ -313,7 +314,7 @@ public class GMLoaderProgram
     /// </summary>
     /// <param name="configFilePath">Path to GMLoader.ini</param>
     /// <returns>Result indicating success or failure with error details</returns>
-    public static GMLoaderResult Run(string configFilePath, string workingDirectory)
+    public static GMLoaderResult Run(string configFilePath, string workingDirectory, List<string> enabledModPathsList)
     {
         try
         {
@@ -326,7 +327,7 @@ public class GMLoaderProgram
                .UseIniFile(configFilePath)
                .Build();
 
-            return RunWithConfig(config, workingDirectory);
+            return RunWithConfig(config, workingDirectory, enabledModPathsList);
         }
         catch (Exception e)
         {
@@ -338,10 +339,12 @@ public class GMLoaderProgram
     /// <summary>
     /// Run GMLoader with an already-loaded config
     /// </summary>
-    public static GMLoaderResult RunWithConfig(IConfig config, string workingDirectory)
+    public static GMLoaderResult RunWithConfig(IConfig config, string workingDirectory, List<string> enabledModPathsList)
     {
         try
         {
+            enabledModPaths = enabledModPathsList.ToArray();
+
             #region Config
             importPreCSXPath = Path.Combine(workingDirectory, config.ImportPreCSX);
             importBuiltInCSXPath = Path.Combine(workingDirectory, config.ImportBuiltinCSX);

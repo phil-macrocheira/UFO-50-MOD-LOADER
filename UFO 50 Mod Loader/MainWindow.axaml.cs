@@ -197,11 +197,12 @@ public partial class MainWindow : Window
 
         ToggleUI(false);
 
-        SearchBox.TextChanged -= SearchBox_TextChanged;
-        SearchBox.Text = "";
-        SearchBox.TextChanged += SearchBox_TextChanged;
-
-        LoadMods();
+        var enabledModPaths = LoadFilteredMods("")
+            .Where(m => m.IsEnabled)
+            .Select(m => Path.Combine(Constants.MyModsPath, m.Name))
+            .Where(path => path != null)
+            .Cast<string>()
+            .ToList();
 
         bool installedSuccessfully = false;
 
@@ -215,7 +216,7 @@ public partial class MainWindow : Window
         }
 
         try {
-            GMLoaderResult? result = await Task.Run(() => InstallService.InstallModsAsync(this));
+            GMLoaderResult? result = await Task.Run(() => InstallService.InstallModsAsync(this, enabledModPaths));
             installedSuccessfully = result?.Success ?? false;
 
             if (result is not null && !result.Success) {
@@ -223,13 +224,14 @@ public partial class MainWindow : Window
             }
         }
         finally {
+            _isInstalling = false;
+
             if (OverwriteModeCheckBox.IsChecked == false)
                 InstallButton.Content = "Load Mods and Launch Game";
             else
                 InstallButton.Content = "Install Mods";
 
             ToggleUI(true);
-            _isInstalling = false;
 
             SortByEnabled();
 
@@ -432,11 +434,25 @@ public partial class MainWindow : Window
         SettingsService.Settings.FirstTimeRun = false;
         SettingsService.Save();
     }
+    private List<Mod> LoadFilteredMods(string searchText)
+    {
+        var mods = _modDatagridService.LoadMods();
+        var enabledMods = new HashSet<string>(SettingsService.Settings.EnabledMods);
+
+        var filtered = string.IsNullOrWhiteSpace(searchText)
+            ? mods
+            : mods.Where(m => m.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
+        
+        foreach (var mod in filtered) {
+            mod.IsEnabled = enabledMods.Contains(mod.Name);
+        }
+
+        return filtered;
+    }
     private void LoadMods()
     {
         var searchText = SearchBox?.Text ?? "";
-        var mods = _modDatagridService.LoadMods();
-        var enabledMods = new HashSet<string>(SettingsService.Settings.EnabledMods);
+        var filtered = LoadFilteredMods(searchText);
 
         foreach (var mod in FilteredMods) {
             mod.PropertyChanged -= Mod_PropertyChanged;
@@ -444,14 +460,9 @@ public partial class MainWindow : Window
 
         FilteredMods.Clear();
 
-        var filtered = string.IsNullOrWhiteSpace(searchText)
-            ? mods
-            : mods.Where(m => m.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase));
-
         foreach (var mod in filtered) {
-            mod.IsEnabled = enabledMods.Contains(mod.Name);
-            mod.PropertyChanged += Mod_PropertyChanged;
             FilteredMods.Add(mod);
+            mod.PropertyChanged += Mod_PropertyChanged;
         }
 
         //if (SettingsService.Settings.EnabledTop)
