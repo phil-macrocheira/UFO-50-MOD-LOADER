@@ -67,8 +67,14 @@ namespace UFO_50_Mod_Loader.Services
         {
             await Task.Run(() => File.Copy(Constants.VanillaDataWinPath, Constants.GMLoaderDataWinPath, overwrite: true));
 
-            if (Directory.Exists(Constants.GMLoaderModsPath))
-                Directory.Delete(Constants.GMLoaderModsPath, recursive: true);
+            if (Directory.Exists(Constants.GMLoaderModsPath)) {
+                try {
+                    Directory.Delete(Constants.GMLoaderModsPath, recursive: true);
+                }
+                catch (Exception ex) {
+                    Logger.Log($"[ERROR] Failed to delete existing mods workspace folder: {ex.Message}");
+                }
+            }
             await Task.Run(() => CopyService.CopyDirectory(Constants.GMLoaderModsBasePath, Constants.GMLoaderModsPath));
 
             var reorderedModPaths = enabledModPaths

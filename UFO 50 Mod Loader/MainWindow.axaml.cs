@@ -197,11 +197,16 @@ public partial class MainWindow : Window
 
         ToggleUI(false);
 
-        var enabledModPaths = LoadFilteredMods("")
+        var enabledMods = LoadFilteredMods("")
             .Where(m => m.IsEnabled)
-            .Select(m => Path.Combine(Constants.MyModsPath, m.Name))
-            .Where(path => path != null)
-            .Cast<string>()
+            .Select(m => m.Name)
+            .ToList();
+
+        SettingsService.Settings.EnabledMods = enabledMods;
+        SettingsService.Save();
+
+        var enabledModPaths = enabledMods
+            .Select(modName => Path.Combine(Constants.MyModsPath, modName))
             .ToList();
 
         bool installedSuccessfully = false;
