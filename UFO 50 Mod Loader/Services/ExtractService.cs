@@ -7,13 +7,18 @@ namespace UFO_50_Mod_Loader.Services;
 
 public static class ExtractService
 {
-    public static async void HandleArchiveAdded(string archivePath)
+    public static async void HandleArchiveAdded(string archivePath, string? fileToDeleteAfterExtract=null)
     {
         await WaitForFileReady(archivePath);
 
         try {
             string destFolder = Extract(archivePath);
             File.Delete(archivePath);
+            if (fileToDeleteAfterExtract != null) {
+                string fileToDeletePath = Path.Combine(destFolder, fileToDeleteAfterExtract);
+                if (File.Exists(fileToDeletePath))
+                    File.Delete(fileToDeletePath);
+            }
             Logger.Log($"Extracted {Path.GetFileName(archivePath)}");
         }
         catch (InvalidDataException ex) {
@@ -23,13 +28,18 @@ public static class ExtractService
             Logger.Log($"Cannot unzip {Path.GetFileName(archivePath)} - {ex.Message}");
         }
     }
-    public static async Task<string?> ExtractAsync(string archivePath)
+    public static async Task<string?> ExtractAsync(string archivePath, string? fileToDeleteAfterExtract = null)
     {
         await WaitForFileReady(archivePath);
 
         try {
             string destFolder = Extract(archivePath);
             File.Delete(archivePath);
+            if (fileToDeleteAfterExtract != null) {
+                string fileToDeletePath = Path.Combine(destFolder, fileToDeleteAfterExtract);
+                if (File.Exists(fileToDeletePath))
+                    File.Delete(fileToDeletePath);
+            }
             Logger.Log($"Extracted {Path.GetFileName(archivePath)}");
             return destFolder;
         }
@@ -56,7 +66,8 @@ public static class ExtractService
                 continue;
 
             var filePath = Path.Combine(destFolder, entry.Key!);
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+            var directoryPath = Path.GetDirectoryName(filePath)!;
+            Directory.CreateDirectory(directoryPath);
             entry.WriteToFile(filePath, new ExtractionOptions { Overwrite = true });
         }
 
@@ -65,6 +76,10 @@ public static class ExtractService
     }
     private static string CopyOutModFolder(string extractedFolderPath)
     {
+        // Rename in case the unzipped folder is the same name as the contained folder
+        Directory.Move(extractedFolderPath, extractedFolderPath + "_temp");
+        extractedFolderPath = extractedFolderPath + "_temp";
+
         string modFolderPath = FindModFolder(extractedFolderPath);
 
         if (modFolderPath == extractedFolderPath) {
@@ -84,8 +99,9 @@ public static class ExtractService
     }
     private static string FindModFolder(string root)
     {
-        if (CheckIfMod.Check(root))
+        if (CheckIfMod.Check(root)) {
             return root;
+        }
 
         foreach (var dir in Directory.GetDirectories(root)) {
             var result = FindModFolder(dir);

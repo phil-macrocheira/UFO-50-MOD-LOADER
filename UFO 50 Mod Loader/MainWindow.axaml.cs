@@ -115,6 +115,9 @@ public partial class MainWindow : Window
         _modDatagridService.ModsChanged += OnModsChanged;
         _modDatagridService.Initialize();
 
+        // Extract any archives in 'my mods'
+        ExtractAllArchives();
+
         if (SelfUpdaterService.JustUpdatedOrInstalled || hadNoDestinationFolder)
         {
             var sourceExists = Directory.Exists(sourcePath);
@@ -129,7 +132,7 @@ public partial class MainWindow : Window
                         string dirName = Path.GetFileName(dir);
                         string destDir = Path.Combine(destinationPath, dirName);
 
-                        Logger.Log($"Installing {Constants.PreinstalledMods}: {dirName}");
+                        Logger.Log($"Copying {Constants.PreinstalledMods}: {dirName}");
 
                         try
                         {
@@ -141,13 +144,13 @@ public partial class MainWindow : Window
                         }
                         catch (Exception ex)
                         {
-                            Logger.Log($"ERROR: Failed to install {dir} to {destDir}: {ex.Message}");
+                            Logger.Log($"ERROR: Failed to copy {dir} to {destDir}: {ex.Message}");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"ERROR: Failed to install {Constants.PreinstalledMods}: {ex.Message}");
+                    Logger.Log($"ERROR: Failed to copy {Constants.PreinstalledMods}: {ex.Message}");
                 }
             }
         }
@@ -515,6 +518,17 @@ public partial class MainWindow : Window
 
         SettingsService.Settings.EnabledMods = allEnabled.ToList();
         SettingsService.Save();
+    }
+    public static async void ExtractAllArchives()
+    {
+        if (!Directory.Exists(Constants.MyModsPath))
+            return;
+
+        var archives = Directory.GetFiles(Constants.MyModsPath, "*.*").Where(f => f.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".7z", StringComparison.OrdinalIgnoreCase)).ToArray();
+
+        foreach (var archive in archives) {
+            await ExtractService.ExtractAsync(archive, "gamebanana.json");
+        }
     }
     private void SearchBox_TextChanged(object? sender, TextChangedEventArgs e)
     {

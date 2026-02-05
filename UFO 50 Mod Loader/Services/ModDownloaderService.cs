@@ -20,7 +20,6 @@ public class ModDownloaderService
             _client.DefaultRequestHeaders.UserAgent.ParseAdd("UFO50ModLoader/1.0");
         }
     }
-
     public async Task<List<ModInfo>> GetModListAsync()
     {
         var mods = new ConcurrentBag<ModInfo>();
@@ -55,7 +54,6 @@ public class ModDownloaderService
         await Task.WhenAll(tasks);
         return mods.ToList();
     }
-
     private async Task<ModInfo?> ParseModElementAsync(JsonElement element)
     {
         try {
@@ -90,7 +88,6 @@ public class ModDownloaderService
             return null;
         }
     }
-
     private async Task<string> GetCreatorNameAsync(string modId, JsonElement element)
     {
         try {
@@ -126,7 +123,6 @@ public class ModDownloaderService
 
         return "-";
     }
-
     private string GetPreviewImageUrl(JsonElement element)
     {
         try {
@@ -143,7 +139,6 @@ public class ModDownloaderService
 
         return "";
     }
-
     public async Task<string> GetFullDescriptionAsync(string modId)
     {
         if (string.IsNullOrEmpty(modId)) return "No description available.";
@@ -166,7 +161,6 @@ public class ModDownloaderService
 
         return "No description available.";
     }
-
     public async Task<List<ModFile>> GetModFilesAsync(string modID)
     {
         var files = new List<ModFile>();
@@ -184,7 +178,6 @@ public class ModDownloaderService
 
         return files;
     }
-
     public async Task<byte[]?> DownloadImageAsync(string url)
     {
         try {
@@ -194,7 +187,6 @@ public class ModDownloaderService
             return null;
         }
     }
-
     public async Task DownloadAndExtractModAsync(ModFile file, string destinationFolder, ModInfo modInfo)
     {
         var tempPath = Path.Combine(Path.GetTempPath(), file.FileName);
@@ -219,7 +211,6 @@ public class ModDownloaderService
                 File.Delete(tempPath);
         }
     }
-
     private async Task WriteMetadataAsync(string modFolder, ModInfo modInfo)
     {
         var metadata = new GameBananaMetadata {
@@ -232,7 +223,6 @@ public class ModDownloaderService
         var json = JsonSerializer.Serialize(metadata, _jsonOptions);
         await File.WriteAllTextAsync(jsonPath, json);
     }
-
     private async Task<JsonDocument> GetJsonAsync(string url)
     {
         var response = await _client.GetAsync(url);
@@ -240,24 +230,16 @@ public class ModDownloaderService
         var json = await response.Content.ReadAsStringAsync();
         return JsonDocument.Parse(json);
     }
-
     private static string GetStringProperty(JsonElement element, string name, string defaultValue = "")
     {
         return element.TryGetProperty(name, out var prop) && prop.ValueKind == JsonValueKind.String
             ? prop.GetString() ?? defaultValue
             : defaultValue;
     }
-
     private static long GetLongProperty(JsonElement element, string name)
     {
         return element.TryGetProperty(name, out var prop) && prop.TryGetInt64(out var val) ? val : 0;
     }
-
-    private static int GetIntProperty(JsonElement element, string name)
-    {
-        return element.TryGetProperty(name, out var prop) && prop.TryGetInt32(out var val) ? val : 0;
-    }
-
     private static string CleanHtml(string html)
     {
         var text = WebUtility.HtmlDecode(html);

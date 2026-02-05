@@ -70,7 +70,7 @@ public class FileWatcherService : IDisposable
         string ext = Path.GetExtension(e.FullPath).ToLowerInvariant();
 
         if (ext is ".zip" or ".7z") {
-            ExtractService.HandleArchiveAdded(e.FullPath);
+            ExtractService.HandleArchiveAdded(e.FullPath, "gamebanana.json");
         }
         else if (Directory.Exists(e.FullPath)) {
             FolderChanged?.Invoke();
