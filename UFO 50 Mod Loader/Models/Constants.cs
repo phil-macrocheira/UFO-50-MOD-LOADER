@@ -32,6 +32,6 @@ namespace UFO_50_Mod_Loader.Models
         public static readonly string GameBananaID = "23000";
         public static readonly string SteamAppID = "1147860";
         public static readonly string RepoUrl = "https://github.com/phil-macrocheira/UFO-50-MOD-LOADER";
-        public static readonly string PreinstalledMods = "preinstalled mods";
+        public static readonly string PackagedMods = "packaged mods";
     }
 }

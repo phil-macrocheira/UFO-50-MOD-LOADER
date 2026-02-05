@@ -107,7 +107,7 @@ public partial class MainWindow : Window
             await CopyUFO50Vanilla(version);
         }
 
-        var sourcePath = Path.Combine(Constants.ModLoaderPath, Constants.PreinstalledMods);
+        var sourcePath = Path.Combine(Constants.ModLoaderPath, Constants.PackagedMods);
         var destinationPath = Constants.MyModsPath;
         bool hadNoDestinationFolder = !Directory.Exists(destinationPath);
 
@@ -132,7 +132,7 @@ public partial class MainWindow : Window
                         string dirName = Path.GetFileName(dir);
                         string destDir = Path.Combine(destinationPath, dirName);
 
-                        Logger.Log($"Copying {Constants.PreinstalledMods}: {dirName}");
+                        Logger.Log($"Copying {Constants.PackagedMods}: {dirName}");
 
                         try
                         {
@@ -150,7 +150,7 @@ public partial class MainWindow : Window
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"ERROR: Failed to copy {Constants.PreinstalledMods}: {ex.Message}");
+                    Logger.Log($"ERROR: Failed to copy {Constants.PackagedMods}: {ex.Message}");
                 }
             }
         }
