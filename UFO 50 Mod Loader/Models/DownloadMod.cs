@@ -68,7 +68,7 @@ public class DownloadMod : INotifyPropertyChanged
         !string.IsNullOrEmpty(InstalledVersion) &&
         InstalledVersion != Version;
 
-    public string DateUpdatedFormatted => FormatDate(DateUpdated);
+    public string DateUpdatedFormatted => DateUpdated != 0 ? FormatDate(DateUpdated) : DateAddedFormatted;
     public string DateAddedFormatted => FormatDate(DateAdded);
 
     public DownloadMod(ModInfo mod)
