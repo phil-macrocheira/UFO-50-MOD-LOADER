@@ -162,7 +162,7 @@ public class InstalledGameService
             return;
         }
     }
-    private uint HashFile(string path)
+    public uint HashFile(string path)
     {
         using var stream = File.OpenRead(path);
         uint hash = CRC32.Compute(stream);

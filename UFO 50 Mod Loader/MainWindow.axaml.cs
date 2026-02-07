@@ -221,7 +221,7 @@ public partial class MainWindow : Window
         }
 
         try {
-            GMLoaderResult? result = await Task.Run(() => InstallService.InstallModsAsync(this, enabledModPaths));
+            GMLoaderResult? result = await Task.Run(() => InstallService.InstallModsAsync(this, enabledModPaths, _gameService));
             installedSuccessfully = result?.Success ?? false;
 
             if (result is not null && !result.Success) {
