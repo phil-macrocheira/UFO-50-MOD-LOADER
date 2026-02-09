@@ -4,6 +4,7 @@ using Avalonia.Threading;
 using GMLoader;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Threading;
 using UFO_50_Mod_Loader.Helpers;
 using UFO_50_Mod_Loader.Models;
 
@@ -16,6 +17,9 @@ public partial class MainWindow : Window
     public static ObservableCollection<Mod> FilteredMods { get; } = new();
     private bool _isInstalling = false;
     public bool IsSteamOS => Constants.IsSteamOS;
+
+    private int _logPostPending = 0;
+    private string _latestLogText = "";
 
     public bool OverwriteMode
     {
@@ -44,10 +48,19 @@ public partial class MainWindow : Window
 
         // Subscribe to log services
         LogService.OnLog += Log => {
-            Dispatcher.UIThread.Post(() => {
-                TextLogBox.Text = $"{Log}";
-                TextLogBox.CaretIndex = TextLogBox.Text?.Length ?? 0;
-            }, DispatcherPriority.Render);
+            Volatile.Write(ref _latestLogText, Log);
+
+            if (Interlocked.Exchange(ref _logPostPending, 1) == 0)
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    Interlocked.Exchange(ref _logPostPending, 0);
+
+                    var text = Volatile.Read(ref _latestLogText);
+                    TextLogBox.Text = text;
+                    TextLogBox.CaretIndex = TextLogBox.Text?.Length ?? 0;
+                });
+            }
         };
 
         // Apply saved window size
