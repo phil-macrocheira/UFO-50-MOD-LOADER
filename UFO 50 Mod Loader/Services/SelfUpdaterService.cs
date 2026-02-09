@@ -65,8 +65,10 @@ namespace UFO_50_Mod_Loader.Services
 
                     if (updateInfo is not null)
                     {
+                        Logger.Log($"Downloading UFO 50 Mod Loader update v{updateInfo.TargetFullRelease.Version}");
                         await updateManager.DownloadUpdatesAsync(updateInfo);
 
+                        Logger.Log($"UFO 50 Mod Loader update v{updateInfo.TargetFullRelease.Version} downloaded");
                         var automaticUpdates = SettingsService.Settings.CheckForUpdatesAutomatically;
                         var applyUpdates = await MessageBoxHelper.Show(parent, "Update found",
                             $"A new version is available. {(automaticUpdates ? "Restart now to update" : "Update")} to version {updateInfo.TargetFullRelease.Version}?",
@@ -74,7 +76,7 @@ namespace UFO_50_Mod_Loader.Services
 
                         if (applyUpdates)
                         {
-                            Logger.Log($"Downloading update for version {updateInfo.TargetFullRelease.Version}");
+                            Logger.Log($"Installing update to version {updateInfo.TargetFullRelease.Version}");
                             updateManager.ApplyUpdatesAndRestart(updateInfo);
                         }
                     }
