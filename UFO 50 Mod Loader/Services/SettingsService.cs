@@ -29,6 +29,8 @@ public static class SettingsService
 
     public static void Save()
     {
+        Settings.Version = Constants.Version;
+
         try {
             var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions {
                 WriteIndented = true
