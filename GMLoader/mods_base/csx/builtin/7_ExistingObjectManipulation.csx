@@ -1,5 +1,7 @@
 mkDir(existingObjectPath);
-string[] objFiles = Directory.GetFiles(existingObjectPath, "*.json");
+string[] objFiles = Directory.GetFiles(existingObjectPath, "*.json")
+                             .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                             .ToArray();
 
 if (objFiles.Length == 0 || !objFiles.Any(x => x.EndsWith(".json")))
     return;

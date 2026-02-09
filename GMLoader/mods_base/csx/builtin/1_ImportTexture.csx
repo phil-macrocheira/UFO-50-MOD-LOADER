@@ -655,7 +655,7 @@ public class Packer
 
         // need to be sorted because of nostrip style
         FileInfo[] files = di.GetFiles("*", SearchOption.AllDirectories)
-            .OrderBy(f => Regex.Replace(f.Name, @"\d+", m => m.Value.PadLeft(10, '0')), StringComparer.Ordinal)
+            .OrderBy(f => Regex.Replace(f.Name, @"\d+", m => m.Value.PadLeft(10, '0')), StringComparer.OrdinalIgnoreCase)
             .ToArray();
         // Filtered files should be used but I'm not enforcing sprite to have config files
         //FileInfo[] filteredFiles = files.Where(file => 

@@ -2,7 +2,9 @@
 // Edited by Senjay for GMLoader
 // Edited by Phil with assistance from Claude Opus 4.5
 
-string[] dirFiles = Directory.GetFiles(roomPath, "*.json");
+string[] dirFiles = Directory.GetFiles(roomPath, "*.json")
+                             .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                             .ToArray();
 
 if (dirFiles.Length == 0 || !dirFiles.Any(x => x.EndsWith(".json")))
     return;

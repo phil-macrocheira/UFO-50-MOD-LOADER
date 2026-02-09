@@ -1,7 +1,7 @@
 mkDir(appendGMLPath);
 string[] directories = Directory.GetDirectories(appendGMLPath)
-                               .OrderBy(d => d, StringComparer.OrdinalIgnoreCase)
-                               .ToArray();
+                                .OrderBy(d => d, StringComparer.OrdinalIgnoreCase)
+                                .ToArray();
 
 UndertaleModLib.Compiler.CodeImportGroup importGroup = new(Data, null, defaultDecompSettings);
 
@@ -10,8 +10,8 @@ if (directories.Length != 0)
     foreach (string directory in directories)
     {
         string[] dirFiles = Directory.GetFiles(directory, "*.gml")
-                                   .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
-                                   .ToArray();
+                                     .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                                     .ToArray();
         
         foreach (string file in dirFiles)
         {
