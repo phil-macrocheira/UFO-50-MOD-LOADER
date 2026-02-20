@@ -74,25 +74,22 @@ namespace UFO_50_Mod_Loader.Services
                 //
                 // - Blaise
 
-                uint expectedExeHash = 557362388;                
-                if (gameService.HashFile(Constants.ModdedCopyExePath) == expectedExeHash)
-                {
-                    // addresses from the headers
+                // address for the code to replace for each version of the exe we support
+                Dictionary<uint, long> expectedExeHashes = new() {
+                    { 557362388, 0x1402b6da7 },
+                    { 567309598, 0x1402a3cba },
+                };
+                if (expectedExeHashes.TryGetValue(gameService.HashFile(Constants.ModdedCopyExePath), out var processMessagesVirtualAddress)) {
+                    // addresses from the headers, same for different versions of the exe
                     long textVirtualBaseAddress = 0x140001000;
                     long textRawBaseAddress = 0x400;
 
-                    // address and size for the code to replace
-                    long processMessagesVirtualAddress = 0x1402b6da7;
-                    int processMessagesCallSize = 5;
-
-                    // final address to write to the file at
-                    long processMessagesRawAddress = processMessagesVirtualAddress - textVirtualBaseAddress + textRawBaseAddress;
-
-                    using (var stream = new FileStream(Constants.ModdedCopyExePath, FileMode.Open, FileAccess.ReadWrite))
-                    {
-                        stream.Position = processMessagesRawAddress;
-
+                    using (var stream = new FileStream(Constants.ModdedCopyExePath, FileMode.Open, FileAccess.ReadWrite)) {
+                        long processMessagesRawAddress = processMessagesVirtualAddress - textVirtualBaseAddress + textRawBaseAddress;
                         byte nopOpcode = 0x90;
+                        int processMessagesCallSize = 5;
+
+                        stream.Position = processMessagesRawAddress;
                         stream.Write(Enumerable.Repeat(nopOpcode, processMessagesCallSize).ToArray(), 0, processMessagesCallSize);
                     }
                 }
