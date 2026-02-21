@@ -78,6 +78,7 @@ namespace UFO_50_Mod_Loader.Services
                 Dictionary<uint, long> expectedExeHashes = new() {
                     { 557362388, 0x1402b6da7 },
                     { 567309598, 0x1402a3cba },
+                    { 2187116479, 0x1402a3cba },
                 };
                 if (expectedExeHashes.TryGetValue(gameService.HashFile(Constants.ModdedCopyExePath), out var processMessagesVirtualAddress)) {
                     // addresses from the headers, same for different versions of the exe
