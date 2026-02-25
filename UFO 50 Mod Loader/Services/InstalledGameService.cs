@@ -168,6 +168,10 @@ public class InstalledGameService
         uint hash = CRC32.Compute(stream);
         return hash;
     }
+    private string ConvertLowercase(string path)
+    {
+        return path.Replace("Texture", "texture");
+    }
     private async Task<Dictionary<string, uint>> HashAllFilesAsync(string gamePath, IEnumerable<string> files)
     {
         var hashes = new ConcurrentDictionary<string, uint>();
@@ -175,8 +179,13 @@ public class InstalledGameService
         await Task.Run(() => {
             Parallel.ForEach(files, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, file => {
                 var path = Path.Combine(gamePath, file);
+                var pathLower = ConvertLowercase(path);
+
                 if (File.Exists(path)) {
                     hashes[file] = HashFile(path);
+                }
+                else if (File.Exists(pathLower)) {
+                    hashes[file] = HashFile(pathLower);
                 }
             });
         });
