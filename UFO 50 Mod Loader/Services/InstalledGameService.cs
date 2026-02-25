@@ -168,9 +168,9 @@ public class InstalledGameService
         uint hash = CRC32.Compute(stream);
         return hash;
     }
-    private string ConvertLowercase(string path)
+    private string ConvertCase(string path)
     {
-        return path.Replace("Texture", "texture");
+        return path.Replace("textures", "Textures");
     }
     private async Task<Dictionary<string, uint>> HashAllFilesAsync(string gamePath, IEnumerable<string> files)
     {
@@ -179,7 +179,7 @@ public class InstalledGameService
         await Task.Run(() => {
             Parallel.ForEach(files, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, file => {
                 var path = Path.Combine(gamePath, file);
-                var pathLower = ConvertLowercase(path);
+                var pathLower = Path.Combine(gamePath, ConvertCase(file));
 
                 if (File.Exists(path)) {
                     hashes[file] = HashFile(path);
@@ -275,6 +275,6 @@ public class InstalledGameService
         if (_hashData == null)
             return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        return _hashData[version].Keys.ToHashSet();
+        return _hashData[version].Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 }

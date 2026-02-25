@@ -29,13 +29,16 @@ public class CopyService
     {
         Directory.CreateDirectory(destinationPath);
 
-        var files = Directory.GetFiles(sourcePath);
+        var files = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories);
         var filesToCopy = new List<(string source, string dest)>();
 
-        foreach (var file in versionFileSet) {
-            string sourceFile = Path.Combine(sourcePath, file);
-            string destFile = Path.Combine(destinationPath, file);
-            filesToCopy.Add((sourceFile, destFile));
+        foreach (var sourceFile in files) {
+            string file = Path.GetRelativePath(sourcePath, sourceFile).Replace('\\', '/');
+            if (versionFileSet.TryGetValue(file, out var actualFile))
+            {
+                string destFile = Path.Combine(destinationPath, actualFile);
+                filesToCopy.Add((sourceFile, destFile));
+            }
         }
 
         // Copy files in parallel
