@@ -277,4 +277,11 @@ public class InstalledGameService
 
         return _hashData[version].Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
+    public Dictionary<string, uint> GetVersionHashData(string version)
+    {
+        if (_hashData != null && _hashData.TryGetValue(version, out var data))
+            return data;
+
+        return new Dictionary<string, uint>();
+    }
 }

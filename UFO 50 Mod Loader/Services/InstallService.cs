@@ -75,12 +75,22 @@ namespace UFO_50_Mod_Loader.Services
                 // - Blaise
 
                 // address for the code to replace for each version of the exe we support
-                Dictionary<uint, long> expectedExeHashes = new() {
-                    { 557362388, 0x1402b6da7 },
-                    { 567309598, 0x1402a3cba },
-                    { 2187116479, 0x1402a3cba },
-                    { 2647718808, 0x1402a3cba },
-                };
+                Dictionary<uint, long> expectedExeHashes = new Dictionary<uint, long>();
+                AddExeHash("1.8.9",  0x1402b6da7);
+                AddExeHash("1.8.35", 0x1402a3cba);
+                AddExeHash("1.8.38", 0x1402a3cba);
+                AddExeHash("1.8.44", 0x1402a3cba);
+                AddExeHash("1.9",    0x1402a3cba);
+                AddExeHash("1.9.1",  0x1402a3cba);
+                void AddExeHash(string version, long address)
+                {
+                    var versionHash = gameService.GetVersionHashData(version);
+                    if (versionHash.TryGetValue("ufo50.exe", out uint hash))
+                    {
+                        expectedExeHashes.Add(hash, address);
+                    }
+                }
+
                 if (expectedExeHashes.TryGetValue(gameService.HashFile(Constants.ModdedCopyExePath), out var processMessagesVirtualAddress)) {
                     // addresses from the headers, same for different versions of the exe
                     long textVirtualBaseAddress = 0x140001000;
