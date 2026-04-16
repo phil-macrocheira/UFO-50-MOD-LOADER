@@ -21,7 +21,7 @@ namespace UFO_50_Mod_Loader.Services
             if (!SettingsService.Settings.OverwriteMode) {
                 if (Directory.Exists(Constants.ModdedCopyPath)) {
                     try {
-                        Directory.Delete(Constants.ModdedCopyPath, recursive: true);
+                        CopyService.DeleteExcluding(Constants.ModdedCopyPath, ".log");
                     }
                     catch (Exception ex) {
                         Logger.Log($"[ERROR] Failed to delete {Path.GetFileName(Constants.ModdedCopyPath)}: {ex.Message}");

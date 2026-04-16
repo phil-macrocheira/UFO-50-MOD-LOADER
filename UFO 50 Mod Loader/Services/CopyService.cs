@@ -49,4 +49,35 @@ public class CopyService
             await sourceStream.CopyToAsync(destStream, ct);
         });
     }
+    public static void DeleteExcluding(string path, string excludedExtension)
+    {
+        if (!Directory.Exists(path))
+            return;
+
+        foreach (var file in Directory.GetFiles(path)) {
+            if (!file.EndsWith(excludedExtension, StringComparison.OrdinalIgnoreCase)) {
+                try {
+                    File.SetAttributes(file, FileAttributes.Normal);
+                }
+                catch { }
+                try {
+                    File.Delete(file);
+                }
+                catch { }
+            }
+        }
+
+        foreach (var dir in Directory.GetDirectories(path))
+        {
+            DeleteExcluding(dir, excludedExtension);
+
+            if (!Directory.EnumerateFileSystemEntries(dir).Any())
+            {
+                try {
+                    Directory.Delete(dir, recursive: false);
+                }
+                catch { }
+            }
+        }
+    }
 }
