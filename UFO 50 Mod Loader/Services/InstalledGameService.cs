@@ -259,9 +259,9 @@ public class InstalledGameService
 
         if (canCopy && version != _latestVersion) {
             if (!uninstallMode)
-                Logger.Log("WARNING: Copying outdated UFO 50 version. Select 'Verify Vanilla Copy' to update your vanilla copy in the future.");
+                Logger.Log($"WARNING: Copying outdated UFO 50 version (you are on {version}, latest is {_latestVersion}). Select 'Verify Vanilla Copy' to update your vanilla copy in the future.");
             else
-                Logger.Log("WARNING: Installing outdated UFO 50 version. Verify integrity of UFO 50 in Steam to update to latest version.");
+                Logger.Log($"WARNING: Installing outdated UFO 50 version (you are on {version}, latest is {_latestVersion}). Verify integrity of UFO 50 in Steam to update to latest version.");
         }
 
         return version;
