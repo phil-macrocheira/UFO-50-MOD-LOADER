@@ -32,7 +32,7 @@ public static class LogService
         try {
             if (string.IsNullOrWhiteSpace(MainLog))
                 return;
-            File.WriteAllText(Constants.LogPath, MainLog);
+            File.AppendAllText(Constants.LogPath, MainLog);
         }
         catch (Exception ex) {
             OnLog?.Invoke($"Failed to save log to file: {ex.Message}");
