@@ -255,6 +255,7 @@ try
                         transparent = spriteProps.yml_transparent.Value;
                         smooth = spriteProps.yml_smooth.Value;
                         preload = spriteProps.yml_preload.Value;
+                        sepMaskType = spriteProps.yml_sepmask.Value;
                         //Log.Information($"{spriteName} x: {spriteProps.yml_x.Value} y: {spriteProps.yml_y.Value}");
                     }
                     else {
@@ -328,8 +329,8 @@ try
                         continue;
                     }
 
-                    if (frame > sprite.Textures.Count - 1) {
-                        sprite.Textures.Add(texentry);
+                    while (frame > sprite.Textures.Count - 1) {
+                        sprite.Textures.Add(new UndertaleSprite.TextureEntry());
                     }
 
                     sprite.Textures[frame] = texentry;
