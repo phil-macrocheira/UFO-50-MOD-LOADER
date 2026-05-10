@@ -725,14 +725,12 @@ public class Packer
 
                     if (frames <= 0)
                     {
-                        Log.Error(fullName + " has 0 frames.");
-                        throw new Exception();
+                        throw new ScriptException(fullName + " has 0 frames.");
                     }
 
                     if (!isSprite && frames > 1)
                     {
-                        Log.Error(fullName + " is not a sprite, but has more than 1 frame.");
-                        throw new Exception();
+                        throw new ScriptException(fullName + " is not a sprite, but has more than 1 frame.");
                     }
 
                     MagickReadSettings settings = new()

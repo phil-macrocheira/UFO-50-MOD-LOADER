@@ -329,9 +329,14 @@ public class GMLoaderProgram
 
             return RunWithConfig(config, workingDirectory, enabledModPathsList);
         }
-        catch (Exception e)
+        catch (ScriptException e)
         {
             Log.Error($"An error occurred: {e.Message}");
+            return GMLoaderResult.Fail(e.Message, e);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"An error occurred: {e}");
             return GMLoaderResult.Fail(e.Message, e);
         }
     }
@@ -339,153 +344,143 @@ public class GMLoaderProgram
     /// <summary>
     /// Run GMLoader with an already-loaded config
     /// </summary>
-    public static GMLoaderResult RunWithConfig(IConfig config, string workingDirectory, List<string> enabledModPathsList)
+    private static GMLoaderResult RunWithConfig(IConfig config, string workingDirectory, List<string> enabledModPathsList)
     {
-        try
+        enabledModPaths = enabledModPathsList.ToArray();
+
+        #region Config
+        importPreCSXPath = Path.Combine(workingDirectory, config.ImportPreCSX);
+        importBuiltInCSXPath = Path.Combine(workingDirectory, config.ImportBuiltinCSX);
+        importPostCSXPath = Path.Combine(workingDirectory, config.ImportPostCSX);
+        importAfterCSXPath = Path.Combine(workingDirectory, config.ImportAfterCSX);
+        gameDataPath = Path.Combine(workingDirectory, config.GameData);
+        modsPath = Path.Combine(workingDirectory, config.ModsDirectory);
+        texturesPath = Path.Combine(workingDirectory, config.TexturesDirectory);
+        backgroundsTexturePath = Path.Combine(workingDirectory, config.BackgroundTextureDirectory);
+        noStripTexturesPath = Path.Combine(workingDirectory, config.NoStripTexturesDirectory);
+        texturesConfigPath = Path.Combine(workingDirectory, config.TexturesConfigDirectory);
+        backgroundsConfigPath = Path.Combine(workingDirectory, config.BackgroundsConfigDirectory);
+        audioPath = Path.Combine(workingDirectory, config.AudioDirectory);
+        audioConfigPath = Path.Combine(workingDirectory, config.AudioConfigDirectory);
+        configPath = Path.Combine(workingDirectory, config.ConfigDirectory);
+        gmlCodePath = Path.Combine(workingDirectory, config.GMLCodeDirectory);
+        gmlCodePatchPath = Path.Combine(workingDirectory, config.GMLCodePatchDirectory);
+        collisionPath = Path.Combine(workingDirectory, config.CollisionDirectory);
+        prependGMLPath = Path.Combine(workingDirectory, config.PrependGMLDirectory);
+        appendGMLPath = Path.Combine(workingDirectory, config.AppendGMLDirectory);
+        appendGMLCollisionPath = Path.Combine(workingDirectory, config.AppendGMLCollisionDirectory);
+        newObjectPath = Path.Combine(workingDirectory, config.NewObjectDirectory);
+        existingObjectPath = Path.Combine(workingDirectory, config.ExistingObjectDirectory);
+        roomPath = Path.Combine(workingDirectory, config.RoomDirectory);
+
+        defaultSpriteX = config.DefaultSpriteX;
+        defaultSpriteY = config.DefaultSpriteY;
+        defaultSpriteSpeedType = config.DefaultSpriteSpeedType;
+        defaultSpriteFrameSpeed = config.DefaultSpriteFrameSpeed;
+        defaultSpriteBoundingBoxType = config.DefaultSpriteBoundingBoxType;
+        defaultSpriteBoundingBoxLeft = config.DefaultSpriteBoundingBoxLeft;
+        defaultSpriteBoundingBoxRight = config.DefaultSpriteBoundingBoxRight;
+        defaultSpriteBoundingBoxBottom = config.DefaultSpriteBoundingBoxBottom;
+        defaultSpriteBoundingBoxTop = config.DefaultSpriteBoundingBoxTop;
+        defaultSpriteSepMasksType = config.DefaultSpriteSepMasksType;
+        defaultSpriteTransparent = config.DefaultSpriteTransparent;
+        defaultSpriteSmooth = config.DefaultSpriteSmooth;
+        defaultSpritePreload = config.DefaultSpritePreload;
+        defaultSpriteSpecialVer = config.DefaultSpriteSpecialVer;
+        defaultBGTransparent = config.DefaultBGTransparent;
+        defaultBGSmooth = config.DefaultBGSmooth;
+        defaultBGPreload = config.DefaultBGPreload;
+        defaultBGTileWidth = config.DefaultBGTileWidth;
+        defaultBGTileHeight = config.DefaultBGTileHeight;
+        defaultBGBorderX = config.DefaultBGBorderX;
+        defaultBGBorderY = config.DefaultBGBorderY;
+        defaultBGTileColumn = config.DefaultBGTileColumn;
+        defaultBGItemOrFramePerTile = config.DefaultBGItemOrFramePerTile;
+        defaultBGTileCount = config.DefaultBGTileCount;
+        defaultBGFrameTime = config.DefaultBGFrameTime;
+        defaultAudioType = config.DefaultAudioType;
+        defaultAudioEmbedded = config.DefaultAudioEmbedded;
+        defaultAudioCompressed = config.DefaultAudioCompressed;
+        defaultAudioEffects = config.DefaultAudioEffects;
+        defaultAudioVolume = config.DefaultAudioVolume;
+        defaultAudioPitch = config.DefaultAudioPitch;
+        defaultAudioGroupIndex = config.DefaultAudioGroupIndex;
+        defaultAudioFileID = config.DefaultAudioFileID;
+        defaultAudioPreload = config.DefaultAudioPreload;
+        #endregion
+
+        mkDir(modsPath);
+        mkDir(texturesPath);
+        mkDir(texturesConfigPath);
+        mkDir(audioPath);
+        mkDir(audioConfigPath);
+        mkDir(gmlCodePath);
+        mkDir(gmlCodePatchPath);
+        mkDir(noStripTexturesPath);
+        mkDir(backgroundsConfigPath);
+        mkDir(roomPath);
+        mkDir(importPreCSXPath);
+        mkDir(importBuiltInCSXPath);
+        mkDir(importPostCSXPath);
+        mkDir(importAfterCSXPath);
+
+        string modsPathAbsoluteDir = Path.GetFullPath(modsPath);
+        if (Directory.Exists(modsPath))
         {
-            enabledModPaths = enabledModPathsList.ToArray();
-
-            #region Config
-            importPreCSXPath = Path.Combine(workingDirectory, config.ImportPreCSX);
-            importBuiltInCSXPath = Path.Combine(workingDirectory, config.ImportBuiltinCSX);
-            importPostCSXPath = Path.Combine(workingDirectory, config.ImportPostCSX);
-            importAfterCSXPath = Path.Combine(workingDirectory, config.ImportAfterCSX);
-            gameDataPath = Path.Combine(workingDirectory, config.GameData);
-            modsPath = Path.Combine(workingDirectory, config.ModsDirectory);
-            texturesPath = Path.Combine(workingDirectory, config.TexturesDirectory);
-            backgroundsTexturePath = Path.Combine(workingDirectory, config.BackgroundTextureDirectory);
-            noStripTexturesPath = Path.Combine(workingDirectory, config.NoStripTexturesDirectory);
-            texturesConfigPath = Path.Combine(workingDirectory, config.TexturesConfigDirectory);
-            backgroundsConfigPath = Path.Combine(workingDirectory, config.BackgroundsConfigDirectory);
-            audioPath = Path.Combine(workingDirectory, config.AudioDirectory);
-            audioConfigPath = Path.Combine(workingDirectory, config.AudioConfigDirectory);
-            configPath = Path.Combine(workingDirectory, config.ConfigDirectory);
-            gmlCodePath = Path.Combine(workingDirectory, config.GMLCodeDirectory);
-            gmlCodePatchPath = Path.Combine(workingDirectory, config.GMLCodePatchDirectory);
-            collisionPath = Path.Combine(workingDirectory, config.CollisionDirectory);
-            prependGMLPath = Path.Combine(workingDirectory, config.PrependGMLDirectory);
-            appendGMLPath = Path.Combine(workingDirectory, config.AppendGMLDirectory);
-            appendGMLCollisionPath = Path.Combine(workingDirectory, config.AppendGMLCollisionDirectory);
-            newObjectPath = Path.Combine(workingDirectory, config.NewObjectDirectory);
-            existingObjectPath = Path.Combine(workingDirectory, config.ExistingObjectDirectory);
-            roomPath = Path.Combine(workingDirectory, config.RoomDirectory);
-
-            defaultSpriteX = config.DefaultSpriteX;
-            defaultSpriteY = config.DefaultSpriteY;
-            defaultSpriteSpeedType = config.DefaultSpriteSpeedType;
-            defaultSpriteFrameSpeed = config.DefaultSpriteFrameSpeed;
-            defaultSpriteBoundingBoxType = config.DefaultSpriteBoundingBoxType;
-            defaultSpriteBoundingBoxLeft = config.DefaultSpriteBoundingBoxLeft;
-            defaultSpriteBoundingBoxRight = config.DefaultSpriteBoundingBoxRight;
-            defaultSpriteBoundingBoxBottom = config.DefaultSpriteBoundingBoxBottom;
-            defaultSpriteBoundingBoxTop = config.DefaultSpriteBoundingBoxTop;
-            defaultSpriteSepMasksType = config.DefaultSpriteSepMasksType;
-            defaultSpriteTransparent = config.DefaultSpriteTransparent;
-            defaultSpriteSmooth = config.DefaultSpriteSmooth;
-            defaultSpritePreload = config.DefaultSpritePreload;
-            defaultSpriteSpecialVer = config.DefaultSpriteSpecialVer;
-            defaultBGTransparent = config.DefaultBGTransparent;
-            defaultBGSmooth = config.DefaultBGSmooth;
-            defaultBGPreload = config.DefaultBGPreload;
-            defaultBGTileWidth = config.DefaultBGTileWidth;
-            defaultBGTileHeight = config.DefaultBGTileHeight;
-            defaultBGBorderX = config.DefaultBGBorderX;
-            defaultBGBorderY = config.DefaultBGBorderY;
-            defaultBGTileColumn = config.DefaultBGTileColumn;
-            defaultBGItemOrFramePerTile = config.DefaultBGItemOrFramePerTile;
-            defaultBGTileCount = config.DefaultBGTileCount;
-            defaultBGFrameTime = config.DefaultBGFrameTime;
-            defaultAudioType = config.DefaultAudioType;
-            defaultAudioEmbedded = config.DefaultAudioEmbedded;
-            defaultAudioCompressed = config.DefaultAudioCompressed;
-            defaultAudioEffects = config.DefaultAudioEffects;
-            defaultAudioVolume = config.DefaultAudioVolume;
-            defaultAudioPitch = config.DefaultAudioPitch;
-            defaultAudioGroupIndex = config.DefaultAudioGroupIndex;
-            defaultAudioFileID = config.DefaultAudioFileID;
-            defaultAudioPreload = config.DefaultAudioPreload;
-            #endregion
-
-            mkDir(modsPath);
-            mkDir(texturesPath);
-            mkDir(texturesConfigPath);
-            mkDir(audioPath);
-            mkDir(audioConfigPath);
-            mkDir(gmlCodePath);
-            mkDir(gmlCodePatchPath);
-            mkDir(noStripTexturesPath);
-            mkDir(backgroundsConfigPath);
-            mkDir(roomPath);
-            mkDir(importPreCSXPath);
-            mkDir(importBuiltInCSXPath);
-            mkDir(importPostCSXPath);
-            mkDir(importAfterCSXPath);
-
-            string modsPathAbsoluteDir = Path.GetFullPath(modsPath);
-            if (Directory.Exists(modsPath))
-            {
-                //Log.Debug($"Scanning the filetree of {modsPathAbsoluteDir}");
-                //Log.Debug($"{Path.GetFileName(modsPathAbsoluteDir)}");
-                //PrintFileTree(modsPath, "", true);
-            }
-
-            string[] dirPreCSXFiles = Directory.GetFiles(importPreCSXPath, "*.csx")
-                .OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray();
-            string[] dirBuiltInCSXFiles = Directory.GetFiles(importBuiltInCSXPath, "*.csx")
-                .OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray();
-            string[] dirPostCSXFiles = Directory.GetFiles(importPostCSXPath, "*.csx")
-                .OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray();
-            string[] dirAfterCSXFiles = Directory.GetFiles(importAfterCSXPath, "*.csx")
-                .OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray();
-
-            if (!File.Exists(gameDataPath))
-            {
-                return GMLoaderResult.Fail($"data.win not found at {gameDataPath}");
-            }
-
-            Data = new UndertaleData();
-            using (var stream = new FileStream(gameDataPath, FileMode.Open, FileAccess.ReadWrite))
-            {
-                Data = UndertaleIO.Read(stream);
-            }
-
-            defaultDecompSettings = new Underanalyzer.Decompiler.DecompileSettings()
-            {
-                RemoveSingleLineBlockBraces = true,
-                EmptyLineAroundBranchStatements = true,
-                EmptyLineBeforeSwitchCases = true,
-            };
-
-            ScriptOptionsInitialize();
-            processCSXScripts(dirPreCSXFiles, dirBuiltInCSXFiles, dirPostCSXFiles, dirAfterCSXFiles);
-
-            Log.Information("Recompiling data.win...");
-            using (var stream = new FileStream(gameDataPath, FileMode.Create, FileAccess.ReadWrite))
-                UndertaleIO.Write(stream, Data);
-
-            if (dirAfterCSXFiles.Length != 0)
-            {
-                Log.Information("Running CSX Scripts after recompilation...");
-                foreach (string file in dirAfterCSXFiles)
-                {
-                    RunCSharpFile(file).GetAwaiter().GetResult();
-                }
-            }
-
-            Log.Information("Successfully recompiled data.win");
-            return GMLoaderResult.Ok();
+            //Log.Debug($"Scanning the filetree of {modsPathAbsoluteDir}");
+            //Log.Debug($"{Path.GetFileName(modsPathAbsoluteDir)}");
+            //PrintFileTree(modsPath, "", true);
         }
-        catch (Exception e)
+
+        string[] dirPreCSXFiles = Directory.GetFiles(importPreCSXPath, "*.csx")
+            .OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray();
+        string[] dirBuiltInCSXFiles = Directory.GetFiles(importBuiltInCSXPath, "*.csx")
+            .OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray();
+        string[] dirPostCSXFiles = Directory.GetFiles(importPostCSXPath, "*.csx")
+            .OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray();
+        string[] dirAfterCSXFiles = Directory.GetFiles(importAfterCSXPath, "*.csx")
+            .OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray();
+
+        if (!File.Exists(gameDataPath))
         {
-            Log.Error($"An error occurred: {e.Message}");
-            return GMLoaderResult.Fail(e.Message, e);
+            return GMLoaderResult.Fail($"data.win not found at {gameDataPath}");
         }
+
+        Data = new UndertaleData();
+        using (var stream = new FileStream(gameDataPath, FileMode.Open, FileAccess.ReadWrite))
+        {
+            Data = UndertaleIO.Read(stream);
+        }
+
+        defaultDecompSettings = new Underanalyzer.Decompiler.DecompileSettings()
+        {
+            RemoveSingleLineBlockBraces = true,
+            EmptyLineAroundBranchStatements = true,
+            EmptyLineBeforeSwitchCases = true,
+        };
+
+        ScriptOptionsInitialize();
+        processCSXScripts(dirPreCSXFiles, dirBuiltInCSXFiles, dirPostCSXFiles, dirAfterCSXFiles);
+
+        Log.Information("Recompiling data.win...");
+        using (var stream = new FileStream(gameDataPath, FileMode.Create, FileAccess.ReadWrite))
+            UndertaleIO.Write(stream, Data);
+
+        if (dirAfterCSXFiles.Length != 0)
+        {
+            Log.Information("Running CSX Scripts after recompilation...");
+            foreach (string file in dirAfterCSXFiles)
+            {
+                RunCSharpFile(file).GetAwaiter().GetResult();
+            }
+        }
+
+        Log.Information("Successfully recompiled data.win");
+        return GMLoaderResult.Ok();
     }
 
     public static bool importConfigDefinedCode(CodeImportGroup importGroup)
     {
-        bool success = true;
-
         string[] configFiles = Directory.GetFiles(gmlCodePatchPath, "*.yaml*", SearchOption.TopDirectoryOnly)
             .OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray();
 
@@ -497,36 +492,29 @@ public class GMLoaderProgram
 
         foreach (string file in configFiles)
         {
-            try
+            byte[] yamlBytes = File.ReadAllBytes(file);
+            string fileName = Path.GetFileName(file);
+            Log.Information($"Deserializing {fileName}");
+
+            var yamlContent = YamlSerializer.Deserialize<Dictionary<string, List<CodeData>>>(yamlBytes);
+
+            foreach (var scriptEntry in yamlContent)
             {
-                byte[] yamlBytes = File.ReadAllBytes(file);
-                string fileName = Path.GetFileName(file);
-                Log.Information($"Deserializing {fileName}");
+                string scriptName = scriptEntry.Key;
+                List<CodeData> patches = scriptEntry.Value;
 
-                var yamlContent = YamlSerializer.Deserialize<Dictionary<string, List<CodeData>>>(yamlBytes);
+                if (!modificationHistory.ContainsKey(scriptName))
+                    modificationHistory[scriptName] = new List<string>();
+                modificationHistory[scriptName].Add(fileName);
 
-                foreach (var scriptEntry in yamlContent)
+                foreach (CodeData patch in patches)
                 {
-                    string scriptName = scriptEntry.Key;
-                    List<CodeData> patches = scriptEntry.Value;
-
-                    if (!modificationHistory.ContainsKey(scriptName))
-                        modificationHistory[scriptName] = new List<string>();
-                    modificationHistory[scriptName].Add(fileName);
-
-                    foreach (CodeData patch in patches)
-                        if (!ProcessCodePatch(importGroup, fileName, scriptName, patch, modificationHistory))
-                            success = false;
+                    ProcessCodePatch(importGroup, fileName, scriptName, patch, modificationHistory);
                 }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"Failed to process {Path.GetFileName(file)}: {e}");
-                success = false;
             }
         }
 
-        return success;
+        return true;
     }
 
     public static bool ProcessCodePatch(CodeImportGroup importGroup, string fileName, string scriptName, CodeData patch, Dictionary<string, List<string>> modificationHistory)
@@ -586,8 +574,8 @@ public class GMLoaderProgram
         {
             string history = modificationHistory.ContainsKey(scriptName)
                 ? string.Join(", ", modificationHistory[scriptName]) : "no modifications recorded";
-            Log.Error($"Error on {fileName} processing {scriptName}\n'{scriptName}' modified by: {history}\nFind: {find}\nCode: {code}\nException: {e}\n");
-            return false;
+            Log.Error($"Error on {fileName} processing {scriptName}\n'{scriptName}' modified by: {history}\nFind: {find}\nCode: {code}\nException: {e.Message}\n");
+            throw new ScriptException($"Failed to process {fileName}. This may be due to conflicts with: {history}. See the log for more details");
         }
     }
 
@@ -880,12 +868,10 @@ public class GMLoaderProgram
                 CliScriptOptions.WithFilePath(Path.GetFullPath(scriptFile ?? "")).WithFileEncoding(Encoding.UTF8), 
                 new Program() { FilePath = gameDataPath }, typeof(Program));
         }
-        catch (Exception exc)
+        finally
         {
-            Log.Error(exc.ToString());
-            throw;
+            Log.Information($"Finished '{Path.GetFileName(scriptFile)}'");
         }
-        Log.Information($"Finished '{Path.GetFileName(scriptFile)}'");
     }
 
     private static void ScriptOptionsInitialize()

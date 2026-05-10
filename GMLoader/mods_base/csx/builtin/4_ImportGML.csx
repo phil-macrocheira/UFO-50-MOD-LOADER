@@ -25,6 +25,4 @@ foreach (string file in dirFiles)
 }
 importGroup.Import(true);
 
-bool success = importConfigDefinedCode(importGroup);
-if (!success)
-    throw new Exception();
+importConfigDefinedCode(importGroup);
