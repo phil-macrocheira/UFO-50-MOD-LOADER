@@ -260,13 +260,16 @@ public partial class MainWindow : Window
     }
     private async void OnDownloadModsClick(object? sender, RoutedEventArgs e)
     {
-        _modDatagridService.PauseWatchers();
-
-        var dialog = new ModDownloaderWindow();
+        var dialog = new ModDownloaderWindow() { MainWindow = this };
         await dialog.ShowDialog(this);
-
+    }
+    public void PauseWatchers()
+    {
+        _modDatagridService.PauseWatchers();
+    }
+    public void ResumeWatchers()
+    {
         _modDatagridService.ResumeWatchers();
-        LoadMods();
     }
     private async void OnUninstallClick(object? sender, RoutedEventArgs e)
     {
@@ -467,7 +470,7 @@ public partial class MainWindow : Window
 
         return filtered;
     }
-    private void LoadMods()
+    public void LoadMods()
     {
         var searchText = SearchBox?.Text ?? "";
         var filtered = LoadFilteredMods(searchText);

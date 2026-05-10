@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 
@@ -8,6 +9,7 @@ namespace UFO_50_Mod_Loader;
 
 public partial class ModDownloaderWindow : Window
 {
+    public MainWindow? MainWindow { init; private get; }
     private readonly ModDownloaderService _downloaderService;
     private readonly ObservableCollection<DownloadMod> _allMods = new();
     private readonly ObservableCollection<DownloadMod> _filteredMods = new();
@@ -207,6 +209,7 @@ public partial class ModDownloaderWindow : Window
             return;
         }
 
+        MainWindow?.PauseWatchers();
         DownloadButton.IsEnabled = false;
         DownloadButton.Content = "Downloading...";
 
@@ -254,6 +257,8 @@ public partial class ModDownloaderWindow : Window
 
                     downloaded++;
                     Logger.Log(logMessage);
+
+                    if (MainWindow != null) Dispatcher.UIThread.Post(MainWindow.LoadMods);
                 }
                 catch (Exception ex) {
                     Logger.Log($"Failed to download {mod.Name}: {ex.Message}");
@@ -273,6 +278,7 @@ public partial class ModDownloaderWindow : Window
             ModDataGrid.ItemsSource = _filteredMods;
         }
         finally {
+            MainWindow?.ResumeWatchers();
             DownloadButton.IsEnabled = true;
             DownloadButton.Content = "Download";
         }
