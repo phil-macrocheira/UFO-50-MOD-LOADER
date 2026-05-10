@@ -28,7 +28,15 @@ namespace UFO_50_Mod_Loader.Services
                         return null;
                     }
                 }
-                await Task.Run(() => CopyService.CopyDirectory(Constants.VanillaCopyPath, Constants.ModdedCopyPath));
+
+                try {
+                    await Task.Run(() => CopyService.CopyDirectory(Constants.VanillaCopyPath, Constants.ModdedCopyPath));
+                }
+                catch (Exception ex) {
+                    Logger.Log($"[ERROR] Failed to copy files to {Path.GetFileName(Constants.ModdedCopyPath)}: {ex.Message}");
+                    return new GMLoaderResult { ErrorMessage = $"Can't copy modded files. You may need to close the game if it's already running" };
+                }
+
                 gamePath = Constants.ModdedCopyPath;
                 File.WriteAllText(Constants.ModdedCopySteamAppID, Constants.SteamAppID);
 
