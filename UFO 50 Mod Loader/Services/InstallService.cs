@@ -90,6 +90,7 @@ namespace UFO_50_Mod_Loader.Services
                 AddExeHash("1.8.44", 0x1402a3cba);
                 AddExeHash("1.9",    0x1402a3cba);
                 AddExeHash("1.9.1",  0x1402a3cba);
+                AddExeHash("1.9.5",  0x1402a3cba);
                 void AddExeHash(string version, long address)
                 {
                     var versionHash = gameService.GetVersionHashData(version);
