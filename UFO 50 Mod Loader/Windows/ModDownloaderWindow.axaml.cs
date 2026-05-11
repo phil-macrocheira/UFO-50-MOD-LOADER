@@ -45,7 +45,7 @@ public partial class ModDownloaderWindow : Window
             var mods = await _downloaderService.GetModListAsync();
 
             _allMods.Clear();
-            foreach (var mod in mods.OrderByDescending(m => m.DateUpdated)) {
+            foreach (var mod in mods.OrderByDescending(m => m.DateUpdated != 0 ? m.DateUpdated : m.DateAdded)) {
                 _allMods.Add(new DownloadMod(mod));
             }
 
@@ -105,15 +105,15 @@ public partial class ModDownloaderWindow : Window
             ViewPageButton.IsEnabled = !string.IsNullOrEmpty(mod.PageUrl);
 
             DescriptionText.Text = string.IsNullOrEmpty(mod.Description)
-                ? "Loading..."
-                : $"{mod.Description}\n\nLoading full description...";
+                ? "<span style='color:#CCCCCC;'>Loading...</span>"
+                : $"<span style='color:#CCCCCC;'>{mod.Description}\n\nLoading full description...</span>";
 
             await LoadPreviewImageAsync(mod.ImageUrl);
 
             var fullDescription = await _downloaderService.GetFullDescriptionAsync(mod.ID);
 
             if (_selectedMod?.ID == mod.ID) {
-                DescriptionText.Text = fullDescription;
+                DescriptionText.Text = $"<span style='color:#CCCCCC;'>{fullDescription}</span>";
             }
         }
     }

@@ -152,7 +152,7 @@ public class ModDownloaderService
                     ? textElement[0].GetString() ?? ""
                     : textElement.GetString() ?? "";
 
-                return CleanHtml(rawHtml);
+                return rawHtml;
             }
         }
         catch (Exception ex) {
@@ -239,14 +239,5 @@ public class ModDownloaderService
     private static long GetLongProperty(JsonElement element, string name)
     {
         return element.TryGetProperty(name, out var prop) && prop.TryGetInt64(out var val) ? val : 0;
-    }
-    private static string CleanHtml(string html)
-    {
-        var text = WebUtility.HtmlDecode(html);
-        text = Regex.Replace(text, @"<br\s*/?>", "\n", RegexOptions.IgnoreCase);
-        text = text.Replace("</li>", "\n");
-        text = Regex.Replace(text, @"</h[1-6]>", "\n", RegexOptions.IgnoreCase);
-        text = Regex.Replace(text, "<.*?>", string.Empty);
-        return text.Trim();
     }
 }
