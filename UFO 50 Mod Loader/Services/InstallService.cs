@@ -225,7 +225,7 @@ namespace UFO_50_Mod_Loader.Services
                         if (SettingsService.Settings.OverwriteMode)
                             Logger.Log("Mods installed successfully!");
                         else
-                            Logger.Log("Mods loaded successfully!");
+                            Logger.Log("Mods loaded successfully! Click the 'Launch Game' button to launch this modded game again.");
                     }
                     else {
                         Logger.Log($"Mod installation failed.");

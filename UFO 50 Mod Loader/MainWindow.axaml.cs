@@ -82,6 +82,7 @@ public partial class MainWindow : Window
     private void ToggleUI(bool state)
     {
         InstallButton.IsEnabled = state;
+        LaunchButton.IsEnabled = state;
         DownloadModsButton.IsEnabled = state;
         ModDataGrid.IsEnabled = state;
         SearchBox.IsEnabled = state;

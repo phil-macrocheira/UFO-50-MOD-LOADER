@@ -133,7 +133,6 @@
             <Menu x:Name="MenuBar" HorizontalAlignment="Left">
                 <!-- UFO 50 -->
                 <MenuItem Header="_UFO 50">
-                    <MenuItem Header="Launch Game" Click="OnLaunchGameClick"/>
                     <MenuItem Header="Verify Vanilla Copy" Click="OnVerifyCopyClick"/>
                     <MenuItem Header="Uninstall Mods" Click="OnUninstallClick"/>
                 </MenuItem>
@@ -201,6 +200,7 @@
         <Grid DockPanel.Dock="Top" Margin="12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
@@ -210,8 +210,15 @@
                     Classes="gray"
                     x:Name="InstallButton" 
                     Click="OnInstallClick"/>
+
+            <Button Grid.Column="1"
+                    Content="Launch Game"
+                    Classes="gray"
+                    Margin="8,0,0,0"
+                    x:Name="LaunchButton"
+                    Click="OnLaunchGameClick"/>
     
-            <TextBox Grid.Column="1" 
+            <TextBox Grid.Column="2" 
                      Name="SearchBox" 
                      Margin="12,0" 
                      Watermark="Filter mods...">
@@ -227,7 +234,7 @@
                 </TextBox.InnerRightContent>
             </TextBox>
     
-            <Button Grid.Column="2" 
+            <Button Grid.Column="3" 
                     Content="Download Mods"
                     Classes="gray"
                     x:Name="DownloadModsButton"
