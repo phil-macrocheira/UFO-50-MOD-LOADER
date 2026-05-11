@@ -143,13 +143,6 @@ public partial class ModDownloaderWindow : Window
         SearchBox.Text = "";
     }
 
-    private void OnSelectAllClick(object? sender, RoutedEventArgs e)
-    {
-        foreach (var mod in _filteredMods) {
-            mod.IsSelected = true;
-        }
-    }
-
     private void OnSelectNoneClick(object? sender, RoutedEventArgs e)
     {
         foreach (var mod in _filteredMods) {
@@ -164,6 +157,15 @@ public partial class ModDownloaderWindow : Window
 
         foreach (var mod in _filteredMods) {
             mod.IsSelected = mod.HasUpdate;
+        }
+    }
+    private void OnSelectNewClick(object? sender, RoutedEventArgs e)
+    {
+        SearchBox.Text = "";
+        ApplyFilter();
+
+        foreach (var mod in _filteredMods) {
+            mod.IsSelected = string.IsNullOrEmpty(mod.InstalledVersion);
         }
     }
 
