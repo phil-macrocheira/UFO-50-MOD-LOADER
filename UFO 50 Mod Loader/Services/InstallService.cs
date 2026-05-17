@@ -219,13 +219,19 @@ namespace UFO_50_Mod_Loader.Services
 
                     if (result.Success) {
                         var GameDataWinPath = Path.Combine(gamePath, "data.win");
+                        var GameExePath = Path.Combine(gamePath, "ufo50.exe");
                         File.Copy(Constants.GMLoaderDataWinPath, GameDataWinPath, overwrite: true);
                         File.Delete(Constants.GMLoaderDataWinPath);
+                        CreateShortcut(GameExePath, "UFO 50 (Steam)");
 
-                        if (SettingsService.Settings.OverwriteMode)
+                        if (SettingsService.Settings.OverwriteMode) {
                             Logger.Log("Mods installed successfully!");
-                        else
+                        }
+                        else {
+                            CreateShortcut(Constants.ModdedCopyExePath, "UFO 50 (Modded Copy)");
+                            File.Copy(Constants.ModdedCopySteamAppID, Path.Combine(Constants.ModLoaderRoot, "steam_appid.txt"), true);
                             Logger.Log("Mods loaded successfully! Click the 'Launch Game' button to launch this modded game again.");
+                        }
                     }
                     else {
                         Logger.Log($"Mod installation failed.");
@@ -238,6 +244,21 @@ namespace UFO_50_Mod_Loader.Services
                 Logger.Log($"[ERROR] {ex.Message}");
                 return null;
             }
+        }
+        private static Task CreateShortcut(string exePath, string exeName)
+        {
+            if (!Constants.IsWindows)
+                return Task.CompletedTask;
+
+            string shortcutPath = Path.Combine(Constants.ModLoaderRoot, exeName + ".lnk");
+            Type shellType = Type.GetTypeFromProgID("WScript.Shell");
+            dynamic shell = Activator.CreateInstance(shellType);
+            dynamic shortcut = shell.CreateShortcut(shortcutPath);
+            shortcut.TargetPath = exePath;
+            shortcut.WorkingDirectory = Constants.ModLoaderRoot;
+            shortcut.Arguments = ""; // Can set arguments here
+            shortcut.Save();
+            return Task.CompletedTask;
         }
     }
 }
