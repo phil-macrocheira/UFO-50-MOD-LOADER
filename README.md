@@ -71,38 +71,23 @@ For more information, see the [Wiki Guide to Modding UFO 50](https://ufo50.mirah
 
 ```
 | Flag | Meaning |
-
 |---|---|
-
 | `--headless` | Required gate. Without it, Mod Loader boots Avalonia normally. |
-
 | `--version` | Prints `<semver>  headless ✓` and exits 0. Used by clients to probe for support. |
-
 | `--mod <path>` | Mod folder path, same shape as `my mods/<x>`. Repeatable. |
-
 | `--launch` / `-L` | After install, launch UFO 50 via `LaunchGameService`. |
-
 | `--game-path <path>` | Override `SettingsService.Settings.GamePath`. |
-
 | `--ignore-warnings` | Treat patch warnings as non-fatal. Blocking conflicts are always fatal. |
-
 | `--json` | Emit one JSON object per line to stdout. |
 
 ### Exit codes
+
 | Code | Meaning |
-
 |---|---|
-
 | `0` | Success. Install completed; game launched if `--launch` was given. |
-
 | `10` | Bad args / unknown flag / no `--mod` given. |
-
 | `11` | Game path missing or invalid. |
-
 | `12` | Vanilla copy not yet seeded — run the GUI once first. |
-
 | `20` | Blocking mod conflict (or patch warning without `--ignore-warnings`). |
-
 | `30` | GMLoader install failed. See `log.txt`. |
-
 | `40` | Launch failed (install succeeded). |
