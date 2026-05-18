@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using System.Runtime.InteropServices;
 using UFO_50_Mod_Loader.Models;
 using Velopack;
 
@@ -19,6 +20,24 @@ namespace UFO_50_Mod_Loader
             catch (Exception ex) {
                 Logger.Log($"[ERROR] Failed to create workspace folder: {ex.Message}");
             }
+
+            // ─── HEADLESS ────────────────────────────────────────────────────
+            if (args.Contains("--headless")) {
+                // WinExe GUI apps have no console by default; attach to the calling terminal
+                // so --json output and error messages are visible to the caller.
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    AttachConsole(-1);
+
+                var opt = CliParser.Parse(args);
+                if (opt is null) {
+                    Console.Error.WriteLine(CliParser.Usage);
+                    Environment.Exit(10);
+                }
+                int code = HeadlessRunner.RunAsync(opt).GetAwaiter().GetResult();
+                Environment.Exit(code);
+                return;
+            }
+            // ─── END HEADLESS ────────────────────────────────────────────────
 
             // Load settings first!
             SettingsService.Load();
@@ -43,6 +62,9 @@ namespace UFO_50_Mod_Loader
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args);
         }
+
+        [DllImport("kernel32.dll")]
+        private static extern bool AttachConsole(int dwProcessId);
 
         // Avalonia configuration, don't remove; also used by visual designer.
         public static AppBuilder BuildAvaloniaApp()

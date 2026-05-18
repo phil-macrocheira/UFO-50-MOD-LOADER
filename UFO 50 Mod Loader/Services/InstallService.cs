@@ -6,7 +6,7 @@ namespace UFO_50_Mod_Loader.Services
 {
     public class InstallService
     {
-        public static async Task<GMLoaderResult?> InstallModsAsync(Window parent, List<string> enabledModPaths, InstalledGameService gameService)
+        public static async Task<GMLoaderResult?> InstallModsAsync(Window? parent, List<string> enabledModPaths, InstalledGameService gameService)
         {
             Logger._showingConflicts = false;
             string gamePath = SettingsService.Settings.GamePath;
