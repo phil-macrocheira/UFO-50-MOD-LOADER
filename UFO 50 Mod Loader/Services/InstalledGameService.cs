@@ -10,12 +10,12 @@ namespace UFO_50_Mod_Loader.Services;
 
 public class InstalledGameService
 {
-    private readonly Window _parentWindow;
+    private readonly Window? _parentWindow;
     private string? _gamePath;
     private Dictionary<string, Dictionary<string, uint>>? _hashData;
     private string? _latestVersion;
 
-    public InstalledGameService(Window parentWindow)
+    public InstalledGameService(Window? parentWindow)
     {
         _parentWindow = parentWindow;
     }
