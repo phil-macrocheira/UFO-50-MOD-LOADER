@@ -48,20 +48,13 @@ For more information, see the [Wiki Guide to Modding UFO 50](https://ufo50.mirah
 
 ## CLI Headless Install/Launch Mode
 
-\### Example
-
+### Example
 ```
-
 "UFO 50 Mod Loader.exe" --headless --mod ./packs/my-adventure --launch --json
-
 ```
 
-\### CLI surface
-
-
-
+### CLI surface
 ```
-
 "UFO 50 Mod Loader.exe" --headless
 
 &#x20;   \[--version]
@@ -77,9 +70,6 @@ For more information, see the [Wiki Guide to Modding UFO 50](https://ufo50.mirah
 &#x20;   \[--json]
 
 ```
-
-
-
 | Flag | Meaning |
 
 |---|---|
@@ -98,12 +88,7 @@ For more information, see the [Wiki Guide to Modding UFO 50](https://ufo50.mirah
 
 | `--json` | Emit one JSON object per line to stdout. |
 
-
-
-\### Exit codes
-
-
-
+### Exit codes
 | Code | Meaning |
 
 |---|---|
@@ -121,4 +106,3 @@ For more information, see the [Wiki Guide to Modding UFO 50](https://ufo50.mirah
 | `30` | GMLoader install failed. See `log.txt`. |
 
 | `40` | Launch failed (install succeeded). |
-
