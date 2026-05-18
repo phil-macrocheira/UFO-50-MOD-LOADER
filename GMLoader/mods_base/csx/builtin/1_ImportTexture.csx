@@ -317,17 +317,18 @@ try
                     }
 
                     // Replacing existing sprite part
-
                     if (isSubimages) {
                         int textureCount = sprite.Textures.Count;
                         frame = ExtractSecondToLastNumber(stripped) ?? 0;
                     }
+                    /*
                     else if (frame > sprite.Textures.Count - 1) {
                         while (frame > sprite.Textures.Count - 1) {
                             sprite.Textures.Add(texentry);
                         }
                         continue;
                     }
+                    */
 
                     while (frame > sprite.Textures.Count - 1) {
                         sprite.Textures.Add(new UndertaleSprite.TextureEntry());
