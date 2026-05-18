@@ -56,19 +56,12 @@ For more information, see the [Wiki Guide to Modding UFO 50](https://ufo50.mirah
 ### CLI surface
 ```
 "UFO 50 Mod Loader.exe" --headless
-
-&#x20;   \[--version]
-
-&#x20;   --mod <path>  \[--mod <path> ...]
-
-&#x20;   \[--launch | -L]
-
-&#x20;   \[--game-path <path>]
-
-&#x20;   \[--ignore-warnings]
-
-&#x20;   \[--json]
-
+    [--version]
+    --mod <path>  [--mod <path> ...]
+    [--launch | -L]
+    [--game-path <path>]
+    [--ignore-warnings]
+    [--json]
 ```
 | Flag | Meaning |
 |---|---|
