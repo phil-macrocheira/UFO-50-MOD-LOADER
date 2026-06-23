@@ -15,6 +15,7 @@ namespace UFO_50_Mod_Loader.Models
         public static readonly string TargetExecutable = "ufo50.exe";
         public static readonly string TargetFolder = "UFO 50";
         public static readonly string SteamAppID = "1147860";
+        public static readonly string TargetHashFile = "ufo50_hashes.json";
 
         public static readonly string ModLoaderPath = AppDomain.CurrentDomain.BaseDirectory;
         public static readonly string ModLoaderRoot = IsWindows ? Path.GetFullPath(Path.Combine(ModLoaderPath, "..")) : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppID);
@@ -26,7 +27,7 @@ namespace UFO_50_Mod_Loader.Models
         public static readonly string ModdedCopySteamAppID = Path.Combine(ModdedCopyPath, "steam_appid.txt");
         public static readonly string VanillaDataWinPath = Path.Combine(VanillaCopyPath, "data.win");
         public static readonly string SettingsPath = Path.Combine(ModLoaderWorkspacePath, "settings.json");
-        public static readonly string HashDataPath = Path.Combine(ModLoaderPath, "Data", "ufo50_hashes.json");
+        public static readonly string HashDataPath = Path.Combine(ModLoaderPath, "Data", TargetHashFile);
         public static readonly string GMLoaderIniPath = Path.Combine(ModLoaderPath, "GMLoader.ini");
         public static readonly string GMLoaderModsBasePath = Path.Combine(ModLoaderPath, "mods_base");
         public static readonly string GMLoaderDataWinPath = Path.Combine(ModLoaderWorkspacePath, "data.win");
