@@ -12,11 +12,11 @@ public class ModDatagridService : IDisposable
     public static readonly Bitmap DefaultIcon = GetDefaultIcon();
     private static Bitmap GetDefaultIcon()
     {
-        var string TargetFile
+        string TargetFile;
         if (Constants.IsWindows) {
-            TargetFile = "UFO_50_Mod_Loader.wrench.ico"
+            TargetFile = "UFO_50_Mod_Loader.wrench.ico";
         } else {
-            TargetFile = "UFO_50_Mod_Loader.wrench.png"
+            TargetFile = "UFO_50_Mod_Loader.wrench.png";
         }
 
         using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(TargetFile);
