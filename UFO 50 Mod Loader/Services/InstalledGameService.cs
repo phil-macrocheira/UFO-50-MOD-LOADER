@@ -35,13 +35,15 @@ public class InstalledGameService
                 _gamePath = path;
                 SettingsService.Settings.GamePath = _gamePath;
                 SettingsService.Save();
-                Logger.Log($"UFO 50 install path found at {_gamePath}");
+                Logger.Log($"{Constants.TargetFolder} install path found at {_gamePath}");
                 return true;
             }
         }
 
         while (true) {
-            await MessageBoxHelper.Show(_parentWindow, "Select UFO 50 Folder", "Could not find UFO 50 automatically.\nPlease select folder where UFO 50 is installed.");
+            await MessageBoxHelper.Show(_parentWindow,
+                $"Select {Constants.TargetFolder} Folder",
+                $"Could not find {Constants.TargetFolder} automatically.\nPlease select folder where {Constants.TargetFolder} is installed.");
 
             var result = await ShowFolderDialog();
 
@@ -55,11 +57,11 @@ public class InstalledGameService
                 _gamePath = result;
                 SettingsService.Settings.GamePath = _gamePath;
                 SettingsService.Save();
-                Logger.Log($"UFO 50 install path set to {_gamePath}");
+                Logger.Log($"{Constants.TargetFolder} install path set to {_gamePath}");
                 return true;
             }
 
-            Logger.Log("Folder selected was not a UFO 50 install path. It must contain ufo50.exe and data.win.");
+            Logger.Log($"Folder selected was not a {Constants.TargetFolder} install path. It must contain {Constants.TargetExecutable} and data.win.");
             Dispatcher.UIThread.RunJobs();
         }
     }
@@ -73,14 +75,14 @@ public class InstalledGameService
             // Windows Steam paths
             paths.Add(Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-                "Steam", "steamapps", "common", "UFO 50"));
+                "Steam", "steamapps", "common", Constants.TargetFolder));
             paths.Add(Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-                "Steam", "steamapps", "common", "UFO 50"));
+                "Steam", "steamapps", "common", Constants.TargetFolder));
 
             // Common alternate Steam library locations
-            paths.Add(@"D:\SteamLibrary\steamapps\common\UFO 50");
-            paths.Add(@"E:\SteamLibrary\steamapps\common\UFO 50");
+            paths.Add(@"D:\SteamLibrary\steamapps\common\" + Constants.TargetFolder);
+            paths.Add(@"E:\SteamLibrary\steamapps\common\" + Constants.TargetFolder);
         }
 
         // Linux
@@ -88,19 +90,19 @@ public class InstalledGameService
             var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
             // Standard Linux Steam path
-            paths.Add(Path.Combine(home, ".steam", "steam", "steamapps", "common", "UFO 50"));
-            paths.Add(Path.Combine(home, ".local", "share", "Steam", "steamapps", "common", "UFO 50"));
+            paths.Add(Path.Combine(home, ".steam", "steam", "steamapps", "common", Constants.TargetFolder));
+            paths.Add(Path.Combine(home, ".local", "share", "Steam", "steamapps", "common", Constants.TargetFolder));
 
             // Steam Deck / Flatpak Steam
             paths.Add(Path.Combine(home, ".var", "app", "com.valvesoftware.Steam",
-                ".local", "share", "Steam", "steamapps", "common", "UFO 50"));
+                ".local", "share", "Steam", "steamapps", "common", Constants.TargetFolder));
         }
 
         // Mac
         else if (Constants.IsOSX) {
             var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             paths.Add(Path.Combine(home, "Library", "Application Support", "Steam",
-                "steamapps", "common", "UFO 50"));
+                "steamapps", "common", Constants.TargetFolder));
         }
 
         return paths;
@@ -112,7 +114,7 @@ public class InstalledGameService
             return false;
 
         var dataWinPath = Path.Combine(path, "data.win");
-        var exePath = Path.Combine(path, "ufo50.exe");
+        var exePath = Path.Combine(path, Constants.TargetExecutable);
 
         return File.Exists(exePath) && File.Exists(dataWinPath);
     }
@@ -123,7 +125,7 @@ public class InstalledGameService
         if (topLevel == null) return null;
 
         var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions {
-            Title = "Select folder where UFO 50 is installed",
+            Title = $"Select folder where {Constants.TargetFolder} is installed",
             AllowMultiple = false
         });
 
@@ -140,7 +142,7 @@ public class InstalledGameService
         }
 
         if (!Path.Exists(Constants.HashDataPath)) {
-            Logger.Log($"[ERROR] ufo50_hashes.json file not found! Cannot verify UFO 50 version!");
+            Logger.Log($"[ERROR] ufo50_hashes.json file not found! Cannot verify {Constants.TargetFolder} version!");
             return;
         }
 
@@ -207,15 +209,15 @@ public class InstalledGameService
             return version;
         }
 
-        string exePath = Path.Combine(gamePath, "ufo50.exe");
+        string exePath = Path.Combine(gamePath, Constants.TargetExecutable);
         if (!File.Exists(exePath)) {
-            Logger.Log($"[ERROR] ufo50.exe was not found at {gamePath}! Can't check UFO 50 version!");
+            Logger.Log($"[ERROR] {Constants.TargetExecutable} was not found at {gamePath}! Can't check {Constants.TargetFolder} version!");
             return version;
         }
 
         uint exeHash = HashFile(exePath);
         foreach (var kvp in _hashData) {
-            if (kvp.Value.TryGetValue("ufo50.exe", out uint hash) && hash == exeHash) {
+            if (kvp.Value.TryGetValue(Constants.TargetExecutable, out uint hash) && hash == exeHash) {
                 version = kvp.Key;
                 canCopy = true;
                 break;
@@ -227,7 +229,7 @@ public class InstalledGameService
             if (actualExeVersion != null && actualExeVersion.EndsWith(".0")) {
                 actualExeVersion = actualExeVersion.Substring(0, actualExeVersion.Length - 2);
             }
-            Logger.Log($"SETUP ERROR: Installed UFO 50 version ({actualExeVersion}) is probably a new version. Mod Loader update required.");
+            Logger.Log($"SETUP ERROR: Installed {Constants.TargetFolder} version ({actualExeVersion}) is probably a new version. Mod Loader update required.");
             return version;
         }
 
@@ -236,11 +238,11 @@ public class InstalledGameService
 
         if (fileHashes.Count != expectedFileHashes.Count) {
             canCopy = false;
-            Logger.Log("SETUP ERROR: Cannot copy UFO 50 files. Installed UFO 50 version is missing files. Verify integrity of UFO 50 in Steam and select 'Verify Vanilla Copy' in the Mod Loader.");
+            Logger.Log($"SETUP ERROR: Cannot copy {Constants.TargetFolder} files. Installed {Constants.TargetFolder} version is missing files. Verify integrity of {Constants.TargetFolder} in Steam and select 'Verify Vanilla Copy' in the Mod Loader.");
         }
         else if (!expectedFileHashes.All(kvp => fileHashes.TryGetValue(kvp.Key, out var value) && value == kvp.Value)) {
             canCopy = false;
-            Logger.Log("SETUP ERROR: Cannot copy UFO 50 files. Installed UFO 50 version is already modded. Verify integrity of UFO 50 in Steam and select 'Verify Vanilla Copy' in the Mod Loader.");
+            Logger.Log($"SETUP ERROR: Cannot copy {Constants.TargetFolder} files. Installed {Constants.TargetFolder} version is already modded. Verify integrity of {Constants.TargetFolder} in Steam and select 'Verify Vanilla Copy' in the Mod Loader.");
         }
 
         if (!canCopy) {
@@ -259,9 +261,9 @@ public class InstalledGameService
 
         if (canCopy && version != _latestVersion) {
             if (!uninstallMode)
-                Logger.Log($"WARNING: Copying outdated UFO 50 version (you are on {version}, latest is {_latestVersion}). Select 'Verify Vanilla Copy' to update your vanilla copy in the future.");
+                Logger.Log($"WARNING: Copying outdated {Constants.TargetFolder} version (you are on {version}, latest is {_latestVersion}). Select 'Verify Vanilla Copy' to update your vanilla copy in the future.");
             else
-                Logger.Log($"WARNING: Installing outdated UFO 50 version (you are on {version}, latest is {_latestVersion}). Verify integrity of UFO 50 in Steam to update to latest version.");
+                Logger.Log($"WARNING: Installing outdated {Constants.TargetFolder} version (you are on {version}, latest is {_latestVersion}). Verify integrity of {Constants.TargetFolder} in Steam to update to latest version.");
         }
 
         return version;

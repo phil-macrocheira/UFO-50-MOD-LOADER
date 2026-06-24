@@ -94,7 +94,7 @@ namespace UFO_50_Mod_Loader.Services
                 void AddExeHash(string version, long address)
                 {
                     var versionHash = gameService.GetVersionHashData(version);
-                    if (versionHash.TryGetValue("ufo50.exe", out uint hash))
+                    if (versionHash.TryGetValue(Constants.TargetExecutable, out uint hash))
                     {
                         expectedExeHashes.Add(hash, address);
                     }
@@ -222,7 +222,7 @@ namespace UFO_50_Mod_Loader.Services
                         File.Copy(Constants.GMLoaderDataWinPath, GameDataWinPath, overwrite: true);
                         File.Delete(Constants.GMLoaderDataWinPath);
 
-                        var SteamExePath = Path.Combine(SettingsService.Settings.GamePath, "ufo50.exe");
+                        var SteamExePath = Path.Combine(SettingsService.Settings.GamePath, Constants.TargetExecutable);
                         CreateShortcut(SteamExePath, "UFO 50 (Steam)");
 
                         if (SettingsService.Settings.OverwriteMode) {
