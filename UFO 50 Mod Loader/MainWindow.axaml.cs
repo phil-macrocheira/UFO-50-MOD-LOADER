@@ -44,7 +44,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         // Set version
-        Title = $"UFO 50 Mod Loader v{Constants.Version}";
+        Title = $"{Constants.ProgramName} v{Constants.Version}";
 
         // Subscribe to log services
         LogService.OnLog += Log => {
@@ -71,6 +71,15 @@ public partial class MainWindow : Window
         // Initialize checkbox states from settings
         OverwriteModeCheckBox.IsChecked = SettingsService.Settings.OverwriteMode;
 
+        // Load Game Metadata (Put a game selector here in future if this becomes a generic game maker program)
+        Game.Load();
+
+        // Rename 'my mods' folder if selected game is UFO 50 to fix legacy folder name
+        RenameLegacyModsFolder();
+
+        // Hide Unused Features
+        HideUnusedFeatures();
+
         // Initialize Services
         _gameService = new InstalledGameService(this);
         _modDatagridService = new ModDatagridService();
@@ -78,6 +87,25 @@ public partial class MainWindow : Window
         ModDataGrid.ItemsSource = FilteredMods;
         SearchBox.TextChanged += SearchBox_TextChanged;
         Loaded += OnWindowLoaded;
+    }
+    private void RenameLegacyModsFolder()
+    {
+        string legacyPath = Path.Combine(Constants.ModLoaderRoot, "my mods");
+
+        if (!Game.Metadata.IsUFO50 || !Directory.Exists(legacyPath))
+            return;
+
+        Directory.Move(legacyPath, Game.Paths.MyModsPath);
+    }
+    private void HideUnusedFeatures()
+    {
+        if (Game.Metadata.GameBananaID == string.Empty) {
+            GameBananaLink.IsVisible = false;
+            DownloadModsButton.IsVisible = false;
+        }
+
+        if (Game.Metadata.DiscordLink == string.Empty)
+            DiscordLink.IsVisible = false;
     }
     private void ToggleUI(bool state)
     {
@@ -109,7 +137,7 @@ public partial class MainWindow : Window
         }
 
         // Check in case UFO 50 Vanilla Copy folder was deleted manually
-        if (!_gameService.IsValidGamePath(Constants.VanillaCopyPath)) {
+        if (!_gameService.IsValidGamePath(Game.Paths.VanillaCopyPath)) {
             SettingsService.Settings.CopiedVanillaVersion = null;
             SettingsService.Save();
         }
@@ -121,10 +149,6 @@ public partial class MainWindow : Window
             await CopyUFO50Vanilla(version);
         }
 
-        var sourcePath = Path.Combine(Constants.ModLoaderPath, Constants.PackagedMods);
-        var destinationPath = Constants.MyModsPath;
-        bool hadNoDestinationFolder = !Directory.Exists(destinationPath);
-
         // Initialize datagrid service
         _modDatagridService.ModsChanged += OnModsChanged;
         _modDatagridService.Initialize();
@@ -132,42 +156,9 @@ public partial class MainWindow : Window
         // Extract any archives in 'my mods'
         ExtractAllArchives();
 
-        if (SelfUpdaterService.JustUpdatedOrInstalled || hadNoDestinationFolder)
-        {
-            var sourceExists = Directory.Exists(sourcePath);
-            var destExists = Directory.Exists(destinationPath);
-
-            if (sourceExists && destExists)
-            {
-                try
-                {
-                    foreach (var dir in Directory.GetDirectories(sourcePath))
-                    {
-                        string dirName = Path.GetFileName(dir);
-                        string destDir = Path.Combine(destinationPath, dirName);
-
-                        Logger.Log($"Copying {Constants.PackagedMods}: {dirName}");
-
-                        try
-                        {
-                            if (Directory.Exists(destDir))
-                            {
-                                Directory.Delete(destDir, true);
-                            }
-                            CopyService.CopyDirectory(dir, destDir);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Log($"ERROR: Failed to copy {dir} to {destDir}: {ex.Message}");
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.Log($"ERROR: Failed to copy {Constants.PackagedMods}: {ex.Message}");
-                }
-            }
-        }
+        // Install packaged mods (Just UFO 50 Modding Settings for now)
+        if (SelfUpdaterService.JustUpdatedOrInstalled && Game.Metadata.IsUFO50)
+            InstallPackagedMods();
 
         LoadMods();
 
@@ -176,6 +167,33 @@ public partial class MainWindow : Window
 
         if (SettingsService.Settings.CheckForUpdatesAutomatically) {
             SelfUpdaterService.CheckForUpdates(this, automatic: true);
+        }
+    }
+    private async void InstallPackagedMods()
+    {
+        if (!Directory.Exists(Game.Paths.MyModsPath) || !Directory.Exists(Constants.PackagedModsPath))
+            return;
+
+        try {
+            foreach (var dir in Directory.GetDirectories(Constants.PackagedModsPath)) {
+                string dirName = Path.GetFileName(dir);
+                string destDir = Path.Combine(Game.Paths.MyModsPath, dirName);
+
+                Logger.Log($"Copying packaged mods: {dirName}");
+
+                try {
+                    if (Directory.Exists(destDir)) {
+                        Directory.Delete(destDir, true);
+                    }
+                    CopyService.CopyDirectory(dir, destDir);
+                }
+                catch (Exception ex) {
+                    Logger.Log($"ERROR: Failed to copy {dir} to {destDir}: {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex) {
+            Logger.Log($"ERROR: Failed to copy packaged mods: {ex.Message}");
         }
     }
     private async void OnLaunchGameClick(object? sender, RoutedEventArgs e)
@@ -189,15 +207,15 @@ public partial class MainWindow : Window
     }
     private async Task CopyUFO50Vanilla(string version)
     {
-        if (Directory.Exists(Constants.VanillaCopyPath))
-            Directory.Delete(Constants.VanillaCopyPath, recursive: true);
+        if (Directory.Exists(Game.Paths.VanillaCopyPath))
+            Directory.Delete(Game.Paths.VanillaCopyPath, recursive: true);
 
         if (_gameService.CanCopy(version)) {
             HashSet<string> versionFileSet = _gameService.GetFileList(version);
-            await CopyService.CopyFileSetAsync(SettingsService.Settings.GamePath, Constants.VanillaCopyPath, versionFileSet);
+            await CopyService.CopyFileSetAsync(SettingsService.Settings.GamePath, Game.Paths.VanillaCopyPath, versionFileSet);
             SettingsService.Settings.CopiedVanillaVersion = version;
             SettingsService.Save();
-            Logger.Log($"Successfully verified and copied UFO 50 v{version} to 'UFO 50 Vanilla Copy' folder.");
+            Logger.Log($"Successfully verified and copied {Game.Metadata.GameName} v{version} to '{Game.Metadata.GameName} Vanilla Copy' folder.");
         }
         else {
             SettingsService.Settings.CopiedVanillaVersion = null;
@@ -220,7 +238,7 @@ public partial class MainWindow : Window
         SettingsService.Save();
 
         var enabledModPaths = enabledMods
-            .Select(modName => Path.Combine(Constants.MyModsPath, modName))
+            .Select(modName => Path.Combine(Game.Paths.MyModsPath, modName))
             .ToList();
 
         bool installedSuccessfully = false;
@@ -274,11 +292,11 @@ public partial class MainWindow : Window
     }
     private async void OnUninstallClick(object? sender, RoutedEventArgs e)
     {
-        string version = await _gameService.GetGameVersionAsync(Constants.VanillaCopyPath, true);
+        string version = await _gameService.GetGameVersionAsync(Game.Paths.VanillaCopyPath, true);
 
         if (_gameService.CanCopy(version)) {
-            CopyService.CopyDirectory(Constants.VanillaCopyPath, SettingsService.Settings.GamePath);
-            Logger.Log($"Uninstalled UFO 50 Mods.");
+            CopyService.CopyDirectory(Game.Paths.VanillaCopyPath, SettingsService.Settings.GamePath);
+            Logger.Log($"Uninstalled {Game.Metadata.GameName} Mods.");
         }
     }
     private void OnOpenFolderClick(object? sender, RoutedEventArgs e)
@@ -320,7 +338,7 @@ public partial class MainWindow : Window
         SearchBox.Text = "";
 
         foreach (var mod in FilteredMods) {
-            if (mod.Name == "UFO 50 Modding Settings")
+            if (Game.Metadata.IsUFO50 && mod.Name == "UFO 50 Modding Settings")
                 continue;
             mod.IsEnabled = false;
         }
@@ -379,7 +397,7 @@ public partial class MainWindow : Window
     private void OnGameBananaClick(object? sender, RoutedEventArgs e)
     {
         ProcessStartInfo psi = new ProcessStartInfo {
-            FileName = "https://gamebanana.com/games/23000",
+            FileName = $"https://gamebanana.com/games/{Game.Metadata.GameBananaID}",
             UseShellExecute = true
         };
         Process.Start(psi);
@@ -447,10 +465,12 @@ public partial class MainWindow : Window
     }
     private void FirstTimeRun()
     {
-        var UFO50ModdingSettingsMod = FilteredMods.FirstOrDefault(m => m.Name == "UFO 50 Modding Settings");
-        if (UFO50ModdingSettingsMod != null) {
-            UFO50ModdingSettingsMod.IsEnabled = true;
-            SaveEnabledMods();
+        if (Game.Metadata.IsUFO50) {
+            var UFO50ModdingSettingsMod = FilteredMods.FirstOrDefault(m => m.Name == $"UFO 50 Modding Settings");
+            if (UFO50ModdingSettingsMod != null) {
+                UFO50ModdingSettingsMod.IsEnabled = true;
+                SaveEnabledMods();
+            }
         }
 
         SettingsService.Settings.FirstTimeRun = false;
@@ -506,7 +526,7 @@ public partial class MainWindow : Window
     {
         var enabledModPaths = FilteredMods
             .Where(m => m.IsEnabled)
-            .Select(m => Path.Combine(Constants.MyModsPath, m.Name))
+            .Select(m => Path.Combine(Game.Paths.MyModsPath, m.Name))
             .Where(path => path != null)
             .Cast<string>()
             .ToList();
@@ -530,7 +550,11 @@ public partial class MainWindow : Window
     private void UpdateVersionColumnVisibility()
     {
         // Hide the Version column if no mods have version data
-        bool anyModHasVersion = FilteredMods.Any(m => !string.IsNullOrEmpty(m.ModVersion) && m.Name != "UFO 50 Modding Settings");
+        bool anyModHasVersion = false;
+        if (Game.Metadata.IsUFO50)
+            anyModHasVersion = FilteredMods.Any(m => !string.IsNullOrEmpty(m.ModVersion) && m.Name != "UFO 50 Modding Settings");
+        else
+            anyModHasVersion = FilteredMods.Any(m => !string.IsNullOrEmpty(m.ModVersion));
         ModDataGrid.Columns[4].IsVisible = anyModHasVersion;
     }
     private void SaveEnabledMods()
@@ -554,10 +578,10 @@ public partial class MainWindow : Window
     }
     public static async void ExtractAllArchives()
     {
-        if (!Directory.Exists(Constants.MyModsPath))
+        if (!Directory.Exists(Game.Paths.MyModsPath))
             return;
 
-        var archives = Directory.GetFiles(Constants.MyModsPath, "*.*").Where(f => f.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".7z", StringComparison.OrdinalIgnoreCase)).ToArray();
+        var archives = Directory.GetFiles(Game.Paths.MyModsPath, "*.*").Where(f => f.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".7z", StringComparison.OrdinalIgnoreCase)).ToArray();
 
         foreach (var archive in archives) {
             await ExtractService.ExtractAsync(archive, "gamebanana.json");

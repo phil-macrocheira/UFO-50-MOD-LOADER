@@ -131,8 +131,8 @@
         <!-- Menu Bar -->
         <Grid DockPanel.Dock="Top" Height="30" Background="#2D2D2D">
             <Menu x:Name="MenuBar" HorizontalAlignment="Left">
-                <!-- UFO 50 -->
-                <MenuItem Header="_UFO 50">
+                <!-- Game -->
+                <MenuItem Header="_Game">
                     <MenuItem Header="Verify Vanilla Copy" Click="OnVerifyCopyClick"/>
                     <MenuItem Header="Uninstall Mods" Click="OnUninstallClick"/>
                 </MenuItem>
@@ -148,7 +148,7 @@
 
                 <!-- Settings -->
                 <MenuItem Header="_Settings">
-                    <MenuItem Header="UFO 50 Install Path" Click="OnGamePathMenuClick" Height="32"/>
+                    <MenuItem Header="Game Install Path" Click="OnGamePathMenuClick" Height="32"/>
 
                     <MenuItem Name="OverwriteModeMenuItem" StaysOpenOnClick="True" Click="OnOverwriteModeClick" IsVisible="{Binding !IsSteamOS}" Height="32">
                         <MenuItem.Header>
@@ -188,10 +188,10 @@
 
                 <!-- Links -->
                 <MenuItem Header="_Links">
-                    <MenuItem Header="Modding Guide" Click="OnModdingGuideClick"/>
-                    <MenuItem Header="GameBanana" Click="OnGameBananaClick"/>
-                    <MenuItem Header="GitHub" Click="OnGitHubClick"/>
-                    <MenuItem Header="Discord" Click="OnDiscordClick"/>
+                    <MenuItem x:Name="ModdingGuideLink" Header="Modding Guide" Click="OnModdingGuideClick"/>
+                    <MenuItem x:Name="GameBananaLink" Header="GameBanana" Click="OnGameBananaClick"/>
+                    <MenuItem x:Name ="GithubLink" Header="GitHub" Click="OnGitHubClick"/>
+                    <MenuItem x:Name="DiscordLink" Header="Discord" Click="OnDiscordClick"/>
                 </MenuItem>
             </Menu>
         </Grid>

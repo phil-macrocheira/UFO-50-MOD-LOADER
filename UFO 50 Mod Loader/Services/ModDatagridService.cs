@@ -40,7 +40,7 @@ public class ModDatagridService : IDisposable
         var seenMods = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         try {
-            var modDirectories = Directory.GetDirectories(Constants.MyModsPath);
+            var modDirectories = Directory.GetDirectories(Game.Paths.MyModsPath);
             foreach (var modDir in modDirectories) {
                 var mod = LoadModFromFolder(modDir);
                 if (mod != null && seenMods.Add(mod.Name)) {
@@ -110,7 +110,7 @@ public class ModDatagridService : IDisposable
             }
 
             // Set version for UFO 50 Modding Settings to match mod loader version
-            if (folderName == "UFO 50 Modding Settings")
+            if (Game.Metadata.IsUFO50 && folderName == "UFO 50 Modding Settings")
                 modVersion = Constants.Version;
 
             return new Mod {
@@ -129,7 +129,7 @@ public class ModDatagridService : IDisposable
     private void CreateFileWatchers()
     {
         try {
-            var watcher = new FileWatcherService(Constants.MyModsPath);
+            var watcher = new FileWatcherService(Game.Paths.MyModsPath);
             watcher.FolderChanged += OnFolderChanged;
             _fileWatchers.Add(watcher);
         }

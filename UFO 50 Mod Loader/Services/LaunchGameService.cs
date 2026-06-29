@@ -10,19 +10,19 @@ namespace UFO_50_Mod_Loader.Services
             if (SettingsService.Settings.OverwriteMode) {
                 try {
                     Process.Start(new ProcessStartInfo {
-                        FileName = "steam://run/1147860",
+                        FileName = $"steam://run/{Game.Metadata.SteamAppID}",
                         UseShellExecute = true
                     });
                 }
                 catch (Exception ex) {
-                    Logger.Log($"Failed to launch UFO 50 via Steam: {ex.Message}");
+                    Logger.Log($"Failed to launch {Game.Metadata.GameName} via Steam: {ex.Message}");
                 }
             }
             else {
                 if (Constants.IsLinux) {
                     var chmod = Process.Start(new ProcessStartInfo {
                         FileName = "chmod",
-                        ArgumentList = { "+x", Constants.ModdedCopyExePath },
+                        ArgumentList = { "+x", Game.Paths.ModdedCopyExePath },
                         UseShellExecute = false
                     });
                     chmod?.WaitForExit();
@@ -30,13 +30,13 @@ namespace UFO_50_Mod_Loader.Services
 
                 try {
                     Process.Start(new ProcessStartInfo {
-                        FileName = Constants.ModdedCopyExePath,
-                        WorkingDirectory = Path.GetDirectoryName(Constants.ModdedCopyExePath),
+                        FileName = Game.Paths.ModdedCopyExePath,
+                        WorkingDirectory = Path.GetDirectoryName(Game.Paths.ModdedCopyExePath),
                         UseShellExecute = true
                     });
                 }
                 catch (Exception ex) {
-                    Logger.Log($"Failed to launch UFO 50 Modded Copy: {ex.Message}");
+                    Logger.Log($"Failed to launch {Game.Metadata.GameName} Modded Copy: {ex.Message}");
                 }
             }
 

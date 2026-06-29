@@ -251,7 +251,7 @@ public partial class ModDownloaderWindow : Window
 
                     await _downloaderService.DownloadAndExtractModAsync(
                         fileToDownload,
-                        Models.Constants.MyModsPath,
+                        Models.Game.Paths.MyModsPath,
                         modInfo
                     );
 

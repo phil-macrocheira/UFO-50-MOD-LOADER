@@ -87,7 +87,7 @@ public static class ExtractService
         }
 
         string modFolderName = Path.GetFileName(modFolderPath.TrimEnd(Path.DirectorySeparatorChar));
-        string destPath = Path.Combine(Constants.MyModsPath, modFolderName);
+        string destPath = Path.Combine(Game.Paths.MyModsPath, modFolderName);
 
         if (Directory.Exists(destPath))
             Directory.Delete(destPath, recursive: true);

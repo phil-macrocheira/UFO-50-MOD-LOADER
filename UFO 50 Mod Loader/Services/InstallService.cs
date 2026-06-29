@@ -16,29 +16,30 @@ namespace UFO_50_Mod_Loader.Services
                 return null;
             }
 
-            await ModdingSettingsAddModNamesAsync(enabledModPaths);
+            if (Game.Metadata.IsUFO50)
+                await ModdingSettingsAddModNamesAsync(enabledModPaths);
 
             if (!SettingsService.Settings.OverwriteMode) {
-                if (Directory.Exists(Constants.ModdedCopyPath)) {
+                if (Directory.Exists(Game.Paths.ModdedCopyPath)) {
                     try {
-                        CopyService.DeleteExcluding(Constants.ModdedCopyPath, ".log");
+                        CopyService.DeleteExcluding(Game.Paths.ModdedCopyPath, ".log");
                     }
                     catch (Exception ex) {
-                        Logger.Log($"[ERROR] Failed to delete {Path.GetFileName(Constants.ModdedCopyPath)}: {ex.Message}");
+                        Logger.Log($"[ERROR] Failed to delete {Path.GetFileName(Game.Paths.ModdedCopyPath)}: {ex.Message}");
                         return null;
                     }
                 }
 
                 try {
-                    await Task.Run(() => CopyService.CopyDirectory(Constants.VanillaCopyPath, Constants.ModdedCopyPath));
+                    await Task.Run(() => CopyService.CopyDirectory(Game.Paths.VanillaCopyPath, Game.Paths.ModdedCopyPath));
                 }
                 catch (Exception ex) {
-                    Logger.Log($"[ERROR] Failed to copy files to {Path.GetFileName(Constants.ModdedCopyPath)}: {ex.Message}");
+                    Logger.Log($"[ERROR] Failed to copy files to {Path.GetFileName(Game.Paths.ModdedCopyPath)}: {ex.Message}");
                     return new GMLoaderResult { ErrorMessage = $"Can't copy modded files. You may need to close the game if it's already running" };
                 }
 
-                gamePath = Constants.ModdedCopyPath;
-                File.WriteAllText(Constants.ModdedCopySteamAppID, Constants.SteamAppID);
+                gamePath = Game.Paths.ModdedCopyPath;
+                File.WriteAllText(Game.Paths.ModdedCopySteamAppID, Game.Metadata.SteamAppID);
 
                 // Time to do some hacky shit!
                 // Modded Copy crashes under some circumstances on startup due to handling an event too early.
@@ -94,18 +95,18 @@ namespace UFO_50_Mod_Loader.Services
                 void AddExeHash(string version, long address)
                 {
                     var versionHash = gameService.GetVersionHashData(version);
-                    if (versionHash.TryGetValue(Constants.TargetExecutable, out uint hash))
+                    if (versionHash.TryGetValue(Game.Metadata.ExeName, out uint hash))
                     {
                         expectedExeHashes.Add(hash, address);
                     }
                 }
 
-                if (expectedExeHashes.TryGetValue(gameService.HashFile(Constants.ModdedCopyExePath), out var processMessagesVirtualAddress)) {
+                if (expectedExeHashes.TryGetValue(gameService.HashFile(Game.Paths.ModdedCopyExePath), out var processMessagesVirtualAddress)) {
                     // addresses from the headers, same for different versions of the exe
                     long textVirtualBaseAddress = 0x140001000;
                     long textRawBaseAddress = 0x400;
 
-                    using (var stream = new FileStream(Constants.ModdedCopyExePath, FileMode.Open, FileAccess.ReadWrite)) {
+                    using (var stream = new FileStream(Game.Paths.ModdedCopyExePath, FileMode.Open, FileAccess.ReadWrite)) {
                         long processMessagesRawAddress = processMessagesVirtualAddress - textVirtualBaseAddress + textRawBaseAddress;
                         byte nopOpcode = 0x90;
                         int processMessagesCallSize = 5;
@@ -123,7 +124,7 @@ namespace UFO_50_Mod_Loader.Services
 
         private static async Task ModdingSettingsAddModNamesAsync(List<string> enabledModPaths)
         {
-            string? moddingSettingsPath = Path.Combine(Constants.MyModsPath, "UFO 50 Modding Settings");
+            string? moddingSettingsPath = Path.Combine(Game.Paths.MyModsPath, "UFO 50 Modding Settings");
 
             if (moddingSettingsPath == null)
                 return;
@@ -148,7 +149,7 @@ namespace UFO_50_Mod_Loader.Services
 
         private static async Task GenerateModsFolderAsync(string gamePath, List<string> enabledModPaths)
         {
-            await Task.Run(() => File.Copy(Constants.VanillaDataWinPath, Constants.GMLoaderDataWinPath, overwrite: true));
+            await Task.Run(() => File.Copy(Game.Paths.VanillaDataWinPath, Constants.GMLoaderDataWinPath, overwrite: true));
 
             if (Directory.Exists(Constants.GMLoaderModsPath)) {
                 try {
@@ -160,9 +161,16 @@ namespace UFO_50_Mod_Loader.Services
             }
             await Task.Run(() => CopyService.CopyDirectory(Constants.GMLoaderModsBasePath, Constants.GMLoaderModsPath));
 
-            var reorderedModPaths = enabledModPaths
-                .OrderBy(m => Path.GetFileName(m) != "UFO 50 Modding Settings")
-                .ThenBy(m => m);
+            IEnumerable<string> reorderedModPaths;
+
+            if (Game.Metadata.IsUFO50) {
+                reorderedModPaths = enabledModPaths
+                    .OrderBy(m => Path.GetFileName(m) != "UFO 50 Modding Settings")
+                    .ThenBy(m => m);
+            }
+            else {
+                reorderedModPaths = enabledModPaths.OrderBy(m => m);
+            }
 
             foreach (string mod in reorderedModPaths) {
                 if (!Directory.Exists(mod)) {
@@ -222,14 +230,14 @@ namespace UFO_50_Mod_Loader.Services
                         File.Copy(Constants.GMLoaderDataWinPath, GameDataWinPath, overwrite: true);
                         File.Delete(Constants.GMLoaderDataWinPath);
 
-                        var SteamExePath = Path.Combine(SettingsService.Settings.GamePath, Constants.TargetExecutable);
-                        CreateShortcut(SteamExePath, "UFO 50 (Steam)");
+                        var SteamExePath = Path.Combine(SettingsService.Settings.GamePath, Game.Metadata.ExeName);
+                        CreateShortcut(SteamExePath, $"{Game.Metadata.GameName} (Steam)");
 
                         if (SettingsService.Settings.OverwriteMode) {
                             Logger.Log("Mods installed successfully!");
                         }
                         else {
-                            CreateShortcut(Constants.ModdedCopyExePath, "UFO 50 (Modded Copy)");
+                            CreateShortcut(Game.Paths.ModdedCopyExePath, $"{Game.Metadata.GameName} (Modded Copy)");
                             Logger.Log("Mods loaded successfully! Click the 'Launch Game' button to launch this modded game again.");
                         }
                     }

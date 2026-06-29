@@ -1,11 +1,8 @@
 ﻿using System.Collections.Concurrent;
-using System.Net;
 using System.Net.Http;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading;
 using UFO_50_Mod_Loader.Models;
-using UFO_50_Mod_Loader.Services;
 
 namespace UFO_50_Mod_Loader;
 
@@ -17,7 +14,7 @@ public class ModDownloaderService
     static ModDownloaderService()
     {
         if (!_client.DefaultRequestHeaders.UserAgent.Any()) {
-            _client.DefaultRequestHeaders.UserAgent.ParseAdd("UFO50ModLoader/1.0");
+            _client.DefaultRequestHeaders.UserAgent.ParseAdd("UFO50ModLoader/1.0"); // Change if this becomes a generic game maker program?
         }
     }
     public async Task<List<ModInfo>> GetModListAsync()
@@ -28,7 +25,7 @@ public class ModDownloaderService
         var page = 1;
 
         while (true) {
-            var url = $"https://gamebanana.com/apiv11/Game/{Constants.GameBananaID}/Subfeed?_nPage={page}&_sSort=default";
+            var url = $"https://gamebanana.com/apiv11/Game/{Game.Metadata.GameBananaID}/Subfeed?_nPage={page}&_sSort=default";
             using var json = await GetJsonAsync(url);
             var records = json.RootElement.GetProperty("_aRecords");
 

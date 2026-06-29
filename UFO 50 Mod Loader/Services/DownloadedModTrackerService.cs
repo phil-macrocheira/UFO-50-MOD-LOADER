@@ -17,7 +17,7 @@ public static class DownloadedModTrackerService
     {
         _installedMods.Clear();
 
-        foreach (var modDir in Directory.GetDirectories(Constants.MyModsPath)) {
+        foreach (var modDir in Directory.GetDirectories(Game.Paths.MyModsPath)) {
             var jsonPath = Path.Combine(modDir, GameBananaMetadata.FileName);
 
             if (!File.Exists(jsonPath))
