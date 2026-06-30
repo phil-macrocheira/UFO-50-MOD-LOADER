@@ -182,7 +182,7 @@ namespace UFO_50_Mod_Loader.Services
                     string folderName = Path.GetFileName(subFolder);
                     string destSubFolder = Path.Combine(Constants.GMLoaderModsPath, folderName);
 
-                    if (folderName == "ext") {
+                    if (Game.Metadata.IsUFO50 && folderName == "ext") {
                         destSubFolder = Path.Combine(gamePath, "ext");
                     }
                     else if (folderName == "audio") {
