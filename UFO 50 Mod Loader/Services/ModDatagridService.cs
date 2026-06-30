@@ -81,7 +81,7 @@ public class ModDatagridService : IDisposable
             // Load modder and description from txt file
             string modder = "";
             string description = "";
-            string? txtPath = Directory.GetFiles(modFolder, "*.txt").FirstOrDefault();
+            string? txtPath = Directory.GetFiles(modFolder, "*.txt").FirstOrDefault(f => !Path.GetFileName(f).Equals("dependencies.txt", StringComparison.OrdinalIgnoreCase));
             if (!string.IsNullOrEmpty(txtPath)) {
                 try {
                     var lines = File.ReadLines(txtPath).Take(2).ToArray();

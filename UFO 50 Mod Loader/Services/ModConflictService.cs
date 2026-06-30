@@ -44,10 +44,10 @@ public static class ModConflictService
             foreach (var file in files) {
                 var parentDir = Path.GetFileName(Path.GetDirectoryName(file));
 
-                if (file.EndsWith("conflicting_mods.txt", StringComparison.OrdinalIgnoreCase)) {
+                if (file.Equals("conflicting_mods.txt", StringComparison.OrdinalIgnoreCase)) {
                     CheckModConflicts(file, modName, enabledModPaths.Select(path => Path.GetFileName(path)).ToHashSet(), result);
                 } 
-                else if (file.EndsWith("files.txt", StringComparison.OrdinalIgnoreCase)) {
+                else if (file.Equals("files.txt", StringComparison.OrdinalIgnoreCase)) {
                     ProcessFileList(file, modPath, relativePaths);
                     modsWithFileList.Add(modName);
                 }

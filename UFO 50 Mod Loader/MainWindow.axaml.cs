@@ -511,6 +511,8 @@ public partial class MainWindow : Window
         //    SortByEnabled();
 
         CheckConflicts();
+        if (Game.Metadata.GameBananaID != string.Empty)
+            CheckDependencies();
         UpdateVersionColumnVisibility();
     }
     private void Mod_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -520,6 +522,8 @@ public partial class MainWindow : Window
         if (e.PropertyName == nameof(Mod.IsEnabled)) {
             SaveEnabledMods();
             CheckConflicts();
+            if (Game.Metadata.GameBananaID != string.Empty)
+                CheckDependencies();
         }
     }
     private void CheckConflicts()
@@ -541,6 +545,31 @@ public partial class MainWindow : Window
         }
 
         if (result.HasBlockingConflicts) {
+            InstallButton.IsEnabled = false;
+        }
+        else {
+            InstallButton.IsEnabled = true;
+        }
+    }
+    private void CheckDependencies()
+    {
+        var enabledModPaths = FilteredMods
+            .Where(m => m.IsEnabled)
+            .Select(m => Path.Combine(Game.Paths.MyModsPath, m.Name))
+            .Where(path => path != null)
+            .Cast<string>()
+            .ToList();
+
+        var result = ModDependencyService.CheckDependencies(enabledModPaths);
+
+        if (result.HasMissingDependencies) {
+            LogService.ShowDependencies(result.GetMessage());
+        }
+        else {
+            LogService.HideDependencies();
+        }
+
+        if (result.HasMissingDependencies) {
             InstallButton.IsEnabled = false;
         }
         else {
