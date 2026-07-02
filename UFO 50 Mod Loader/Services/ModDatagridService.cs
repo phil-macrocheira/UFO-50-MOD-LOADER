@@ -1,8 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Media.Imaging;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using UFO_50_Mod_Loader.Helpers;
 using UFO_50_Mod_Loader.Models;
 

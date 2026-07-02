@@ -149,16 +149,16 @@ public partial class MainWindow : Window
             await CopyUFO50Vanilla(version);
         }
 
+        // Install packaged mods (Just UFO 50 Modding Settings for now)
+        if ((SelfUpdaterService.JustUpdatedOrInstalled || !Directory.Exists(Game.Paths.MyModsPath)) && Directory.Exists(Constants.PackagedModsPath) && Game.Metadata.IsUFO50)
+            InstallPackagedMods();
+
         // Initialize datagrid service
         _modDatagridService.ModsChanged += OnModsChanged;
         _modDatagridService.Initialize();
 
         // Extract any archives in 'my mods'
         ExtractAllArchives();
-
-        // Install packaged mods (Just UFO 50 Modding Settings for now)
-        if (SelfUpdaterService.JustUpdatedOrInstalled && Game.Metadata.IsUFO50)
-            InstallPackagedMods();
 
         LoadMods();
 
@@ -169,11 +169,8 @@ public partial class MainWindow : Window
             SelfUpdaterService.CheckForUpdates(this, automatic: true);
         }
     }
-    private async void InstallPackagedMods()
+    private void InstallPackagedMods()
     {
-        if (!Directory.Exists(Game.Paths.MyModsPath) || !Directory.Exists(Constants.PackagedModsPath))
-            return;
-
         try {
             foreach (var dir in Directory.GetDirectories(Constants.PackagedModsPath)) {
                 string dirName = Path.GetFileName(dir);
