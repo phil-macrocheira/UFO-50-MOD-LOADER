@@ -10,15 +10,16 @@ public class ModDatagridService : IDisposable
     public static readonly Bitmap DefaultIcon = GetDefaultIcon();
     private static Bitmap GetDefaultIcon()
     {
-        string TargetFile;
-        if (Constants.IsWindows) {
-            TargetFile = "UFO_50_Mod_Loader.wrench.ico";
-        } else {
-            TargetFile = "UFO_50_Mod_Loader.wrench.png";
-        }
+        string WrenchFile = "UFO_50_Mod_Loader.wrench.ico";
 
-        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(TargetFile);
-        return new Bitmap(stream);
+        try {
+            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(WrenchFile);
+            return new Bitmap(stream);
+        }
+        catch (Exception ex) {
+            Logger.Log($"Error loading wrench icon: {ex.Message}");
+            return null;
+        }
     }
 
     private readonly List<FileWatcherService> _fileWatchers = new();
@@ -54,10 +55,10 @@ public class ModDatagridService : IDisposable
     }
     private Mod? LoadModFromFolder(string modFolder)
     {
-        try {
-            string parentModFolder = Path.GetFileName(Path.GetDirectoryName(Path.GetFullPath(modFolder))!);
-            string folderName = Path.GetFileName(modFolder);
+        string parentModFolder = Path.GetFileName(Path.GetDirectoryName(Path.GetFullPath(modFolder))!);
+        string folderName = Path.GetFileName(modFolder);
 
+        try {
             // Check if it is a mod
             if (!CheckIfMod.Check(modFolder))
                 return null;
@@ -120,7 +121,8 @@ public class ModDatagridService : IDisposable
                 ModVersion = modVersion
             };
         }
-        catch {
+        catch (Exception ex) {
+            Logger.Log($"Failed to load mod folder {folderName}: {ex.Message}");
             return null;
         }
     }

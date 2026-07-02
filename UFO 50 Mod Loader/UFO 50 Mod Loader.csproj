@@ -27,14 +27,8 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
   
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-    <None Remove="wrench.ico" />
+  <ItemGroup>
     <EmbeddedResource Include="wrench.ico" />
-  </ItemGroup>
-  
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-    <None Remove="wrench.png" />
-    <EmbeddedResource Include="wrench.png" />
   </ItemGroup>
   
   <ItemGroup>

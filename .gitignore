@@ -371,3 +371,6 @@ GMLoader/obj
 
 # vpk access token for uploading releases
 GITHUB_TOKEN
+
+# Personal notes
+MOVING_TO_LINUX.txt
