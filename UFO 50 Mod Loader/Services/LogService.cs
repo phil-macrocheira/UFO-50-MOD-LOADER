@@ -37,7 +37,6 @@ public static class LogService
         _showingDependencies = true;
         UpdateDisplay();
     }
-
     public static void HideDependencies()
     {
         _showingDependencies = false;

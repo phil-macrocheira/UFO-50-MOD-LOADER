@@ -1,4 +1,5 @@
-﻿using YamlDotNet.Serialization;
+﻿using UFO_50_Mod_Loader.Models;
+using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace UFO_50_Mod_Loader.Services;
@@ -43,11 +44,11 @@ public static class ModConflictService
 
             foreach (var file in files) {
                 var parentDir = Path.GetFileName(Path.GetDirectoryName(file));
-
-                if (file.Equals("conflicting_mods.txt", StringComparison.OrdinalIgnoreCase)) {
+                string filename = Path.GetFileName(file);
+                if (filename.Equals("conflicting_mods.txt", StringComparison.OrdinalIgnoreCase)) {
                     CheckModConflicts(file, modName, enabledModPaths.Select(path => Path.GetFileName(path)).ToHashSet(), result);
                 } 
-                else if (file.Equals("files.txt", StringComparison.OrdinalIgnoreCase)) {
+                else if (filename.Equals("files.txt", StringComparison.OrdinalIgnoreCase)) {
                     ProcessFileList(file, modPath, relativePaths);
                     modsWithFileList.Add(modName);
                 }
@@ -121,19 +122,17 @@ public static class ModConflictService
             Logger.Log($"WARNING: Invalid YAML in {modName}/{filename} - {ex.Message}");
         }
     }
-
     private static void CheckModConflicts(string modListPath, string mod1, HashSet<string> enabledMods, ConflictResult result)
     {
         var lines = File.ReadAllLines(modListPath);
         foreach (var mod2 in lines) {
             if (string.IsNullOrWhiteSpace(mod2)) continue;
             if (enabledMods.Contains(mod2)) {
-                result.Conflicts.Add($"{mod1} is known to be incompatible with {mod2}");
+                result.Conflicts.Add($"WARNING: {mod1} is incompatible with {mod2}");
                 result.HasBlockingConflicts = true;
             }
         }
     }
-
     private static void CheckFileConflicts(List<string> modPaths, Dictionary<string, Dictionary<string, string>> modFiles, HashSet<string> modsWithFileList, ConflictResult result)
     {
         for (int i = 0; i < modPaths.Count; i++) {

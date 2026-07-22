@@ -495,8 +495,16 @@ public class GMLoaderProgram
             byte[] yamlBytes = File.ReadAllBytes(file);
             string fileName = Path.GetFileName(file);
             Log.Information($"Deserializing {fileName}");
+            Dictionary<string, List<CodeData>>? yamlContent;
 
-            var yamlContent = YamlSerializer.Deserialize<Dictionary<string, List<CodeData>>>(yamlBytes);
+            try {
+                yamlContent = YamlSerializer.Deserialize<Dictionary<string, List<CodeData>>>(yamlBytes);
+            }
+            catch (Exception ex) {
+                throw new ScriptException($"{fileName}: YAML is invalid: {ex.Message}");
+            }
+
+            ValidateYAML(fileName, yamlContent);
 
             foreach (var scriptEntry in yamlContent)
             {
@@ -516,7 +524,47 @@ public class GMLoaderProgram
 
         return true;
     }
+    public static void ValidateYAML(string fileName, Dictionary<string, List<CodeData>>? yamlContent)
+    {
+        if (yamlContent == null || yamlContent.Count == 0)
+            throw new ScriptException($"{fileName}: No entries found");
 
+        var allValidTypes = new HashSet<string>()
+        {
+            "findreplace", "findreplacetrim", "findappend", "findprepend",
+            "findappendtrim", "findprependtrim", "findreplaceregex",
+            "findremove", "findremovetrim", "append", "prepend"
+        };
+
+        foreach (var (scriptName, patches) in yamlContent)
+        {
+            if (string.IsNullOrWhiteSpace(scriptName))
+                throw new ScriptException($"{fileName}: Contains a blank script name");
+
+            if (patches == null || patches.Count == 0)
+                throw new ScriptException($"{fileName}: {scriptName} has no patch entries");
+
+            for (int i = 0; i < patches.Count; i++)
+            {
+                var patch = patches[i];
+                string prefix = $"{fileName}: {scriptName} entry {i + 1}";
+
+                string type = (patch.yml_type ?? "").ToLowerInvariant();
+
+                if (string.IsNullOrEmpty(type))
+                    throw new ScriptException($"{prefix}: missing type");
+
+                if (!allValidTypes.Contains(type))
+                    throw new ScriptException($"{prefix}: unknown type '{patch.yml_type}'");
+
+                bool codeIsEmpty = string.IsNullOrEmpty(patch.yml_code);
+                bool noCodeRequired = type is "findremove" or "findremovetrim" or "append" or "prepend";
+
+                if (codeIsEmpty && !noCodeRequired)
+                    throw new ScriptException($"{prefix} ({type}): missing code field");
+            }
+        }
+    }
     public static bool ProcessCodePatch(CodeImportGroup importGroup, string fileName, string scriptName, CodeData patch, Dictionary<string, List<string>> modificationHistory)
     {
         string type = patch.yml_type ?? "";
@@ -563,6 +611,14 @@ public class GMLoaderProgram
                 if (string.IsNullOrEmpty(find)) { Log.Error($"Regex pattern is empty for {scriptName}"); return false; }
                 importGroup.QueueRegexFindReplace(scriptName, find, code, caseSensitive);
                 break;
+            case "findremove":
+                if (string.IsNullOrEmpty(find)) { Log.Error($"Find pattern is empty for {scriptName}"); return false; }
+                importGroup.QueueFindReplace(scriptName, find, "", caseSensitive);
+                break;
+            case "findremovetrim":
+                if (string.IsNullOrEmpty(find)) { Log.Error($"Find pattern is empty for {scriptName}"); return false; }
+                importGroup.QueueTrimmedLinesFindReplace(scriptName, find, "", caseSensitive);
+                break;
         }
 
         try
@@ -574,8 +630,14 @@ public class GMLoaderProgram
         {
             string history = modificationHistory.ContainsKey(scriptName)
                 ? string.Join(", ", modificationHistory[scriptName]) : "no modifications recorded";
+
+            if (fileName == history) {
+                Log.Error($"Error on {fileName} processing {scriptName}\n'{scriptName}' modified by: {history}\nFind: {find}\nCode: {code}\nException: {e.Message}\n");
+                throw new ScriptException($"Failed to process {fileName}. Most likely due to a 'find' value not being found. See the log for more details.");
+            }
+
             Log.Error($"Error on {fileName} processing {scriptName}\n'{scriptName}' modified by: {history}\nFind: {find}\nCode: {code}\nException: {e.Message}\n");
-            throw new ScriptException($"Failed to process {fileName}. This may be due to conflicts with: {history}. See the log for more details");
+            throw new ScriptException($"Failed to process {fileName}. This may be due to a 'find' value not being found or conflicts with other code patches: {history}. See the log for more details.");
         }
     }
 

@@ -16,10 +16,12 @@ public partial class MainWindow : Window
     private readonly InstalledGameService _gameService;
     public static ObservableCollection<Mod> FilteredMods { get; } = new();
     private bool _isInstalling = false;
+    private bool _hasBlockingConflicts;
     public bool IsSteamOS => Constants.IsSteamOS;
 
     private int _logPostPending = 0;
     private string _latestLogText = "";
+    public List<string> DependencyIDs { get; set; } = new();
 
     public bool OverwriteMode
     {
@@ -161,6 +163,7 @@ public partial class MainWindow : Window
         ExtractAllArchives();
 
         LoadMods();
+        SortByEnabled();
 
         if (SettingsService.Settings.FirstTimeRun == true)
             FirstTimeRun();
@@ -277,6 +280,7 @@ public partial class MainWindow : Window
     private async void OnDownloadModsClick(object? sender, RoutedEventArgs e)
     {
         var dialog = new ModDownloaderWindow() { MainWindow = this };
+        dialog.DependencyIDs = DependencyIDs;
         await dialog.ShowDialog(this);
     }
     public void PauseWatchers()
@@ -541,36 +545,25 @@ public partial class MainWindow : Window
             LogService.HideConflicts();
         }
 
-        if (result.HasBlockingConflicts) {
-            InstallButton.IsEnabled = false;
-        }
-        else {
-            InstallButton.IsEnabled = true;
-        }
+        _hasBlockingConflicts = result.HasBlockingConflicts;
+        InstallButton.IsEnabled = !_hasBlockingConflicts;
     }
     private void CheckDependencies()
     {
-        var enabledModPaths = FilteredMods
-            .Where(m => m.IsEnabled)
-            .Select(m => Path.Combine(Game.Paths.MyModsPath, m.Name))
-            .Where(path => path != null)
-            .Cast<string>()
-            .ToList();
+        var enabledModPaths = FilteredMods.Where(m => m.IsEnabled).Select(m => Path.Combine(Game.Paths.MyModsPath, m.Name)).Where(path => path != null).Cast<string>().ToList();
+        var disabledMods = FilteredMods.Where(m => !m.IsEnabled);
 
         var result = ModDependencyService.CheckDependencies(enabledModPaths);
+        DependencyIDs = result.MissingModIDs;
+        //List<string> modsToCheckbox = result.MissingModNames;
 
         if (result.HasMissingDependencies) {
             LogService.ShowDependencies(result.GetMessage());
-        }
-        else {
-            LogService.HideDependencies();
-        }
-
-        if (result.HasMissingDependencies) {
             InstallButton.IsEnabled = false;
         }
         else {
-            InstallButton.IsEnabled = true;
+            LogService.HideDependencies();
+            InstallButton.IsEnabled = !_hasBlockingConflicts;
         }
     }
     private void UpdateVersionColumnVisibility()

@@ -14,7 +14,7 @@ public partial class ModDownloaderWindow : Window
     private readonly ObservableCollection<DownloadMod> _allMods = new();
     private readonly ObservableCollection<DownloadMod> _filteredMods = new();
     private DownloadMod? _selectedMod;
-
+    public List<string> DependencyIDs { get; set; } = new();
     public ModDownloaderWindow()
     {
         InitializeComponent();
@@ -27,6 +27,9 @@ public partial class ModDownloaderWindow : Window
 
     private async void OnWindowLoaded(object? sender, EventArgs e)
     {
+        if (DependencyIDs.Count == 0)
+            SelectDependenciesButton.IsVisible = false;
+
         await LoadModsAsync();
     }
 
@@ -157,6 +160,16 @@ public partial class ModDownloaderWindow : Window
 
         foreach (var mod in _filteredMods) {
             mod.IsSelected = mod.HasUpdate;
+        }
+    }
+    private void OnSelectDependenciesClick(object? sender, RoutedEventArgs e)
+    {
+        SearchBox.Text = "";
+        ApplyFilter();
+
+        foreach (var mod in _filteredMods) {
+            if (DependencyIDs.Contains(mod.ID))
+                mod.IsSelected = true;
         }
     }
     private void OnSelectNewClick(object? sender, RoutedEventArgs e)
