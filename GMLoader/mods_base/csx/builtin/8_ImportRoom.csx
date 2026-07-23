@@ -686,9 +686,7 @@ void ReadTilesLayer(ref Utf8JsonReader reader, UndertaleRoom.Layer newLayer)
         ReadAnticipateJSONObject(ref reader, JsonTokenType.StartArray);
         for (int x = 0; x < newLayerData.TilesX; x++)
         {
-            ReadAnticipateJSONObject(ref reader, JsonTokenType.StartObject);
             (tileIds[y])[x] = (uint) ReadNum(ref reader);
-            ReadAnticipateJSONObject(ref reader, JsonTokenType.EndObject);
         }
 
         ReadAnticipateJSONObject(ref reader, JsonTokenType.EndArray);
