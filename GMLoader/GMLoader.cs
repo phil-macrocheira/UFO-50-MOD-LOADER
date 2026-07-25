@@ -556,12 +556,6 @@ public class GMLoaderProgram
 
                 if (!allValidTypes.Contains(type))
                     throw new ScriptException($"{prefix}: unknown type '{patch.yml_type}'");
-
-                bool codeIsEmpty = string.IsNullOrEmpty(patch.yml_code);
-                bool noCodeRequired = type is "findremove" or "findremovetrim" or "append" or "prepend";
-
-                if (codeIsEmpty && !noCodeRequired)
-                    throw new ScriptException($"{prefix} ({type}): missing code field");
             }
         }
     }
