@@ -95,10 +95,23 @@ public class ModDatagridService : IDisposable
             // Load version from gamebanana.json if it exists
             string modVersion = "";
             string jsonPath = Path.Combine(modFolder, GameBananaMetadata.FileName);
+            string modDataPath = Path.Combine(modFolder, "mod_data.json");
             if (File.Exists(jsonPath)) {
                 try {
                     var json = File.ReadAllText(jsonPath);
                     var metadata = System.Text.Json.JsonSerializer.Deserialize<GameBananaMetadata>(json);
+                    if (metadata != null && !string.IsNullOrEmpty(metadata.Version)) {
+                        modVersion = metadata.Version;
+                    }
+                }
+                catch {
+                    // Skip invalid JSON files
+                }
+            }
+            else if (File.Exists(modDataPath)) {
+                try {
+                    var json = File.ReadAllText(modDataPath);
+                    var metadata = System.Text.Json.JsonSerializer.Deserialize<ModData>(json);
                     if (metadata != null && !string.IsNullOrEmpty(metadata.Version)) {
                         modVersion = metadata.Version;
                     }
