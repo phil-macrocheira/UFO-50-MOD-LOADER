@@ -20,44 +20,53 @@ public class ModDownloaderService
     public async Task<List<ModInfo>> GetModListAsync()
     {
         var mods = new ConcurrentBag<ModInfo>();
-        var throttler = new SemaphoreSlim(10);
+        var throttler = new SemaphoreSlim(20);
         var tasks = new List<Task>();
-        var page = 1;
 
-        while (true) {
-            var url = $"https://gamebanana.com/apiv11/Game/{Game.Metadata.GameBananaID}/Subfeed?_nPage={page}&_sSort=default";
-            using var json = await GetJsonAsync(url);
-            var records = json.RootElement.GetProperty("_aRecords");
+        var json = await ParseModListPage(1, mods);
+        var metadata = json.RootElement.GetProperty("_aMetadata");
+        var recordCount = GetLongProperty(metadata, "_nRecordCount");
+        var perpage = GetLongProperty(metadata, "_nPerpage");
 
-            if (records.GetArrayLength() == 0) break;
+        if (perpage > 0) {
+            var pageCount = (recordCount + perpage - 1) / perpage;
+            int lastPage = Convert.ToInt32(pageCount);
 
-            foreach (var element in records.EnumerateArray()) {
-                var elementCopy = JsonDocument.Parse(element.GetRawText()).RootElement;
-
+            foreach (var page in Enumerable.Range(2, lastPage)) {
                 tasks.Add(Task.Run(async () => {
                     await throttler.WaitAsync();
-                    try {
-                        var mod = await ParseModElementAsync(elementCopy);
-                        if (mod != null) mods.Add(mod);
+                    try
+                    {
+                        await ParseModListPage(page, mods);
                     }
-                    finally {
+                    finally
+                    {
                         throttler.Release();
                     }
                 }));
             }
-            page++;
         }
 
         await Task.WhenAll(tasks);
         return mods.ToList();
     }
-    private async Task<ModInfo?> ParseModElementAsync(JsonElement element)
+    private async Task<JsonDocument> ParseModListPage(int page, ConcurrentBag<ModInfo> mods)
+    {
+        var url = $"https://gamebanana.com/apiv11/Game/{Game.Metadata.GameBananaID}/Subfeed?_nPage={page}&_sSort=default&_csvModelInclusions=Mod";
+        var json = await GetJsonAsync(url);
+        var records = json.RootElement.GetProperty("_aRecords");
+
+        foreach (var element in records.EnumerateArray()) {
+            var elementCopy = JsonDocument.Parse(element.GetRawText()).RootElement;
+            var mod = ParseModElement(elementCopy);
+            if (mod != null) mods.Add(mod);
+        }
+
+        return json;
+    }
+    private ModInfo? ParseModElement(JsonElement element)
     {
         try {
-            if (!element.TryGetProperty("_sModelName", out var modelName) ||
-                modelName.GetString() != "Mod")
-                return null;
-
             var id = element.GetProperty("_idRow").ToString();
             var name = GetStringProperty(element, "_sName");
             var pageUrl = GetStringProperty(element, "_sProfileUrl");
@@ -65,8 +74,7 @@ public class ModDownloaderService
             var version = GetStringProperty(element, "_sVersion", "1.0");
             var dateUpdated = GetLongProperty(element, "_tsDateUpdated");
             var dateAdded = GetLongProperty(element, "_tsDateAdded");
-
-            var creator = await GetCreatorNameAsync(id, element);
+            var creator = GetStringProperty(element.GetProperty("_aSubmitter"), "_sName");
             var imageUrl = GetPreviewImageUrl(element);
 
             return new ModInfo {
