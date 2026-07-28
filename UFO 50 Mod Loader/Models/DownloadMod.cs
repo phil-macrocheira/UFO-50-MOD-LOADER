@@ -26,12 +26,23 @@ public class DownloadMod : INotifyPropertyChanged
 {
     private bool _isSelected;
     private string _installedVersion = "";
+    private string _creator = "";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public string ID { get; }
     public string Name { get; }
-    public string Creator { get; }
+    public string Creator
+    {
+        get => _creator;
+        set
+        {
+            if (_creator != value) {
+                _creator = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Creator)));
+            }
+        }
+    }
     public string Description { get; }
     public string ImageUrl { get; }
     public string PageUrl { get; }

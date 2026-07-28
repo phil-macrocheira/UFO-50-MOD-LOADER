@@ -11,7 +11,7 @@ public partial class ModDownloaderWindow : Window
 {
     public MainWindow? MainWindow { init; private get; }
     private readonly ModDownloaderService _downloaderService;
-    private readonly ObservableCollection<DownloadMod> _allMods = new();
+    public ObservableCollection<DownloadMod> _allMods = new();
     private readonly ObservableCollection<DownloadMod> _filteredMods = new();
     private DownloadMod? _selectedMod;
     public List<string> DependencyIDs { get; set; } = new();
@@ -31,6 +31,7 @@ public partial class ModDownloaderWindow : Window
             SelectDependenciesButton.IsVisible = false;
 
         await LoadModsAsync();
+        await LoadModCreatorsAsync();
     }
 
     private async Task LoadModsAsync()
@@ -69,7 +70,10 @@ public partial class ModDownloaderWindow : Window
             Logger.Log($"Failed to load mods from GameBanana: {ex.Message}");
         }
     }
-
+    private async Task LoadModCreatorsAsync()
+    {
+        var mods = await _downloaderService.GetModListAsync(_allMods, true);
+    }
     private void ApplyFilter()
     {
         var searchText = SearchBox?.Text ?? "";

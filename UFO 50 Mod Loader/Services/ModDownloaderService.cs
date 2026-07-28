@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -17,13 +18,13 @@ public class ModDownloaderService
             _client.DefaultRequestHeaders.UserAgent.ParseAdd("UFO50ModLoader/1.0"); // Change if this becomes a generic game maker program?
         }
     }
-    public async Task<List<ModInfo>> GetModListAsync()
+    public async Task<List<ModInfo>> GetModListAsync(ObservableCollection<DownloadMod> _allMods = null, bool getCreator = false)
     {
         var mods = new ConcurrentBag<ModInfo>();
         var throttler = new SemaphoreSlim(20);
         var tasks = new List<Task>();
 
-        var json = await ParseModListPage(1, mods);
+        var json = await ParseModListPage(1, mods, _allMods, getCreator);
         var metadata = json.RootElement.GetProperty("_aMetadata");
         var recordCount = GetLongProperty(metadata, "_nRecordCount");
         var perpage = GetLongProperty(metadata, "_nPerpage");
@@ -37,7 +38,7 @@ public class ModDownloaderService
                     await throttler.WaitAsync();
                     try
                     {
-                        await ParseModListPage(page, mods);
+                        await ParseModListPage(page, mods, _allMods, getCreator);
                     }
                     finally
                     {
@@ -50,7 +51,7 @@ public class ModDownloaderService
         await Task.WhenAll(tasks);
         return mods.ToList();
     }
-    private async Task<JsonDocument> ParseModListPage(int page, ConcurrentBag<ModInfo> mods)
+    private async Task<JsonDocument> ParseModListPage(int page, ConcurrentBag<ModInfo> mods, ObservableCollection<DownloadMod> _allMods = null, bool getCreator = false)
     {
         var url = $"https://gamebanana.com/apiv11/Game/{Game.Metadata.GameBananaID}/Subfeed?_nPage={page}&_sSort=default&_csvModelInclusions=Mod";
         var json = await GetJsonAsync(url);
@@ -58,11 +59,32 @@ public class ModDownloaderService
 
         foreach (var element in records.EnumerateArray()) {
             var elementCopy = JsonDocument.Parse(element.GetRawText()).RootElement;
-            var mod = ParseModElement(elementCopy);
-            if (mod != null) mods.Add(mod);
+            var mod = new ModInfo();
+
+            if (!getCreator) {
+                mod = ParseModElement(elementCopy);
+                if (mod != null) mods.Add(mod);
+            }
+            else {
+                mod = await ParseModElementCreator(elementCopy, _allMods);
+            }
         }
 
         return json;
+    }
+    private async Task<ModInfo?> ParseModElementCreator(JsonElement element, ObservableCollection<DownloadMod> _allMods)
+    {
+        try {
+            var id = element.GetProperty("_idRow").ToString();
+            var creator = await GetCreatorNameAsync(id, element);
+            var modToUpdate = _allMods.FirstOrDefault(m => m.ID == id);
+            if (modToUpdate != null)
+                modToUpdate.Creator = creator;
+            return null;
+        }
+        catch {
+            return null;
+        }
     }
     private ModInfo? ParseModElement(JsonElement element)
     {
@@ -74,8 +96,8 @@ public class ModDownloaderService
             var version = GetStringProperty(element, "_sVersion", "1.0");
             var dateUpdated = GetLongProperty(element, "_tsDateUpdated");
             var dateAdded = GetLongProperty(element, "_tsDateAdded");
-            var creator = GetStringProperty(element.GetProperty("_aSubmitter"), "_sName");
             var imageUrl = GetPreviewImageUrl(element);
+            var creator = "";
 
             return new ModInfo {
                 ID = id,
