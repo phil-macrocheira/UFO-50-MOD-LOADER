@@ -157,6 +157,7 @@ namespace UFO_50_Mod_Loader.Services
                 }
                 catch (Exception ex) {
                     Logger.Log($"[ERROR] Failed to delete existing mods workspace folder: {ex.Message}");
+                    return;
                 }
             }
             await Task.Run(() => CopyService.CopyDirectory(Constants.GMLoaderModsBasePath, Constants.GMLoaderModsPath));

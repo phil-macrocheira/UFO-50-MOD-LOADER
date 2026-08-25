@@ -24,7 +24,7 @@ bool _objIsAwake;
 
 foreach (string file in objFiles)
 {
-    Log.Information($"Manipulating existing {Path.GetFileNameWithoutExtension(file)} properties");
+    Log.Information($"Modifying existing {Path.GetFileNameWithoutExtension(file)} properties");
     _objName = Path.GetFileNameWithoutExtension(file);
 
     jsonContent = File.ReadAllText(file);
@@ -53,4 +53,7 @@ foreach (string file in objFiles)
     Obj.Persistent = _objIsPersistent;
     Obj.UsesPhysics = _objUsesPhysics;
     Obj.IsSensor = _objIsSensor;
+
+    if (Obj == Obj.ParentId)
+        throw new ScriptException($"ERROR: {Obj.Name} has its parent set to itself.");
 }
