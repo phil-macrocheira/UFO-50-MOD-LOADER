@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Threading;
 using System.Diagnostics;
+using System.Net.Http;
 using System.Threading;
 using UFO_50_Mod_Loader.Helpers;
 using UFO_50_Mod_Loader.Models;
@@ -53,12 +54,18 @@ namespace UFO_50_Mod_Loader.Services
                     var updateManager = new UpdateManager(source, new UpdateOptions() { AllowVersionDowngrade = true });
 
                     UpdateInfo? updateInfo;
-                    try
-                    {
+                    try {
                         updateInfo = await updateManager.CheckForUpdatesAsync();
                     }
-                    catch (Velopack.Exceptions.NotInstalledException ex)
-                    {
+                    catch (Velopack.Exceptions.NotInstalledException ex) {
+                        Logger.Log($"Can't check for updates: {ex.Message}");
+                        return;
+                    }
+                    catch (HttpRequestException ex) {
+                        Logger.Log($"Can't check for updates: {ex.Message}");
+                        return;
+                    }
+                    catch (Exception ex) {
                         Logger.Log($"Can't check for updates: {ex.Message}");
                         return;
                     }
