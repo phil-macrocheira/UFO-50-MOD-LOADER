@@ -51,6 +51,11 @@ public static class ExtractService
             Logger.Log($"Cannot unzip {Path.GetFileName(archivePath)} - {ex.Message}");
             return null;
         }
+        catch (InvalidOperationException ex) {
+            string myModsPathName = new DirectoryInfo(Game.Paths.MyModsPath).Name;
+            Logger.Log($"Error: Invalid zip file '{Path.GetFileName(archivePath)}' in '{myModsPathName}' folder");
+            return null;
+        }
     }
     private static string Extract(string archivePath)
     {
