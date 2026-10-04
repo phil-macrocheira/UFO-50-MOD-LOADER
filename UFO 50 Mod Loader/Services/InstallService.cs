@@ -187,14 +187,14 @@ namespace UFO_50_Mod_Loader.Services
                         destSubFolder = Path.Combine(gamePath, "ext");
                     }
                     else if (folderName == "audio") {
-                        foreach (string audiogroup in Directory.GetFiles(subFolder)) {
+                        foreach (string audiogroup in Directory.GetFiles(subFolder, "*.dat")) {
                             string destFile = Path.Combine(gamePath, Path.GetFileName(audiogroup));
                             await Task.Run(() => File.Copy(audiogroup, destFile, true));
                         }
                         continue;
                     }
                     else if (folderName == "dll") {
-                        foreach (string dll in Directory.GetFiles(subFolder)) {
+                        foreach (string dll in Directory.GetFiles(subFolder, "*.dll")) {
                             string destFile = Path.Combine(gamePath, Path.GetFileName(dll));
                             await Task.Run(() => File.Copy(dll, destFile, true));
                         }
