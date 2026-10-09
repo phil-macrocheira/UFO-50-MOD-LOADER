@@ -252,10 +252,15 @@ public class ModDownloaderService
     }
     private async Task<JsonDocument> GetJsonAsync(string url)
     {
-        var response = await _client.GetAsync(url);
-        response.EnsureSuccessStatusCode();
-        var json = await response.Content.ReadAsStringAsync();
-        return JsonDocument.Parse(json);
+        try {
+            var response = await _client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonDocument.Parse(json);
+        }
+        catch (Exception ex) {
+            throw;
+        }
     }
     private static string GetStringProperty(JsonElement element, string name, string defaultValue = "")
     {

@@ -30,11 +30,16 @@ public partial class ModDownloaderWindow : Window
         if (DependencyIDs.Count == 0)
             SelectDependenciesButton.IsVisible = false;
 
-        await LoadModsAsync();
+        bool success = await LoadModsAsync();
+        if (!success) {
+            Close();
+            return;
+        }
+
         await LoadModCreatorsAsync();
     }
 
-    private async Task LoadModsAsync()
+    private async Task<bool> LoadModsAsync()
     {
         try {
             Title = "GameBanana Mod Downloader - Loading...";
@@ -64,10 +69,13 @@ public partial class ModDownloaderWindow : Window
             if (_filteredMods.Count > 0) {
                 ModDataGrid.SelectedItem = _filteredMods[0];
             }
+
+            return true;
         }
         catch (Exception ex) {
             StatusText.Text = $"Error: {ex.Message}";
-            Logger.Log($"Failed to load mods from GameBanana: {ex.Message}");
+            Logger.Log("Mod Downloader failed to connect. If you have internet, GameBanana API may be down temporarily.");
+            return false;
         }
     }
     private async Task LoadModCreatorsAsync()
