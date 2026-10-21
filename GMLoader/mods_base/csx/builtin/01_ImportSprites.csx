@@ -49,7 +49,7 @@ uint borderY;
 uint tileColumn;
 uint itemOrFramePerTile;
 uint tileCount;
-int frameTime;
+long frameTime;
 
 static List<MagickImage> imagesToCleanup = new();
 
@@ -172,7 +172,7 @@ try
                         tileColumn = bgProps.yml_tile_column.Value;
                         itemOrFramePerTile = bgProps.yml_item_per_tile.Value;
                         tileCount = bgProps.yml_tile_count.Value;
-                        //frameTime = bgProps.yml_frametime.Value;
+                        frameTime = bgProps.yml_frametime.Value;
                         //Log.Information($"{bgSpriteName} tile_count: {bgProps.yml_tile_count.Value} tile_width: {bgProps.yml_tile_width.Value}");
                     }
                     else {

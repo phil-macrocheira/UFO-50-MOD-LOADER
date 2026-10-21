@@ -187,9 +187,17 @@ namespace UFO_50_Mod_Loader.Services
                         destSubFolder = Path.Combine(gamePath, "ext");
                     }
                     else if (folderName == "audio") {
+                        string moddedAudioFolder = Path.Combine(gamePath, Constants.ModdedAudioFolderName);
+                        var audioExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".ogg", ".wav" };
+
                         foreach (string audiogroup in Directory.GetFiles(subFolder, "*.dat")) {
                             string destFile = Path.Combine(gamePath, Path.GetFileName(audiogroup));
                             await Task.Run(() => File.Copy(audiogroup, destFile, true));
+                        }
+                        foreach (string audiofile in Directory.EnumerateFiles(subFolder).Where(f => audioExtensions.Contains(Path.GetExtension(f)))) {
+                            Directory.CreateDirectory(moddedAudioFolder);
+                            string destFile = Path.Combine(moddedAudioFolder, Path.GetFileName(audiofile));
+                            await Task.Run(() => File.Copy(audiofile, destFile, true));
                         }
                         continue;
                     }

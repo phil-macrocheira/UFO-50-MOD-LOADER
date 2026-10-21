@@ -97,6 +97,7 @@ public interface IConfig
     public string BackgroundsConfigDirectory { get; }
     public string AudioDirectory { get; }
     public string AudioConfigDirectory { get; }
+    public string ShaderDirectory { get; }
     public string ConfigDirectory { get; }
     public string GMLCodeDirectory { get; }
     public string GMLCodePatchDirectory { get; }
@@ -231,6 +232,7 @@ public class GMLoaderProgram
     public static string backgroundsConfigPath { get; set; } = string.Empty;
     public static string audioPath { get; set; } = string.Empty;
     public static string audioConfigPath { get; set; } = string.Empty;
+    public static string shaderPath { get; set; } = string.Empty;
     public static string configPath { get; set; } = string.Empty;
     public static DecompileSettings defaultDecompSettings { get; set; } = null!;
     public static string gmlCodePath { get; set; } = string.Empty;
@@ -362,6 +364,7 @@ public class GMLoaderProgram
         backgroundsConfigPath = Path.Combine(workingDirectory, config.BackgroundsConfigDirectory);
         audioPath = Path.Combine(workingDirectory, config.AudioDirectory);
         audioConfigPath = Path.Combine(workingDirectory, config.AudioConfigDirectory);
+        shaderPath = Path.Combine(workingDirectory, config.ShaderDirectory);
         configPath = Path.Combine(workingDirectory, config.ConfigDirectory);
         gmlCodePath = Path.Combine(workingDirectory, config.GMLCodeDirectory);
         gmlCodePatchPath = Path.Combine(workingDirectory, config.GMLCodePatchDirectory);
@@ -740,6 +743,7 @@ public class GMLoaderProgram
                         yml_transparent = configs.yml_transparent ?? defaultBGTransparent,
                         yml_smooth = configs.yml_smooth ?? defaultBGSmooth,
                         yml_preload = configs.yml_preload ?? defaultBGPreload,
+                        yml_frametime = configs.yml_frametime ?? defaultBGFrameTime,
                     };
                 }
             });

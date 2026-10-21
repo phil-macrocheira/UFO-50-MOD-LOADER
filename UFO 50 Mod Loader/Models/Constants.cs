@@ -24,5 +24,6 @@ namespace UFO_50_Mod_Loader.Models
         public static readonly string PackagesPath = Path.Combine(ModLoaderRoot, "packages");
         public static readonly string PackagedModsPath = Path.Combine(ModLoaderPath, "packaged mods");
         public static readonly string LogPath = Path.Combine(ModLoaderRoot, "log.txt");
+        public static readonly string ModdedAudioFolderName = "modded_audio";
     }
 }
