@@ -919,6 +919,8 @@ public class GMLoaderProgram
     public static void DisableAllSyncBindings() { }
     public static void EnsureDataLoaded() { }
 
+    public static Action<Action> MainThreadAction => static (f) => f();
+
     private static async Task RunCSharpCode(string code, string? scriptFile = null)
     {
         Log.Information($"Executing '{Path.GetFileName(scriptFile)}'");
